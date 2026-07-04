@@ -45,6 +45,7 @@ function BookRow({ book }: { book: Book }) {
       >
         <span className="md:hidden">{book.thought}</span>
         <motion.span
+          aria-hidden
           className="hidden md:inline"
           initial={false}
           animate={{ opacity: open ? 1 : 0 }}
