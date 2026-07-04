@@ -1,0 +1,60 @@
+---
+title: What security audits taught me about writing software
+date: 2026-06-20
+summary: A year of reading other people's code for a living changes how you write your own. Notes on threat models, boring failure modes, and why the most secure code is usually the most legible.
+topics:
+  - security
+  - engineering
+---
+
+Auditing is a strange way to read code. You are not trying to use it, extend it, or ship it. You are trying to find the one assumption its authors stopped seeing. After enough of that, some patterns stop looking like security lessons and start looking like software lessons that happen to have consequences.
+
+Here is what stuck.
+
+## The vulnerability is almost never clever
+
+The write-ups that circulate are the clever ones — the exotic chains, the four-bug pivots. The findings that actually fill audit reports are duller: a check performed in one place and assumed everywhere else, an error path that returns early before the cleanup, a default that was safe in the environment the author tested and unsafe in the one the code shipped to.
+
+The lesson is not "attackers are unsophisticated." It is that **software fails at its seams**, and seams are exactly the places no single author feels responsible for. When I write code now, I spend my review energy at the boundaries — the deserializer, the retry wrapper, the place where one team's promise becomes another team's assumption.
+
+## A threat model is a sentence, not a document
+
+Most projects I audited had no threat model. A few had a forty-page one nobody had opened since it was written. The teams that fared best had something smaller: a sentence everyone could say from memory.
+
+> We assume the database is trusted, the browser is hostile, and anything that crosses the queue was written by an attacker.
+
+A sentence like that survives because it fits in a code review comment. It gives a reviewer standing to ask "the queue is hostile — why are we trusting this field?" without scheduling a meeting. The forty-page document defends the system on paper; the sentence defends it in the diff.
+
+## Legibility is a security property
+
+The correlation I could not un-see: the codebases with the most findings were rarely the ones with the least security effort. They were the ones that were hardest to read. Deep inheritance, implicit state, clever metaprogramming — every layer of indirection is a place where the author's intent and the machine's behaviour can quietly diverge, and vulnerabilities live in exactly that gap.
+
+The inverse held too. Code that was boring to read was boring to attack. Not because it had fewer bugs in some absolute sense, but because its bugs were shallow — visible to the author, the reviewer, and the auditor at the same depth.
+
+```ts
+// The version that passed audit cleanly was never the clever one.
+function canAccess(user: User, doc: Document): boolean {
+  if (doc.ownerId === user.id) return true;
+  if (doc.visibility === "public") return true;
+  return doc.sharedWith.includes(user.id);
+}
+```
+
+Three lines, three rules, no framework. When access control looks like this, a wrong rule is a one-line diff away from being a right rule. When it is spread across decorators, middleware, and a policy engine, the same wrong rule is an incident.
+
+## Fixes rot faster than features
+
+Twice I audited systems I had seen before, a year apart. Both times, some fixes from the first report had quietly regressed — not because anyone removed them, but because the code around them was rewritten by someone who did not know why the odd-looking check existed.
+
+A fix without a test is a comment. A fix without a comment is a trap for the next refactor. The durable fixes were the ones that encoded their reason: a test named after the failure, an assertion with the CVE number in the message, a type that made the unsafe state unrepresentable. The fix that survives is the one that explains itself.
+
+## What changed in my own work
+
+Less than I expected, and more fundamental than I expected.
+
+- I write the trust boundary down before I write the handler.
+- I treat "hard to explain in review" as a defect, even when the code is correct.
+- I let validation be repetitive. Deduplicating checks across layers saves lines and costs incidents.
+- I name tests after failures, not features, so the reason outlives the author.
+
+None of this is security engineering in the certificate-and-cipher sense. It is ordinary software engineering, done as if someone adversarial will eventually read the code — because someone eventually will. The audit just makes that reader arrive early, while their findings are still cheap.
