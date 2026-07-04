@@ -1,12 +1,24 @@
 import type { Metadata } from "next";
 
+import { JsonLd } from "../../components/json-ld";
 import { MarginsList } from "../../components/margins/margins-list";
 import { getAllNotes } from "../../lib/margins";
+import { SITE, absoluteUrl } from "../../lib/site";
+
+const DESCRIPTION =
+  "Half-thoughts, undated in feel, kept as they were written. Philosophy, engineering, myth, books.";
 
 export const metadata: Metadata = {
   title: "Margins",
-  description:
-    "Half-thoughts, undated in feel, kept as they were written. Philosophy, engineering, myth, books.",
+  description: DESCRIPTION,
+  alternates: { canonical: "/margins" },
+  openGraph: {
+    title: "Margins",
+    description: DESCRIPTION,
+    url: absoluteUrl("/margins"),
+    siteName: SITE.name,
+    type: "website",
+  },
 };
 
 export default function MarginsPage() {
@@ -17,8 +29,19 @@ export default function MarginsPage() {
     category: n.category,
   }));
 
+  const blogJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "Margins",
+    url: absoluteUrl("/margins"),
+    description: DESCRIPTION,
+    author: { "@type": "Person", name: SITE.author, url: SITE.url },
+    inLanguage: "en",
+  };
+
   return (
     <main className="relative z-10 mx-auto w-full max-w-[1440px] px-6 pb-40 pt-40 md:px-12 md:pt-56">
+      <JsonLd data={blogJsonLd} />
       <header className="mb-16 flex items-baseline justify-between">
         <span className="label">Margins</span>
         <span className="label">{notes.length.toString().padStart(3, "0")}</span>

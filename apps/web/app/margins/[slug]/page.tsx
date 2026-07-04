@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { JsonLd } from "../../../components/json-ld";
 import {
   CATEGORY_LABELS,
   getAllNotes,
   getNoteMetaBySlug,
 } from "../../../lib/margins";
+import { SITE, absoluteUrl } from "../../../lib/site";
 
 type Params = { slug: string };
 
@@ -22,9 +24,28 @@ export async function generateMetadata({
   const { slug } = await params;
   const meta = getNoteMetaBySlug(slug);
   if (!meta) return { title: "Not found" };
+  const description =
+    meta.excerpt || `${CATEGORY_LABELS[meta.category]} · Margins`;
+  const url = absoluteUrl(`/margins/${meta.slug}`);
   return {
     title: meta.title,
-    description: `${CATEGORY_LABELS[meta.category]} · Margins`,
+    description,
+    alternates: { canonical: `/margins/${meta.slug}` },
+    openGraph: {
+      title: meta.title,
+      description,
+      url,
+      siteName: SITE.name,
+      type: "article",
+      publishedTime: meta.date,
+      authors: [SITE.author],
+      section: CATEGORY_LABELS[meta.category],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: meta.title,
+      description,
+    },
   };
 }
 
@@ -43,8 +64,27 @@ export default async function NotePage({
   )) as { default: React.ComponentType };
   const Content = mod.default;
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: meta.title,
+    description: meta.excerpt || undefined,
+    url: absoluteUrl(`/margins/${meta.slug}`),
+    datePublished: meta.date,
+    articleSection: CATEGORY_LABELS[meta.category],
+    inLanguage: "en",
+    author: { "@type": "Person", name: SITE.author, url: SITE.url },
+    isPartOf: {
+      "@type": "Blog",
+      name: "Margins",
+      url: absoluteUrl("/margins"),
+    },
+    mainEntityOfPage: absoluteUrl(`/margins/${meta.slug}`),
+  };
+
   return (
     <main className="relative z-10 mx-auto w-full max-w-[1440px] px-6 pb-40 pt-40 md:px-12 md:pt-56">
+      <JsonLd data={articleJsonLd} />
       <header className="mb-16 flex items-baseline justify-between">
         <Link href="/margins" className="label hover:text-rust transition-colors">
           &larr; Margins

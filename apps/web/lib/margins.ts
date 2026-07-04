@@ -15,7 +15,23 @@ export type MarginMeta = {
   year: string;
   category: MarginCategory;
   filepath: string;
+  excerpt: string;
 };
+
+function toExcerpt(markdown: string): string {
+  const firstParagraph = markdown
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .find((block) => block.length > 0 && !block.startsWith("#"));
+  if (!firstParagraph) return "";
+  const plain = firstParagraph
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/[*_`>#]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (plain.length <= 160) return plain;
+  return `${plain.slice(0, 157).replace(/\s+\S*$/, "")}…`;
+}
 
 const ROOT = path.join(process.cwd(), "content", "margins");
 
@@ -60,6 +76,7 @@ export function getAllNotes(): MarginMeta[] {
       year: date.slice(0, 4),
       category,
       filepath,
+      excerpt: toExcerpt(parsed.content),
     };
   });
   notes.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));

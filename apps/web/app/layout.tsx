@@ -11,7 +11,9 @@ import { AmbientDust } from "../components/chrome/ambient-dust";
 import { ShootingStar } from "../components/chrome/shooting-star";
 import { ChromeIndex } from "../components/chrome/chrome-index";
 import { KonamiListener } from "../components/chrome/konami-listener";
+import { JsonLd } from "../components/json-ld";
 import { getAllNotes } from "../lib/margins";
+import { SITE } from "../lib/site";
 
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
@@ -28,20 +30,74 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://sarwagya.wtf"),
+  metadataBase: new URL(SITE.url),
   title: {
-    default: "Sarwagya",
-    template: "%s — Sarwagya",
+    default: SITE.title,
+    template: `%s — ${SITE.name}`,
   },
-  description:
-    "Building things that outlive the excitement that created them.",
+  description: SITE.description,
+  applicationName: SITE.name,
+  authors: [{ name: SITE.author, url: SITE.url }],
+  creator: SITE.author,
+  publisher: SITE.author,
+  keywords: [
+    "Sarwagya",
+    "Sarwagya Singh",
+    "0xsarwagya",
+    "software engineering",
+    "security",
+    "writing",
+    "philosophy",
+    "essays",
+    "personal site",
+  ],
   openGraph: {
-    title: "Sarwagya",
-    description:
-      "Building things that outlive the excitement that created them.",
+    title: SITE.title,
+    description: SITE.description,
+    url: SITE.url,
+    siteName: SITE.name,
+    locale: SITE.locale,
     type: "website",
   },
-  robots: { index: true, follow: true },
+  twitter: {
+    card: "summary_large_image",
+    site: SITE.twitterHandle,
+    creator: SITE.twitterHandle,
+    title: SITE.title,
+    description: SITE.description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+};
+
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: SITE.author,
+  alternateName: ["Sarwagya", "0xsarwagya"],
+  url: SITE.url,
+  email: SITE.email,
+  sameAs: [SITE.twitterUrl, SITE.githubUrl],
+  jobTitle: "Software Engineer",
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE.name,
+  url: SITE.url,
+  description: SITE.description,
+  author: { "@type": "Person", name: SITE.author, url: SITE.url },
+  inLanguage: "en",
 };
 
 export default function RootLayout({
@@ -55,6 +111,8 @@ export default function RootLayout({
       className={`${instrumentSerif.variable} ${geistMono.variable}`}
     >
       <body>
+        <JsonLd data={personJsonLd} />
+        <JsonLd data={websiteJsonLd} />
         <SmoothScroll>
           <AmbientDust />
           <ShootingStar />
