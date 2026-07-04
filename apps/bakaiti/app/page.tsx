@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+
+import { canonicalAlternates } from "@repo/seo/canonical";
 import Link from "next/link";
 
 import { getAllTakes } from "../lib/takes";
+import { SITE } from "../lib/site";
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+  alternates: canonicalAlternates(SITE, "/"),
 };
 
 const HOUSE_RULES = [

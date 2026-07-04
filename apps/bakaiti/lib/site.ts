@@ -1,20 +1,29 @@
-import { createSite } from "@0xsarwagya/ui/site";
+import { SARWAGYA } from "@repo/seo/author";
+import { absoluteUrl as resolve } from "@repo/seo/canonical";
+import type { SiteIdentity } from "@repo/seo/types";
 
-export const SITE = createSite({
+export const SITE: SiteIdentity & {
+  email: string;
+  twitterUrl: string;
+  githubUrl: string;
+  mainSiteUrl: string;
+} = {
   url: "https://bakaiti.sarwagya.wtf",
-  name: "Sarwagya · Bakaiti",
-  title: "Bakaiti — I have opinions",
+  name: "Bakaiti",
+  titleDefault: "Bakaiti — Opinions by Sarwagya Singh",
+  titleTemplate: "%s — Bakaiti",
   description:
-    "Long-form opinions from Sarwagya Singh, held strongly and researched loosely. This was apparently cheaper than therapy.",
-  author: "Sarwagya Singh",
-  email: "hello@sarwagya.wtf",
+    "Strongly held, loosely researched opinions on technology, politics, family, India, and whatever else required a postmortem.",
+  locale: "en_US",
+  person: SARWAGYA,
   twitterHandle: "@0xsarwagya",
+  feedPath: "/feed.xml",
+  email: SARWAGYA.email,
   twitterUrl: "https://twitter.com/0xsarwagya",
   githubUrl: "https://github.com/0xsarwagya",
   mainSiteUrl: "https://sarwagya.wtf",
-  locale: "en_US",
-});
+};
 
 export function absoluteUrl(path: string): string {
-  return SITE.absoluteUrl(path);
+  return resolve(SITE, path);
 }
