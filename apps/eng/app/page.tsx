@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { EDUCATION, EXPERIENCE, PROJECTS } from "../content/profile";
 import { getAllLearnings } from "../lib/learnings";
 import { SITE } from "../lib/site";
 
@@ -11,6 +12,10 @@ export const metadata: Metadata = {
 const DATASHEET: { key: string; value: React.ReactNode }[] = [
   { key: "Name", value: "Sarwagya Singh" },
   { key: "Focus", value: "Security & systems engineering" },
+  {
+    key: "Currently",
+    value: "Full Stack Engineer at ACTIMI · B.Sc. IT at TU Munich",
+  },
   { key: "Location", value: "Ludwigsburg, Germany" },
   {
     key: "Writing",
@@ -78,6 +83,101 @@ export default function Home() {
             </span>
           </div>
         ))}
+      </section>
+
+      <section id="experience" className="mt-24 md:mt-36" aria-label="Experience">
+        <h2 className="label">Experience</h2>
+        <div className="mt-6 flex flex-col">
+          {EXPERIENCE.map((e) => (
+            <div
+              key={`${e.org}-${e.role}`}
+              className="grid grid-cols-12 gap-2 border-t border-ink/10 py-5 first:border-t-0 md:gap-8"
+            >
+              <span className="col-span-12 font-mono text-[11px] text-stone md:col-span-3">
+                {e.dates}
+              </span>
+              <div className="col-span-12 md:col-span-9">
+                <p className="font-serif" style={{ fontSize: 21, lineHeight: 1.25 }}>
+                  {e.role} <span className="text-ink/60">·</span> {e.org}
+                </p>
+                <p className="mt-1 font-mono text-[11px] text-stone">{e.meta}</p>
+                {e.note ? (
+                  <p
+                    className="mt-2 max-w-2xl font-body text-graphite"
+                    style={{ fontSize: 15, lineHeight: 1.55 }}
+                  >
+                    {e.note}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="projects" className="mt-24 md:mt-36" aria-label="Projects">
+        <div className="flex items-baseline justify-between">
+          <h2 className="label">Selected projects</h2>
+          <a
+            href={SITE.githubUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="label transition-colors hover:text-rust"
+          >
+            All on GitHub ↗
+          </a>
+        </div>
+        <div className="mt-6 flex flex-col">
+          {PROJECTS.map((p) => (
+            <a
+              key={p.name}
+              href={p.url}
+              target="_blank"
+              rel="noreferrer"
+              className="group grid grid-cols-12 gap-2 border-t border-ink/10 py-5 first:border-t-0 md:gap-8"
+            >
+              <span className="col-span-12 font-mono text-[11px] text-stone md:col-span-3">
+                {p.language}
+              </span>
+              <div className="col-span-12 md:col-span-9">
+                <p className="font-mono text-[14px] text-ink transition-colors group-hover:text-rust">
+                  {p.name} ↗
+                </p>
+                <p
+                  className="mt-2 max-w-2xl font-body text-graphite"
+                  style={{ fontSize: 15, lineHeight: 1.55 }}
+                >
+                  {p.description}
+                </p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section id="education" className="mt-24 md:mt-36" aria-label="Education">
+        <h2 className="label">Education</h2>
+        <div className="mt-6 flex flex-col">
+          {EDUCATION.map((e) => (
+            <div
+              key={e.school}
+              className="grid grid-cols-12 gap-2 border-t border-ink/10 py-5 first:border-t-0 md:gap-8"
+            >
+              <span className="col-span-12 font-mono text-[11px] text-stone md:col-span-3">
+                {e.dates}
+              </span>
+              <div className="col-span-12 md:col-span-9">
+                <p className="font-serif" style={{ fontSize: 21, lineHeight: 1.25 }}>
+                  {e.school}
+                </p>
+                <p className="mt-1 font-mono text-[11px] text-stone">
+                  {e.degree}
+                  {e.note ? ` · ${e.note}` : ""}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="mt-24 md:mt-36" aria-label="Latest learnings">

@@ -93,7 +93,15 @@ const personJsonLd = {
   url: SITE.mainSiteUrl,
   email: SITE.email,
   sameAs: [SITE.twitterUrl, SITE.githubUrl, SITE.mainSiteUrl],
-  jobTitle: "Software Engineer",
+  jobTitle: "Full Stack Engineer",
+  worksFor: { "@type": "Organization", name: "ACTIMI" },
+  alumniOf: [
+    {
+      "@type": "CollegeOrUniversity",
+      name: "Technical University of Munich",
+    },
+    { "@type": "CollegeOrUniversity", name: "Universität des Saarlandes" },
+  ],
 };
 
 const themeInitScript = `try{var t=localStorage.getItem("theme");var d=t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",d?"dark":"light")}catch(e){}`;
