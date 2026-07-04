@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { ThemeToggle } from "./theme-toggle";
+
 export function SiteHeader() {
   return (
     <header className="mx-auto flex w-full max-w-[1100px] items-baseline justify-between px-5 pt-8 sm:px-6 md:px-10 md:pt-10">
@@ -19,6 +21,7 @@ export function SiteHeader() {
         >
           sarwagya.wtf ↗
         </a>
+        <ThemeToggle />
       </nav>
     </header>
   );

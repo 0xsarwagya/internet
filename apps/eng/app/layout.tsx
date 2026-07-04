@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Instrument_Serif, Newsreader } from "next/font/google";
 
@@ -78,6 +78,13 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f4ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#14120f" },
+  ],
+};
+
 const personJsonLd = {
   "@context": "https://schema.org",
   "@type": "Person",
@@ -88,6 +95,8 @@ const personJsonLd = {
   sameAs: [SITE.twitterUrl, SITE.githubUrl, SITE.mainSiteUrl],
   jobTitle: "Software Engineer",
 };
+
+const themeInitScript = `try{var t=localStorage.getItem("theme");var d=t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",d?"dark":"light")}catch(e){}`;
 
 const websiteJsonLd = {
   "@context": "https://schema.org",
@@ -106,8 +115,10 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${instrumentSerif.variable} ${newsreader.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
     >
       <body>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <JsonLd data={personJsonLd} />
         <JsonLd data={websiteJsonLd} />
         <SiteHeader />
