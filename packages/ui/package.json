@@ -1,26 +1,42 @@
 {
-  "name": "@repo/ui",
+  "name": "@0xsarwagya/ui",
   "version": "0.0.0",
   "private": true,
   "exports": {
-    "./*": "./src/*.tsx"
+    "./json-ld": "./src/json-ld.tsx",
+    "./footer-link": "./src/footer-link.tsx",
+    "./theme-toggle": "./src/theme-toggle.tsx",
+    "./reading-progress": "./src/reading-progress.tsx",
+    "./prose": "./src/prose.tsx",
+    "./content": "./src/content.ts",
+    "./og": "./src/og.tsx",
+    "./site": "./src/site.ts",
+    "./styles/tokens.css": "./styles/tokens.css",
+    "./styles/dark.css": "./styles/dark.css"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
-    "generate:component": "turbo gen react-component",
     "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "gray-matter": "^4"
+  },
+  "peerDependencies": {
+    "next": ">=16",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/mdx": "^2.0.14",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "eslint": "^9.39.1",
-    "typescript": "5.9.2"
-  },
-  "dependencies": {
+    "next": "16.2.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "typescript": "5.9.2"
   }
 }

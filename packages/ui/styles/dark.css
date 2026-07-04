@@ -1,0 +1,47 @@
+/* Opt-in dark mode for sites in the family that support it.
+   Import after tokens.css; requires the themeInitScript from
+   @0xsarwagya/ui/theme-toggle to stamp data-theme on <html>. */
+
+@custom-variant dark (&:where(html[data-theme="dark"], html[data-theme="dark"] *));
+
+html[data-theme="dark"] {
+  --color-paper: #14120f;
+  --color-ink: #ebe7de;
+  --color-graphite: #b0aba0;
+  --color-stone: #a29580;
+  --color-rust: #c9705a;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    --color-paper: #14120f;
+    --color-ink: #ebe7de;
+    --color-graphite: #b0aba0;
+    --color-stone: #a29580;
+    --color-rust: #c9705a;
+  }
+}
+
+@layer base {
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    html:not([data-theme]) {
+      color-scheme: dark;
+    }
+  }
+}
+
+html[data-theme="dark"] .grain {
+  mix-blend-mode: screen;
+  opacity: 0.1;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) .grain {
+    mix-blend-mode: screen;
+    opacity: 0.1;
+  }
+}

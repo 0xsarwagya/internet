@@ -2,13 +2,14 @@ import { ImageResponse } from "next/og";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
-export async function loadInstrumentSerif(
+export async function loadGoogleFont(
+  family: string,
   text: string,
 ): Promise<ArrayBuffer | null> {
   try {
     const css = await (
       await fetch(
-        `https://fonts.googleapis.com/css2?family=Instrument+Serif&text=${encodeURIComponent(text)}`,
+        `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, "+")}&text=${encodeURIComponent(text)}`,
       )
     ).text();
     const match = css.match(
@@ -22,18 +23,37 @@ export async function loadInstrumentSerif(
   }
 }
 
+export type OgCardColors = {
+  paper: string;
+  ink: string;
+  stone: string;
+  accent: string;
+};
+
+const DEFAULT_COLORS: OgCardColors = {
+  paper: "#f6f4ef",
+  ink: "#0d0d0d",
+  stone: "#9b8c73",
+  accent: "#a34a3a",
+};
+
 export async function renderOgCard({
   eyebrow,
   title,
   footer,
   titleSize,
+  colors = DEFAULT_COLORS,
 }: {
   eyebrow: string;
   title: string;
   footer: string;
   titleSize: number;
+  colors?: OgCardColors;
 }) {
-  const font = await loadInstrumentSerif(`${title}${eyebrow}${footer}`);
+  const font = await loadGoogleFont(
+    "Instrument Serif",
+    `${title}${eyebrow}${footer}`,
+  );
 
   return new ImageResponse(
     (
@@ -44,8 +64,8 @@ export async function renderOgCard({
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#f6f4ef",
-          color: "#0d0d0d",
+          background: colors.paper,
+          color: colors.ink,
           padding: "72px 80px",
           fontFamily: font ? "Instrument Serif" : "serif",
         }}
@@ -55,7 +75,7 @@ export async function renderOgCard({
             display: "flex",
             justifyContent: "space-between",
             fontSize: 28,
-            color: "#9b8c73",
+            color: colors.stone,
           }}
         >
           <div style={{ display: "flex" }}>{eyebrow}</div>
@@ -77,7 +97,7 @@ export async function renderOgCard({
             display: "flex",
             width: 96,
             height: 4,
-            background: "#a34a3a",
+            background: colors.accent,
           }}
         />
       </div>

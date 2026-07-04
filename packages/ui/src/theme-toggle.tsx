@@ -24,3 +24,5 @@ export function ThemeToggle() {
     </button>
   );
 }
+
+export const themeInitScript = `try{var t=localStorage.getItem("theme");var d=t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",d?"dark":"light")}catch(e){}`;
