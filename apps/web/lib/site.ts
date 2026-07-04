@@ -1,17 +1,19 @@
-export const SITE = {
+import { SARWAGYA } from "@repo/seo/author";
+import { absoluteUrl as resolve } from "@repo/seo/canonical";
+import type { SiteIdentity } from "@repo/seo/types";
+
+export const SITE: SiteIdentity = {
   url: "https://sarwagya.wtf",
   name: "Sarwagya",
-  title: "Sarwagya — Software, Writing, Systems",
+  titleDefault: "Sarwagya Singh — Engineer, Writer & Builder",
+  titleTemplate: "%s — Sarwagya Singh",
   description:
-    "Sarwagya's personal site. Essays and half-thoughts on software engineering, security, philosophy, myth, and books — building things that outlive the excitement that created them.",
-  author: "Sarwagya Singh",
-  email: "hello@sarwagya.wtf",
-  twitterHandle: "@0xsarwagya",
-  twitterUrl: "https://twitter.com/0xsarwagya",
-  githubUrl: "https://github.com/0xsarwagya",
+    "Sarwagya Singh is a software engineer and writer from Bihar, living in Germany. He builds software, writes about engineering, and keeps notes in the margins.",
   locale: "en_US",
-} as const;
+  person: SARWAGYA,
+  twitterHandle: "@0xsarwagya",
+};
 
 export function absoluteUrl(path: string): string {
-  return new URL(path, SITE.url).toString();
+  return resolve(SITE, path);
 }

@@ -2,18 +2,36 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { JsonLd } from "@0xsarwagya/ui/json-ld";
+import {
+  JsonLd,
+  articleJsonLd,
+  breadcrumbJsonLd,
+} from "@repo/seo/json-ld";
+import { createArticleMetadata } from "@repo/seo/metadata";
+import type { ArticleMeta } from "@repo/seo/types";
 import {
   CATEGORY_LABELS,
   getAllNotes,
   getNoteMetaBySlug,
+  type MarginMeta,
 } from "../../../lib/margins";
-import { SITE, absoluteUrl } from "../../../lib/site";
+import { SITE } from "../../../lib/site";
 
 type Params = { slug: string };
 
 export function generateStaticParams(): Params[] {
   return getAllNotes().map((n) => ({ slug: n.slug }));
+}
+
+function toArticleMeta(meta: MarginMeta): ArticleMeta {
+  return {
+    title: meta.title,
+    description: meta.excerpt || `${CATEGORY_LABELS[meta.category]} · Margins`,
+    path: `/margins/${meta.slug}`,
+    datePublished: meta.date,
+    ...(meta.updated ? { dateModified: meta.updated } : {}),
+    section: CATEGORY_LABELS[meta.category],
+  };
 }
 
 export async function generateMetadata({
@@ -24,29 +42,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const meta = getNoteMetaBySlug(slug);
   if (!meta) return { title: "Not found" };
-  const description =
-    meta.excerpt || `${CATEGORY_LABELS[meta.category]} · Margins`;
-  const url = absoluteUrl(`/margins/${meta.slug}`);
-  return {
-    title: meta.title,
-    description,
-    alternates: { canonical: `/margins/${meta.slug}` },
-    openGraph: {
-      title: meta.title,
-      description,
-      url,
-      siteName: SITE.name,
-      type: "article",
-      publishedTime: meta.date,
-      authors: [SITE.author],
-      section: CATEGORY_LABELS[meta.category],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: meta.title,
-      description,
-    },
-  };
+  return createArticleMetadata(SITE, toArticleMeta(meta));
 }
 
 export default async function NotePage({
@@ -64,27 +60,20 @@ export default async function NotePage({
   )) as { default: React.ComponentType };
   const Content = mod.default;
 
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: meta.title,
-    description: meta.excerpt || undefined,
-    url: absoluteUrl(`/margins/${meta.slug}`),
-    datePublished: meta.date,
-    articleSection: CATEGORY_LABELS[meta.category],
-    inLanguage: "en",
-    author: { "@type": "Person", name: SITE.author, url: SITE.url },
-    isPartOf: {
-      "@type": "Blog",
-      name: "Margins",
-      url: absoluteUrl("/margins"),
-    },
-    mainEntityOfPage: absoluteUrl(`/margins/${meta.slug}`),
-  };
+  const article = toArticleMeta(meta);
+  const articleLd = articleJsonLd(SITE, article, {
+    blog: { name: "Margins", path: "/margins" },
+  });
+  const breadcrumbLd = breadcrumbJsonLd(SITE, [
+    { name: "Sarwagya", path: "/" },
+    { name: "Margins", path: "/margins" },
+    { name: meta.title, path: article.path },
+  ]);
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-[1440px] px-6 pb-40 pt-40 md:px-12 md:pt-56">
-      <JsonLd data={articleJsonLd} />
+      <JsonLd data={articleLd} />
+      <JsonLd data={breadcrumbLd} />
       <header className="mb-16 flex items-baseline justify-between">
         <Link href="/margins" className="label hover:text-rust transition-colors">
           &larr; Margins

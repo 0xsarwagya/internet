@@ -4,6 +4,9 @@ import { Instrument_Serif } from "next/font/google";
 
 import "./globals.css";
 
+import { SARWAGYA } from "@repo/seo/author";
+import { JsonLd, personJsonLd, websiteJsonLd } from "@repo/seo/json-ld";
+import { createSiteMetadata } from "@repo/seo/metadata";
 import { SmoothScroll } from "../components/chrome/smooth-scroll";
 import { Grain } from "../components/chrome/grain";
 import { CursorHalo } from "../components/chrome/cursor-halo";
@@ -11,7 +14,6 @@ import { AmbientDust } from "../components/chrome/ambient-dust";
 import { ShootingStar } from "../components/chrome/shooting-star";
 import { ChromeIndex } from "../components/chrome/chrome-index";
 import { KonamiListener } from "../components/chrome/konami-listener";
-import { JsonLd } from "@0xsarwagya/ui/json-ld";
 import { getAllNotes } from "../lib/margins";
 import { SITE } from "../lib/site";
 
@@ -29,76 +31,26 @@ const instrumentSerif = Instrument_Serif({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE.url),
-  title: {
-    default: SITE.title,
-    template: `%s — ${SITE.name}`,
-  },
-  description: SITE.description,
-  applicationName: SITE.name,
-  authors: [{ name: SITE.author, url: SITE.url }],
-  creator: SITE.author,
-  publisher: SITE.author,
+export const metadata: Metadata = createSiteMetadata(SITE, {
   keywords: [
     "Sarwagya",
     "Sarwagya Singh",
     "0xsarwagya",
+    "software engineer",
+    "writer",
     "software engineering",
     "security",
     "writing",
-    "philosophy",
     "essays",
     "personal site",
   ],
-  openGraph: {
-    title: SITE.title,
-    description: SITE.description,
-    url: SITE.url,
-    siteName: SITE.name,
-    locale: SITE.locale,
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    site: SITE.twitterHandle,
-    creator: SITE.twitterHandle,
-    title: SITE.title,
-    description: SITE.description,
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
-    },
-  },
-};
+});
 
-const personJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  name: SITE.author,
-  alternateName: ["Sarwagya", "0xsarwagya"],
-  url: SITE.url,
-  email: SITE.email,
-  sameAs: [SITE.twitterUrl, SITE.githubUrl],
-  jobTitle: "Software Engineer",
-};
-
-const websiteJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: SITE.name,
-  url: SITE.url,
-  description: SITE.description,
-  author: { "@type": "Person", name: SITE.author, url: SITE.url },
-  inLanguage: "en",
-};
+const personLd = personJsonLd(SARWAGYA, {
+  description:
+    "Software engineer and writer from Bihar, living in Germany. Builds software, writes about engineering, and keeps notes in the margins.",
+});
+const websiteLd = websiteJsonLd(SITE);
 
 export default function RootLayout({
   children,
@@ -111,8 +63,8 @@ export default function RootLayout({
       className={`${instrumentSerif.variable} ${geistMono.variable}`}
     >
       <body>
-        <JsonLd data={personJsonLd} />
-        <JsonLd data={websiteJsonLd} />
+        <JsonLd data={personLd} />
+        <JsonLd data={websiteLd} />
         <SmoothScroll>
           <AmbientDust />
           <ShootingStar />

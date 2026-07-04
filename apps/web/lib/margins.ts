@@ -9,6 +9,7 @@ export type MarginMeta = {
   slug: string;
   title: string;
   date: string;
+  updated?: string;
   year: string;
   category: MarginCategory;
   excerpt: string;
@@ -25,6 +26,7 @@ export function getAllNotes(): MarginMeta[] {
     slug: e.slug,
     title: e.title,
     date: e.date,
+    ...(e.updated ? { updated: e.updated } : {}),
     year: e.year,
     category: (e.category || "philosophy") as MarginCategory,
     excerpt: e.excerpt,

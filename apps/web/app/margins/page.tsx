@@ -1,25 +1,25 @@
 import type { Metadata } from "next";
 
-import { JsonLd } from "@0xsarwagya/ui/json-ld";
+import { JsonLd, blogJsonLd } from "@repo/seo/json-ld";
+import { createPageMetadata } from "@repo/seo/metadata";
 import { MarginsList } from "../../components/margins/margins-list";
 import { getAllNotes } from "../../lib/margins";
-import { SITE, absoluteUrl } from "../../lib/site";
+import { SITE } from "../../lib/site";
 
 const DESCRIPTION =
   "Half-thoughts, undated in feel, kept as they were written. Philosophy, engineering, myth, books.";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata(SITE, {
   title: "Margins",
   description: DESCRIPTION,
-  alternates: { canonical: "/margins" },
-  openGraph: {
-    title: "Margins",
-    description: DESCRIPTION,
-    url: absoluteUrl("/margins"),
-    siteName: SITE.name,
-    type: "website",
-  },
-};
+  path: "/margins",
+});
+
+const blogLd = blogJsonLd(SITE, {
+  name: "Margins",
+  path: "/margins",
+  description: DESCRIPTION,
+});
 
 export default function MarginsPage() {
   const notes = getAllNotes().map((n) => ({
@@ -29,19 +29,9 @@ export default function MarginsPage() {
     category: n.category,
   }));
 
-  const blogJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Blog",
-    name: "Margins",
-    url: absoluteUrl("/margins"),
-    description: DESCRIPTION,
-    author: { "@type": "Person", name: SITE.author, url: SITE.url },
-    inLanguage: "en",
-  };
-
   return (
     <main className="relative z-10 mx-auto w-full max-w-[1440px] px-6 pb-40 pt-40 md:px-12 md:pt-56">
-      <JsonLd data={blogJsonLd} />
+      <JsonLd data={blogLd} />
       <header className="mb-16 flex items-baseline justify-between">
         <span className="label">Margins</span>
         <span className="label">{notes.length.toString().padStart(3, "0")}</span>
