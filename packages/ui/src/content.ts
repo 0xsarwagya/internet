@@ -7,6 +7,8 @@ export type ContentEntry = {
   slug: string;
   title: string;
   date: string;
+  /** Set only when the frontmatter records an update. */
+  updated?: string;
   year: string;
   category: string;
   summary: string;
@@ -50,6 +52,22 @@ function readingMinutes(markdown: string): number {
   return Math.max(1, Math.round(words / 220));
 }
 
+/** Frontmatter dates must be real: fail the build rather than fall back. */
+function parseIsoDate(value: unknown, filepath: string, field: string): string {
+  const iso =
+    value instanceof Date
+      ? value.toISOString().slice(0, 10)
+      : typeof value === "string"
+        ? value.trim()
+        : null;
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso) || Number.isNaN(Date.parse(iso))) {
+    throw new Error(
+      `Invalid or missing "${field}" frontmatter in ${filepath} — expected YYYY-MM-DD, got ${JSON.stringify(value)}`,
+    );
+  }
+  return iso;
+}
+
 export type ContentSource = {
   all(): ContentEntry[];
   bySlug(slug: string): ContentEntry | undefined;
@@ -67,19 +85,22 @@ export function createContentSource(relativeDir: string): ContentSource {
       const data = parsed.data as {
         title?: unknown;
         date?: unknown;
+        updated?: unknown;
         category?: unknown;
         summary?: unknown;
         topics?: unknown;
       };
       const slug = path.basename(filepath, ".mdx");
-      const date =
-        data.date instanceof Date
-          ? data.date.toISOString().slice(0, 10)
-          : String(data.date ?? "1970-01-01");
+      const date = parseIsoDate(data.date, filepath, "date");
+      const updated =
+        data.updated == null
+          ? undefined
+          : parseIsoDate(data.updated, filepath, "updated");
       return {
         slug,
         title: String(data.title ?? slug),
         date,
+        ...(updated ? { updated } : {}),
         year: date.slice(0, 4),
         category: String(data.category ?? ""),
         summary: String(data.summary ?? ""),
