@@ -1,0 +1,56 @@
+---
+title: Your startup does not need Kubernetes
+date: 2026-06-30
+summary: A love letter to the three users you have and the container orchestra you hired for them. Featuring autoscaling, YAML, and other ways to avoid finding product-market fit.
+topics:
+  - infrastructure
+  - opinions
+---
+
+Congratulations on your seed round. I read the announcement. You're going to ~~change the world~~ disrupt a market that three larger companies are already comfortably failing to serve. Genuinely, good luck — I mean that.
+
+Which is why we need to talk about the Kubernetes cluster.
+
+## The numbers, briefly
+
+You have three users. One is your co-founder. One is your co-founder's partner, who opened the app once at dinner out of politeness and has an account because sign-in with Google is frictionless like that. The third might be real. Nobody wants to check.
+
+For these three people, you are running a managed Kubernetes cluster with two node pools, an ingress controller, a service mesh — the service mesh is my favourite part — cert-manager, external-dns, a Prometheus stack that consumes more memory than your actual product, and Grafana dashboards nobody has opened since the week they were set up, which was also the week they were screenshotted for the engineering blog.
+
+Your infrastructure bill is four figures. Your monthly recurring revenue is a smaller number of figures. In some months, it is a number of figures that requires a minus sign.
+
+## "But we need to scale"
+
+Do you? Walk me through it. The plan is: you launch, it goes viral, a hundred thousand users arrive on a Tuesday, and Kubernetes saves you.
+
+Here is what actually happens on that Tuesday, in the universe where it occurs: your database falls over. It falls over because it is one Postgres instance, which was the correct choice, and no amount of horizontal pod autoscaling changes the number of Postgres instances you have. Your pods will scale beautifully. They will scale like a flock of birds. They will all be waiting on the same connection pool.
+
+Scaling problems are the problems you are begging the universe to give you. The universe rarely delivers them on your schedule, and when it does, the bottleneck is never the thing you pre-optimised. It is always, always the database, or the one synchronous call to a third-party API that someone added in week two.
+
+## What this is actually about
+
+Nobody sets up a service mesh for three users because of traffic. Let's be honest about the real reasons, because they're human and I have sympathy for all of them:
+
+- Kubernetes is what the last company used, and the last company had revenue, so perhaps the causality flows backward if you squint.
+- "Migrating off Heroku" is a project with a visible finish line, unlike "finding customers."
+- The architecture diagram looks incredible in the investor deck. Boxes! Arrows! A hexagon!
+- Infrastructure work provides the sensation of progress with none of the risk of user feedback. YAML cannot churn. YAML cannot tell you it doesn't understand your onboarding.
+
+That last one is the whole thing, really. Every hour spent tuning a horizontal pod autoscaler is an hour you are excused from confronting the possibility that the product isn't working. The cluster is not serving your users. It is serving you. It is emotional-support infrastructure.
+
+## The part where I admit things
+
+I should mention that I have done all of this. The mesh, the dashboards, the multi-environment GitOps pipeline for an app whose entire state could have lived in a spreadsheet — mine was a beautiful pipeline and I miss it more than some people I went to school with. This is not a take from a mountaintop. It is a take from the support group.
+
+The recovery program, as practised:
+
+1. One server. A big, boring one. Vertical scaling is not a personality flaw.
+2. Postgres, with backups you have actually tested restoring. This step disqualifies most of us.
+3. A deploy script that is embarrassing. `git pull && restart` has carried companies to acquisition.
+4. A file called `TODO-when-we-have-users.md` where the Kubernetes energy goes to live. Write "istio" in it. Feel the feeling. Close the file.
+
+## The uncomfortable summary
+
+Kubernetes is genuinely great. That's what makes this hard. It is a masterpiece of engineering built by people whose problems you do not have, the way a Formula 1 car is a masterpiece built for a race you are not in. Buying one to do the school run doesn't make you fast. It makes you a person doing the school run in a Formula 1 car, refuelling it with money.
+
+Your startup will live or die on whether anyone wants the thing. Everything else is ~~architecture~~ procrastination with a control plane.
