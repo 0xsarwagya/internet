@@ -1,5 +1,5 @@
 import { getAllLearnings, getLearningBySlug } from "../../../lib/learnings";
-import { OG_SIZE, renderOgCard } from "../../../lib/og";
+import { OG_SIZE, renderOgCard } from "@0xsarwagya/ui/og";
 
 export const alt = "Learnings — eng.sarwagya.wtf";
 export const size = OG_SIZE;

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { ThemeToggle } from "./theme-toggle";
+import { ThemeToggle } from "@0xsarwagya/ui/theme-toggle";
 
 export function SiteHeader() {
   return (

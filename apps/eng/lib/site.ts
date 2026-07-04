@@ -1,4 +1,6 @@
-export const SITE = {
+import { createSite } from "@0xsarwagya/ui/site";
+
+export const SITE = createSite({
   url: "https://eng.sarwagya.wtf",
   name: "Sarwagya · Eng",
   title: "Sarwagya Singh — Engineering, written down",
@@ -11,8 +13,8 @@ export const SITE = {
   githubUrl: "https://github.com/0xsarwagya",
   mainSiteUrl: "https://sarwagya.wtf",
   locale: "en_US",
-} as const;
+});
 
 export function absoluteUrl(path: string): string {
-  return new URL(path, SITE.url).toString();
+  return SITE.absoluteUrl(path);
 }

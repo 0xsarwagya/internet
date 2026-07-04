@@ -11,12 +11,12 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@0xsarwagya/ui": "workspace:*",
     "@mdx-js/loader": "^3",
     "@mdx-js/react": "^3",
     "@next/mdx": "^16",
     "@tailwindcss/postcss": "^4",
     "@types/mdx": "^2.0.14",
-    "gray-matter": "^4",
     "next": "16.2.0",
     "postcss": "^8.5.16",
     "react": "^19.2.0",

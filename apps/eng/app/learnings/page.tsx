@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { JsonLd } from "../../components/json-ld";
+import { JsonLd } from "@0xsarwagya/ui/json-ld";
 import { getAllLearnings } from "../../lib/learnings";
 import { SITE, absoluteUrl } from "../../lib/site";
 

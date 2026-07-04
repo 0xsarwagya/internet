@@ -4,7 +4,8 @@ import { Instrument_Serif, Newsreader } from "next/font/google";
 
 import "./globals.css";
 
-import { JsonLd } from "../components/json-ld";
+import { JsonLd } from "@0xsarwagya/ui/json-ld";
+import { themeInitScript } from "@0xsarwagya/ui/theme-toggle";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 import { SITE } from "../lib/site";
@@ -103,8 +104,6 @@ const personJsonLd = {
     { "@type": "CollegeOrUniversity", name: "Universität des Saarlandes" },
   ],
 };
-
-const themeInitScript = `try{var t=localStorage.getItem("theme");var d=t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.setAttribute("data-theme",d?"dark":"light")}catch(e){}`;
 
 const websiteJsonLd = {
   "@context": "https://schema.org",

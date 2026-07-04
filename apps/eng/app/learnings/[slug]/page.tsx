@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { JsonLd } from "../../../components/json-ld";
-import { ReadingProgress } from "../../../components/reading-progress";
+import { JsonLd } from "@0xsarwagya/ui/json-ld";
+import { ReadingProgress } from "@0xsarwagya/ui/reading-progress";
 import { getAllLearnings, getLearningBySlug } from "../../../lib/learnings";
 import { SITE, absoluteUrl } from "../../../lib/site";
 

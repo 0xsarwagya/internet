@@ -1,4 +1,4 @@
-import { OG_SIZE, renderOgCard } from "../lib/og";
+import { OG_SIZE, renderOgCard } from "@0xsarwagya/ui/og";
 
 export const alt = "Sarwagya Singh — engineering, written down";
 export const size = OG_SIZE;
