@@ -1,0 +1,93 @@
+# Deploys each app to its Vercel project when it (or shared code) changes.
+#
+# Required repository secret:
+#   VERCEL_TOKEN — a Vercel token with access to the "vestcodes" team
+#     (create at https://vercel.com/account/settings/tokens)
+#
+# Optional repository variable:
+#   VERCEL_PROJECT_ID_WEB — set to the Vercel project id serving sarwagya.wtf
+#     to enable deploys of apps/web from CI.
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  VERCEL_ORG_ID: team_nGZexZ2lSQI3skFqdAn8MtZy
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.filter.outputs.web == 'true' || steps.filter.outputs.shared == 'true' }}
+      eng: ${{ steps.filter.outputs.eng == 'true' || steps.filter.outputs.shared == 'true' }}
+      bakaiti: ${{ steps.filter.outputs.bakaiti == 'true' || steps.filter.outputs.shared == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shared:
+              - 'packages/**'
+              - 'pnpm-lock.yaml'
+              - 'turbo.json'
+              - '.github/workflows/deploy.yml'
+            web:
+              - 'apps/web/**'
+              - 'vercel.json'
+            eng:
+              - 'apps/eng/**'
+            bakaiti:
+              - 'apps/bakaiti/**'
+
+  deploy:
+    needs: changes
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: eng
+            project_id: prj_YwwJqUcUJqZ3G22oOjp3NW4nAJ6g
+          - app: bakaiti
+            project_id: prj_qpT3p8RGVMvoMw5oVZiqs2qwQzhM
+          - app: web
+            project_id: ${{ vars.VERCEL_PROJECT_ID_WEB }}
+    env:
+      VERCEL_PROJECT_ID: ${{ matrix.project_id }}
+      DO_DEPLOY: ${{ needs.changes.outputs[matrix.app] == 'true' && matrix.project_id != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.DO_DEPLOY == 'true'
+
+      - uses: pnpm/action-setup@v4
+        if: env.DO_DEPLOY == 'true'
+
+      - uses: actions/setup-node@v4
+        if: env.DO_DEPLOY == 'true'
+        with:
+          node-version: 24
+
+      - name: Install Vercel CLI
+        if: env.DO_DEPLOY == 'true'
+        run: npm install -g vercel@latest
+
+      - name: Pull project settings
+        if: env.DO_DEPLOY == 'true'
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        if: env.DO_DEPLOY == 'true'
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        if: env.DO_DEPLOY == 'true'
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
