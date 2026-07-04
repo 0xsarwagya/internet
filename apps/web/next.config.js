@@ -10,6 +10,10 @@ const nextConfig = {
   outputFileTracingRoot: path.join(__dirname, "../../"),
 };
 
-const withMDX = createMDX({});
+const withMDX = createMDX({
+  options: {
+    remarkPlugins: [["remark-frontmatter"]],
+  },
+});
 
 export default withMDX(nextConfig);
