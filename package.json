@@ -1,5 +1,5 @@
 {
-  "name": "0xsarwagya",
+  "name": "internet",
   "private": true,
   "scripts": {
     "build": "turbo run build",
