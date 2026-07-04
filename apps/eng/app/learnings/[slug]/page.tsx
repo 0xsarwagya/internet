@@ -2,15 +2,36 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { JsonLd } from "@0xsarwagya/ui/json-ld";
+import {
+  JsonLd,
+  articleJsonLd,
+  breadcrumbJsonLd,
+} from "@repo/seo/json-ld";
+import { createArticleMetadata } from "@repo/seo/metadata";
+import type { ArticleMeta } from "@repo/seo/types";
 import { ReadingProgress } from "@0xsarwagya/ui/reading-progress";
-import { getAllLearnings, getLearningBySlug } from "../../../lib/learnings";
-import { SITE, absoluteUrl } from "../../../lib/site";
+import {
+  getAllLearnings,
+  getLearningBySlug,
+  type LearningMeta,
+} from "../../../lib/learnings";
+import { SITE } from "../../../lib/site";
 
 type Params = { slug: string };
 
 export function generateStaticParams(): Params[] {
   return getAllLearnings().map((l) => ({ slug: l.slug }));
+}
+
+function toArticleMeta(meta: LearningMeta): ArticleMeta {
+  return {
+    title: meta.title,
+    description: meta.summary || meta.excerpt,
+    path: `/learnings/${meta.slug}`,
+    datePublished: meta.date,
+    ...(meta.updated ? { dateModified: meta.updated } : {}),
+    tags: meta.topics,
+  };
 }
 
 export async function generateMetadata({
@@ -21,27 +42,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const meta = getLearningBySlug(slug);
   if (!meta) return { title: "Not found" };
-  const url = absoluteUrl(`/learnings/${meta.slug}`);
-  return {
-    title: meta.title,
-    description: meta.summary,
-    alternates: { canonical: `/learnings/${meta.slug}` },
-    openGraph: {
-      title: meta.title,
-      description: meta.summary,
-      url,
-      siteName: SITE.name,
-      type: "article",
-      publishedTime: meta.date,
-      authors: [SITE.author],
-      tags: meta.topics,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: meta.title,
-      description: meta.summary,
-    },
-  };
+  return createArticleMetadata(SITE, toArticleMeta(meta));
 }
 
 export default async function LearningPage({
@@ -58,28 +59,21 @@ export default async function LearningPage({
   };
   const Content = mod.default;
 
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: meta.title,
-    description: meta.summary,
-    url: absoluteUrl(`/learnings/${meta.slug}`),
-    datePublished: meta.date,
-    keywords: meta.topics.join(", "),
+  const article = toArticleMeta(meta);
+  const articleLd = articleJsonLd(SITE, article, {
+    blog: { name: "Learnings", path: "/learnings" },
     timeRequired: `PT${meta.readingMinutes}M`,
-    inLanguage: "en",
-    author: { "@type": "Person", name: SITE.author, url: SITE.mainSiteUrl },
-    isPartOf: {
-      "@type": "Blog",
-      name: "Learnings",
-      url: absoluteUrl("/learnings"),
-    },
-    mainEntityOfPage: absoluteUrl(`/learnings/${meta.slug}`),
-  };
+  });
+  const breadcrumbLd = breadcrumbJsonLd(SITE, [
+    { name: "Eng", path: "/" },
+    { name: "Learnings", path: "/learnings" },
+    { name: meta.title, path: article.path },
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-[1100px] px-5 sm:px-6 md:px-10">
-      <JsonLd data={articleJsonLd} />
+      <JsonLd data={articleLd} />
+      <JsonLd data={breadcrumbLd} />
       <ReadingProgress />
 
       <article className="mx-auto max-w-[680px] pt-20 md:pt-28">

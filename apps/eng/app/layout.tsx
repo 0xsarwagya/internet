@@ -4,7 +4,9 @@ import { Instrument_Serif, Newsreader } from "next/font/google";
 
 import "./globals.css";
 
-import { JsonLd } from "@0xsarwagya/ui/json-ld";
+import { SARWAGYA } from "@repo/seo/author";
+import { JsonLd, personJsonLd, websiteJsonLd } from "@repo/seo/json-ld";
+import { createSiteMetadata } from "@repo/seo/metadata";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 import { SITE } from "../lib/site";
@@ -30,53 +32,18 @@ const newsreader = Newsreader({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE.url),
-  title: {
-    default: SITE.title,
-    template: `%s — ${SITE.name}`,
-  },
-  description: SITE.description,
-  applicationName: SITE.name,
-  authors: [{ name: SITE.author, url: SITE.mainSiteUrl }],
-  creator: SITE.author,
-  publisher: SITE.author,
+export const metadata: Metadata = createSiteMetadata(SITE, {
   keywords: [
     "Sarwagya Singh",
     "0xsarwagya",
     "software engineer",
     "security engineering",
     "systems engineering",
+    "software architecture",
     "engineering blog",
     "long-form engineering writing",
   ],
-  openGraph: {
-    title: SITE.title,
-    description: SITE.description,
-    url: SITE.url,
-    siteName: SITE.name,
-    locale: SITE.locale,
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    site: SITE.twitterHandle,
-    creator: SITE.twitterHandle,
-    title: SITE.title,
-    description: SITE.description,
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
-    },
-  },
-};
+});
 
 export const viewport: Viewport = {
   themeColor: [
@@ -85,14 +52,7 @@ export const viewport: Viewport = {
   ],
 };
 
-const personJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  name: SITE.author,
-  alternateName: ["Sarwagya", "0xsarwagya"],
-  url: SITE.mainSiteUrl,
-  email: SITE.email,
-  sameAs: [SITE.twitterUrl, SITE.githubUrl, SITE.mainSiteUrl],
+const personLd = personJsonLd(SARWAGYA, {
   jobTitle: "Full Stack Engineer",
   worksFor: { "@type": "Organization", name: "ACTIMI" },
   alumniOf: [
@@ -102,17 +62,8 @@ const personJsonLd = {
     },
     { "@type": "CollegeOrUniversity", name: "Universität des Saarlandes" },
   ],
-};
-
-const websiteJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: SITE.name,
-  url: SITE.url,
-  description: SITE.description,
-  author: { "@type": "Person", name: SITE.author, url: SITE.mainSiteUrl },
-  inLanguage: "en",
-};
+});
+const websiteLd = websiteJsonLd(SITE);
 
 export default function RootLayout({
   children,
@@ -123,8 +74,8 @@ export default function RootLayout({
       className={`${instrumentSerif.variable} ${newsreader.variable} ${geistMono.variable}`}
     >
       <body>
-        <JsonLd data={personJsonLd} />
-        <JsonLd data={websiteJsonLd} />
+        <JsonLd data={personLd} />
+        <JsonLd data={websiteLd} />
         <SiteHeader />
         {children}
         <SiteFooter />

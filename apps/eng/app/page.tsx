@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+import { canonicalAlternates } from "@repo/seo/canonical";
 import Link from "next/link";
 
 import { EDUCATION, EXPERIENCE, PROJECTS } from "../content/profile";
@@ -6,7 +8,7 @@ import { getAllLearnings } from "../lib/learnings";
 import { SITE } from "../lib/site";
 
 export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+  alternates: canonicalAlternates(SITE, "/"),
 };
 
 const DATASHEET: { key: string; value: React.ReactNode }[] = [

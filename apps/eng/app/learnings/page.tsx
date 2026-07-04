@@ -1,43 +1,34 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { JsonLd } from "@0xsarwagya/ui/json-ld";
+import { JsonLd, blogJsonLd } from "@repo/seo/json-ld";
+import { createPageMetadata } from "@repo/seo/metadata";
 import { getAllLearnings } from "../../lib/learnings";
-import { SITE, absoluteUrl } from "../../lib/site";
+import { SITE } from "../../lib/site";
 
 const DESCRIPTION =
   "Long-form notes on things learned the slow way — security, systems, and the craft of software that has to be maintained.";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata(SITE, {
   title: "Learnings",
   description: DESCRIPTION,
-  alternates: { canonical: "/learnings" },
-  openGraph: {
-    title: "Learnings",
-    description: DESCRIPTION,
-    url: absoluteUrl("/learnings"),
-    siteName: SITE.name,
-    type: "website",
-  },
-};
+  path: "/learnings",
+});
+
+const blogLd = blogJsonLd(SITE, {
+  name: "Learnings",
+  path: "/learnings",
+  description: DESCRIPTION,
+});
 
 export default function LearningsPage() {
   const learnings = getAllLearnings();
   const years = [...new Set(learnings.map((l) => l.year))];
 
-  const blogJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Blog",
-    name: "Learnings",
-    url: absoluteUrl("/learnings"),
-    description: DESCRIPTION,
-    author: { "@type": "Person", name: SITE.author, url: SITE.mainSiteUrl },
-    inLanguage: "en",
-  };
 
   return (
     <main className="mx-auto w-full max-w-[1100px] px-5 sm:px-6 md:px-10">
-      <JsonLd data={blogJsonLd} />
+      <JsonLd data={blogLd} />
 
       <section className="pt-24 md:pt-36">
         <div className="flex items-baseline justify-between">
