@@ -1,0 +1,60 @@
+---
+title: "Your First Connection"
+description: "Request a device, connect, discover a characteristic, and read a value."
+order: 2
+---
+
+This walkthrough reads a battery level — service `180f`, characteristic
+`2a19` — because almost every BLE device exposes it.
+
+## The whole flow
+
+```ts
+import { createBluetooth } from "@0xsarwagya/agnostic-web-ble";
+import { nativeWebBluetoothAdapter } from "@0xsarwagya/agnostic-web-ble/adapters/native";
+
+const bluetooth = createBluetooth({
+  adapters: [nativeWebBluetoothAdapter()],
+});
+
+// Must run inside a user gesture (a click) on the native adapter.
+const device = await bluetooth.requestDevice({
+  filters: [{ services: ["180f"] }],
+});
+
+const connection = await device.connect();
+const service = await connection.getPrimaryService("180f");
+const characteristic = await service.getCharacteristic("2a19");
+
+const value = await characteristic.readValue();
+console.log(`battery: ${value.getUint8(0)}%`);
+```
+
+UUIDs may be written as 16-bit short forms (`"180f"`), `0x`-prefixed hex, or
+full 128-bit UUIDs — they are normalized internally.
+
+## What you should see
+
+The runtime's device chooser appears, you pick a device, and the battery
+percentage prints. `readValue()` always resolves to a `DataView`, whichever
+adapter produced it.
+
+## Common failure
+
+If `getPrimaryService` rejects with `SERVICE_NOT_FOUND`, the usual cause is
+that the service was not listed in `filters` or `optionalServices` when the
+device was requested. Runtimes only grant access to services you asked for.
+
+## Cleanup
+
+```ts
+device.on("disconnect", () => {
+  // reflect the loss in your UI
+});
+
+await device.disconnect();
+```
+
+## Next step
+
+[Subscribe to notifications](/agnostic-web-ble/docs/guides/notifications).

@@ -1,0 +1,59 @@
+---
+title: "Installation"
+description: "Install Agnostic Web BLE and create your first Bluetooth client."
+order: 1
+---
+
+Install the package:
+
+<Install package="@0xsarwagya/agnostic-web-ble" />
+
+Then create a Bluetooth client with the adapters your application supports,
+in preference order:
+
+```ts
+import { createBluetooth } from "@0xsarwagya/agnostic-web-ble";
+import { nativeWebBluetoothAdapter } from "@0xsarwagya/agnostic-web-ble/adapters/native";
+
+const bluetooth = createBluetooth({
+  adapters: [nativeWebBluetoothAdapter()],
+});
+```
+
+Selection is deterministic: the first adapter whose `isAvailable()` resolves
+true wins. Nothing is selected until the first operation runs, and you can
+always inspect the decision:
+
+```ts
+const adapter = await bluetooth.selectAdapter();
+console.log(adapter.id); // "native-web-bluetooth"
+```
+
+## Checking what this runtime can do
+
+Never branch on browser names. Ask for capabilities instead:
+
+```ts
+const capabilities = await bluetooth.capabilities();
+
+if (capabilities.requiresUserGesture) {
+  // requestDevice must be called from a click handler
+}
+```
+
+## Expected result
+
+`createBluetooth` never throws for an unsupported runtime — the failure
+surfaces on first use as a `BluetoothError` with code `UNAVAILABLE`, listing
+every adapter that was tried.
+
+## Common failure
+
+<Callout type="warning">
+Web Bluetooth requires a secure context. On `http://` pages (other than
+`localhost`), the native adapter reports itself unavailable.
+</Callout>
+
+## Next step
+
+[Your first connection](/agnostic-web-ble/docs/getting-started/first-connection).

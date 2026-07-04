@@ -1,0 +1,41 @@
+---
+title: "Introduction"
+description: "What Agnostic Web BLE is, what it refuses to be, and where to start."
+order: 1
+---
+
+Agnostic Web BLE gives web applications one Bluetooth Low Energy API across
+different runtime adapters.
+
+Your application describes how it wants to talk to a device — request,
+connect, discover, read, write, subscribe. An adapter translates that into
+whatever the current runtime actually provides. Application code never
+branches on browser names.
+
+```
+your application
+      ↓
+agnostic API
+      ↓
+adapter
+      ↓
+runtime
+```
+
+It is not a BLE protocol implementation, a polyfill, or a device SDK. It is
+the line between device logic and runtime logic.
+
+## Where to start
+
+- [Installation](/agnostic-web-ble/docs/getting-started/installation) — add the package and create a client.
+- [First connection](/agnostic-web-ble/docs/getting-started/first-connection) — request, connect, and read a value.
+- [Notifications](/agnostic-web-ble/docs/guides/notifications) — subscribe to characteristic changes.
+- [Error handling](/agnostic-web-ble/docs/guides/errors) — every failure is a typed `BluetoothError`.
+
+## Status
+
+<Callout type="warning">
+Agnostic Web BLE is in beta. The core journey — request, connect, read,
+write, subscribe — is stable in intent, but the adapter contract may still
+change before 1.0.
+</Callout>

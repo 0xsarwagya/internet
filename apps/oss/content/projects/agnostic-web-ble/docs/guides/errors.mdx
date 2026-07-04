@@ -1,0 +1,60 @@
+---
+title: "Error Handling"
+description: "Every failure is a typed BluetoothError with a stable code."
+order: 2
+---
+
+BLE fails constantly: devices disappear, permissions get denied, connections
+drop. Every failure in Agnostic Web BLE is a `BluetoothError` — no parsing
+of browser error strings.
+
+```ts
+import { isBluetoothError } from "@0xsarwagya/agnostic-web-ble";
+
+try {
+  await device.connect();
+} catch (error) {
+  if (isBluetoothError(error) && error.code === "PERMISSION_DENIED") {
+    // tell the user what they can do about it
+  }
+}
+```
+
+## The error shape
+
+```ts
+{
+  code: "CONNECTION_FAILED",   // stable, documented code
+  message: "...",              // human-readable
+  operation: "connect",        // which API call failed
+  adapterId: "native-web-bluetooth",
+  recoverable: true,           // worth retrying?
+  cause: DOMException          // original runtime error, preserved
+}
+```
+
+The original runtime error is never destroyed — it is attached as `cause`.
+
+## Error codes
+
+| Code | Meaning |
+| --- | --- |
+| `UNSUPPORTED` | The runtime cannot perform this operation at all. |
+| `UNAVAILABLE` | No adapter is available in this runtime. |
+| `PERMISSION_DENIED` | The user or runtime refused access. |
+| `DEVICE_NOT_FOUND` | No device matched, or the chooser was dismissed. |
+| `CONNECTION_FAILED` | The GATT connection could not be established. |
+| `DISCONNECTED` | The operation ran against a dropped connection. |
+| `SERVICE_NOT_FOUND` | Service missing or not requested up front. |
+| `CHARACTERISTIC_NOT_FOUND` | Characteristic missing from the service. |
+| `READ_FAILED` / `WRITE_FAILED` | The GATT operation itself failed. |
+| `SUBSCRIPTION_FAILED` | The characteristic does not notify, or the runtime refused. |
+| `TIMEOUT` | The operation was aborted or timed out. |
+| `ADAPTER_ERROR` | The adapter failed internally. |
+| `UNKNOWN` | Anything an adapter could not classify. |
+
+## Common failure
+
+The most frequent real-world code is `DEVICE_NOT_FOUND` — usually the user
+closing the device chooser. Treat it as a normal outcome, not an exception
+worth alarming anyone about.

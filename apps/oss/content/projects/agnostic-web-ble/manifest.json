@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "mdxVersion": 1,
+  "slug": "agnostic-web-ble",
+  "name": "Agnostic Web BLE",
+  "packageName": "@0xsarwagya/agnostic-web-ble",
+  "description": "A TypeScript library for using Bluetooth Low Energy across web runtimes through one consistent API.",
+  "status": "beta",
+  "license": "MIT",
+  "repository": "https://github.com/0xsarwagya/agnostic-web-ble",
+  "landing": "site/landing.mdx",
+  "docs": "docs",
+  "assets": "site/assets",
+  "demo": "site/demo",
+  "links": {
+    "repository": "https://github.com/0xsarwagya/agnostic-web-ble"
+  }
+}

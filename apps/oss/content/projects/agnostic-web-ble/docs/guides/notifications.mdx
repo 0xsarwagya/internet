@@ -1,0 +1,57 @@
+---
+title: "Notifications"
+description: "Subscribe to characteristic value changes and clean up correctly."
+order: 1
+---
+
+Subscriptions deliver normalized `DataView` values and always return an
+unsubscribe function.
+
+```ts
+const characteristic = await service.getCharacteristic("2a19");
+
+const unsubscribe = await characteristic.subscribe((value) => {
+  console.log("battery:", value.getUint8(0));
+});
+
+// later
+unsubscribe();
+```
+
+## Why it works this way
+
+Different runtimes deliver notifications through different event systems.
+The adapter normalizes them into one callback with one binary type, so
+application code written against the mock adapter behaves identically
+against hardware.
+
+## Lifecycle
+
+<Callout type="warning">
+Notifications stop when the device disconnects. Subscriptions are not
+automatically restored on reconnect — re-subscribe after a new
+`connect()`.
+</Callout>
+
+Listen for the drop and reflect it:
+
+```ts
+device.on("disconnect", () => {
+  // subscriptions are gone; update state, offer reconnect
+});
+```
+
+## Common failure
+
+`subscribe` rejects with `SUBSCRIPTION_FAILED` when the characteristic does
+not support notifications. Check the device's characteristic properties —
+not every readable characteristic notifies.
+
+## Cleanup
+
+Calling the returned unsubscribe function removes the listener and stops
+notifications best-effort. It is safe to call after a disconnect.
+
+## Next step
+
+[Error handling](/agnostic-web-ble/docs/guides/errors).
