@@ -20,6 +20,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    {
+      url: absoluteUrl("/map"),
+      lastModified: latest,
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
     ...notes.map((note) => ({
       url: absoluteUrl(`/margins/${note.slug}`),
       lastModified: new Date(note.date),
