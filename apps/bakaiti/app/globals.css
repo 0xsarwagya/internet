@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "@0xsarwagya/ui/styles/tokens.css";
-@import "@0xsarwagya/ui/styles/dark.css";
 
 @source "../../../packages/ui/src";
 
