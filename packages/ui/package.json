@@ -3,13 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
-    "./json-ld": "./src/json-ld.tsx",
     "./footer-link": "./src/footer-link.tsx",
     "./reading-progress": "./src/reading-progress.tsx",
     "./prose": "./src/prose.tsx",
     "./content": "./src/content.ts",
     "./og": "./src/og.tsx",
-    "./site": "./src/site.ts",
     "./styles/tokens.css": "./styles/tokens.css",
     "./styles/dark.css": "./styles/dark.css"
   },
