@@ -5,7 +5,6 @@
   "exports": {
     "./json-ld": "./src/json-ld.tsx",
     "./footer-link": "./src/footer-link.tsx",
-    "./theme-toggle": "./src/theme-toggle.tsx",
     "./reading-progress": "./src/reading-progress.tsx",
     "./prose": "./src/prose.tsx",
     "./content": "./src/content.ts",

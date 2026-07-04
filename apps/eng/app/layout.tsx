@@ -5,7 +5,6 @@ import { Instrument_Serif, Newsreader } from "next/font/google";
 import "./globals.css";
 
 import { JsonLd } from "@0xsarwagya/ui/json-ld";
-import { themeInitScript } from "@0xsarwagya/ui/theme-toggle";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 import { SITE } from "../lib/site";
@@ -122,10 +121,8 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${instrumentSerif.variable} ${newsreader.variable} ${geistMono.variable}`}
-      suppressHydrationWarning
     >
       <body>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <JsonLd data={personJsonLd} />
         <JsonLd data={websiteJsonLd} />
         <SiteHeader />

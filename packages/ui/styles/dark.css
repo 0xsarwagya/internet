@@ -1,6 +1,6 @@
 /* Opt-in dark mode for sites in the family that support it.
-   Import after tokens.css; requires the themeInitScript from
-   @0xsarwagya/ui/theme-toggle to stamp data-theme on <html>. */
+   Import after tokens.css. Follows the system preference; a site
+   can also force a theme by stamping data-theme on <html>. */
 
 @custom-variant dark (&:where(html[data-theme="dark"], html[data-theme="dark"] *));
 
