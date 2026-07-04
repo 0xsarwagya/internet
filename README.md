@@ -10,6 +10,7 @@ sarwagya.wtf/margins          the margins
 eng.sarwagya.wtf              the engineer
 eng.sarwagya.wtf/learnings    the learnings
 bakaiti.sarwagya.wtf          the unnecessary opinions
+oss.sarwagya.wtf              the workshop
 ```
 
 ## The map
@@ -21,25 +22,21 @@ bakaiti.sarwagya.wtf          the unnecessary opinions
                          │     internet     │
                          └────────┬─────────┘
                                   │
-                ┌─────────────────┼─────────────────┐
-                │                 │                 │
-                ▼                 ▼                 ▼
-        ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
-        │ sarwagya.wtf  │ │     eng.      │ │   bakaiti.    │
-        │               │ │ sarwagya.wtf  │ │ sarwagya.wtf  │
-        │  the person   │ │ the engineer  │ │ the opinions  │
-        └───────┬───────┘ └───────┬───────┘ └───────┬───────┘
-                │                 │                 │
-                ▼                 ▼                 │
-          ┌───────────┐     ┌───────────┐          │
-          │ /margins  │     │ /learnings│          │
-          │ what stays│     │ what stuck│          │
-          └─────┬─────┘     └─────┬─────┘          │
-                │                 │                │
-                └ · · · · · · · · ┼ · · · · · · · ·┘
-                                  ·
-                     ui · content · og · tokens
-                          @0xsarwagya/ui
+        ┌───────────┬───────────┼───────────┬───────────┐
+        ▼           ▼           ▼           ▼           ▼
+ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
+ │ sarwagya │ │   eng.   │ │ bakaiti. │ │   oss.   │
+ │   .wtf   │ │ sarwagya │ │ sarwagya │ │ sarwagya │
+ │the person│ │ engineer │ │ opinions │ │ workshop │
+ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘
+      ▼            ▼            ▼            ▼
+  /margins     /learnings     /takes    agnostic-web-ble
+  what stays   what stuck  what slipped   the proof
+      │            │            │            │
+      └ · · · · · · ┼ · · · · · · ┼ · · · · · · ┘
+                   ·            ·
+              ui · seo · tokens · og
+           @0xsarwagya/ui + @repo/seo
 ```
 
 There is an interactive version at [sarwagya.wtf/map](https://sarwagya.wtf/map).
@@ -51,18 +48,23 @@ apps/
   web/        sarwagya.wtf      — the personal site and the margins
   eng/        eng.sarwagya.wtf  — engineering, written down
   bakaiti/    bakaiti.…         — long-form opinions, cheaper than therapy
+  oss/        oss.sarwagya.wtf  — the workshop: project landings, docs, demos
 packages/
   ui/                 @0xsarwagya/ui — shared components, content pipeline,
-                      design tokens, and OG card rendering
+                      design tokens, OG cards, and the semantic project
+                      MDX vocabulary
+  seo/                @repo/seo — metadata, canonical URLs, structured data
   eslint-config/      shared lint rules
   typescript-config/  shared tsconfigs
 ```
 
 Every site is Next.js with Tailwind and MDX. Content is plain `.mdx` files with
-frontmatter, read by one shared content pipeline. The three sites share a single
+frontmatter, read by one shared content pipeline. The sites share a single
 visual family — paper, ink, stone, rust; a display serif, a text serif, and a
 mono — and diverge only in register: the personal site is a broadside, the
-engineering site is a logbook, bakaiti is a red pen.
+engineering site is a logbook, bakaiti is a red pen, and the workshop
+renders open-source project content synchronized from each project's own
+repository (see `scripts/oss-sync.mjs`).
 
 ## Philosophy
 
@@ -75,7 +77,7 @@ after six months away.
 
 ```sh
 pnpm install
-pnpm dev        # all apps: web :3000, eng :3001, bakaiti :3002
+pnpm dev        # web :3000, eng :3001, bakaiti :3002, oss :3003
 pnpm build      # build everything
 pnpm lint       # lint everything
 ```

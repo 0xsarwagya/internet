@@ -22,9 +22,9 @@ const NODES: MapNode[] = [
     sub: "0xsarwagya/internet",
     desc: "The monorepo. All of this lives in one place.",
     href: "https://github.com/0xsarwagya/internet",
-    x: 440,
+    x: 500,
     y: 70,
-    w: 200,
+    w: 210,
     h: 68,
   },
   {
@@ -33,9 +33,9 @@ const NODES: MapNode[] = [
     sub: "the person",
     desc: "Making, in slow layers — thoughts, software, and the sentences between.",
     href: "https://sarwagya.wtf",
-    x: 150,
+    x: 125,
     y: 260,
-    w: 210,
+    w: 195,
     h: 72,
   },
   {
@@ -44,20 +44,31 @@ const NODES: MapNode[] = [
     sub: "the engineer",
     desc: "Long-form engineering learnings, written to be useful.",
     href: "https://eng.sarwagya.wtf",
-    x: 440,
+    x: 375,
     y: 260,
-    w: 210,
+    w: 195,
     h: 72,
   },
   {
     id: "bakaiti",
     title: "bakaiti.sarwagya.wtf",
-    sub: "the unnecessary opinions",
+    sub: "the opinions",
     desc: "Strongly held, loosely researched. Cheaper than therapy.",
     href: "https://bakaiti.sarwagya.wtf",
-    x: 730,
+    x: 625,
     y: 260,
-    w: 210,
+    w: 195,
+    h: 72,
+  },
+  {
+    id: "oss",
+    title: "oss.sarwagya.wtf",
+    sub: "the workshop",
+    desc: "Open-source libraries, documented properly and maintained honestly.",
+    href: "https://oss.sarwagya.wtf",
+    x: 875,
+    y: 260,
+    w: 195,
     h: 72,
   },
   {
@@ -66,9 +77,9 @@ const NODES: MapNode[] = [
     sub: "what stays",
     desc: "Half-thoughts, kept as they were written.",
     href: "https://sarwagya.wtf/margins",
-    x: 150,
+    x: 125,
     y: 430,
-    w: 160,
+    w: 155,
     h: 60,
   },
   {
@@ -77,20 +88,42 @@ const NODES: MapNode[] = [
     sub: "what stuck",
     desc: "Things learned the slow way.",
     href: "https://eng.sarwagya.wtf/learnings",
-    x: 440,
+    x: 375,
     y: 430,
-    w: 160,
+    w: 155,
+    h: 60,
+  },
+  {
+    id: "takes",
+    title: "/takes",
+    sub: "what slipped out",
+    desc: "Long-form takes, delivered with unearned confidence.",
+    href: "https://bakaiti.sarwagya.wtf/takes",
+    x: 625,
+    y: 430,
+    w: 155,
+    h: 60,
+  },
+  {
+    id: "ble",
+    title: "agnostic-web-ble",
+    sub: "the proof",
+    desc: "Bluetooth Low Energy for the web, whatever your browser might be.",
+    href: "https://oss.sarwagya.wtf/agnostic-web-ble",
+    x: 875,
+    y: 430,
+    w: 175,
     h: 60,
   },
   {
     id: "packages",
-    title: "ui · content · og · tokens",
-    sub: "@0xsarwagya/ui",
-    desc: "The shared machinery. One package, three sites, the same paper and ink.",
-    href: "https://github.com/0xsarwagya/internet/tree/main/packages/ui",
-    x: 440,
-    y: 580,
-    w: 300,
+    title: "ui · seo · tokens · og",
+    sub: "@0xsarwagya/ui + @repo/seo",
+    desc: "The shared machinery. Same paper and ink beneath all four sites.",
+    href: "https://github.com/0xsarwagya/internet/tree/main/packages",
+    x: 500,
+    y: 590,
+    w: 320,
     h: 48,
     faint: true,
   },
@@ -100,11 +133,15 @@ const EDGES: { from: string; to: string; dashed?: boolean }[] = [
   { from: "internet", to: "web" },
   { from: "internet", to: "eng" },
   { from: "internet", to: "bakaiti" },
+  { from: "internet", to: "oss" },
   { from: "web", to: "margins" },
   { from: "eng", to: "learnings" },
+  { from: "bakaiti", to: "takes" },
+  { from: "oss", to: "ble" },
   { from: "web", to: "packages", dashed: true },
   { from: "eng", to: "packages", dashed: true },
   { from: "bakaiti", to: "packages", dashed: true },
+  { from: "oss", to: "packages", dashed: true },
 ];
 
 function byId(id: string): MapNode {
@@ -123,10 +160,10 @@ export function InternetMap() {
       </p>
 
       <svg
-        viewBox="0 0 880 640"
+        viewBox="0 0 1000 650"
         className="mt-6 w-full"
         role="img"
-        aria-label="A map of the sites and packages in this corner of the internet"
+        aria-label="A map of the sites, routes, projects, and packages in this corner of the internet"
       >
         {EDGES.map((edge) => {
           const from = byId(edge.from);
@@ -182,7 +219,7 @@ export function InternetMap() {
                     ? `font-mono ${isActive ? "fill-rust" : "fill-ink/55"}`
                     : `font-serif ${isActive ? "fill-rust" : "fill-ink"}`
                 }
-                style={{ fontSize: node.faint ? 12 : node.id === "internet" ? 22 : 17 }}
+                style={{ fontSize: node.faint ? 12 : node.id === "internet" ? 22 : 16 }}
               >
                 {node.title}
               </text>
