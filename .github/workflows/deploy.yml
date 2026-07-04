@@ -3,10 +3,6 @@
 # Required repository secret:
 #   VERCEL_TOKEN — a Vercel token with access to the "vestcodes" team
 #     (create at https://vercel.com/account/settings/tokens)
-#
-# Optional repository variable:
-#   VERCEL_PROJECT_ID_WEB — set to the Vercel project id serving sarwagya.wtf
-#     to enable deploys of apps/web from CI.
 
 name: Deploy
 
@@ -60,7 +56,7 @@ jobs:
           - app: bakaiti
             project_id: prj_qpT3p8RGVMvoMw5oVZiqs2qwQzhM
           - app: web
-            project_id: ${{ vars.VERCEL_PROJECT_ID_WEB }}
+            project_id: prj_67zm2FPbYeaAFIGZ46i2KmEDI3rY
     env:
       VERCEL_PROJECT_ID: ${{ matrix.project_id }}
       DO_DEPLOY: ${{ needs.changes.outputs[matrix.app] == 'true' && matrix.project_id != '' }}
