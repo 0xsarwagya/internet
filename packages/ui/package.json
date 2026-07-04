@@ -6,6 +6,7 @@
     "./footer-link": "./src/footer-link.tsx",
     "./reading-progress": "./src/reading-progress.tsx",
     "./prose": "./src/prose.tsx",
+    "./mdx": "./src/mdx/registry.tsx",
     "./content": "./src/content.ts",
     "./og": "./src/og.tsx",
     "./styles/tokens.css": "./styles/tokens.css",
