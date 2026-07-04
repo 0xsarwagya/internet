@@ -25,6 +25,7 @@ jobs:
       web: ${{ steps.filter.outputs.web == 'true' || steps.filter.outputs.shared == 'true' }}
       eng: ${{ steps.filter.outputs.eng == 'true' || steps.filter.outputs.shared == 'true' }}
       bakaiti: ${{ steps.filter.outputs.bakaiti == 'true' || steps.filter.outputs.shared == 'true' }}
+      oss: ${{ steps.filter.outputs.oss == 'true' || steps.filter.outputs.shared == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -43,6 +44,9 @@ jobs:
               - 'apps/eng/**'
             bakaiti:
               - 'apps/bakaiti/**'
+            oss:
+              - 'apps/oss/**'
+              - 'scripts/oss-sync.mjs'
 
   deploy:
     needs: changes
@@ -57,6 +61,8 @@ jobs:
             project_id: prj_qpT3p8RGVMvoMw5oVZiqs2qwQzhM
           - app: web
             project_id: prj_67zm2FPbYeaAFIGZ46i2KmEDI3rY
+          - app: oss
+            project_id: prj_6HXBmbUaEXVqUPvlVybTYvdKRFiK
     env:
       VERCEL_PROJECT_ID: ${{ matrix.project_id }}
       DO_DEPLOY: ${{ needs.changes.outputs[matrix.app] == 'true' && matrix.project_id != '' }}
