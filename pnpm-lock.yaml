@@ -10,7 +10,7 @@ importers:
     devDependencies:
       next:
         specifier: 16.2.0
-        version: 16.2.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 16.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       prettier:
         specifier: ^3.7.4
         version: 3.7.4
@@ -156,7 +156,7 @@ importers:
     dependencies:
       '@0xsarwagya/agnostic-web-ble':
         specifier: github:0xsarwagya/agnostic-web-ble
-        version: https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/f991fa3758d872eefd431f9973f7d8eb64ec0869
+        version: https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/91141d133c5877664639a8ae813010ac9d0ba380
       '@0xsarwagya/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -320,7 +320,7 @@ importers:
         version: 5.2.0(eslint@9.39.1(jiti@2.7.0))
       eslint-plugin-turbo:
         specifier: ^2.7.1
-        version: 2.7.1(eslint@9.39.1(jiti@2.7.0))(turbo@2.10.2)
+        version: 2.7.1(eslint@9.39.1(jiti@2.7.0))(turbo@2.10.3)
       globals:
         specifier: ^16.5.0
         version: 16.5.0
@@ -350,7 +350,7 @@ importers:
         version: 9.39.1(jiti@2.7.0)
       next:
         specifier: 16.2.0
-        version: 16.2.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 16.2.0(react-dom@19.2.7(react@19.2.0))(react@19.2.0)
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -402,8 +402,8 @@ importers:
 
 packages:
 
-  '@0xsarwagya/agnostic-web-ble@https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/f991fa3758d872eefd431f9973f7d8eb64ec0869':
-    resolution: {tarball: https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/f991fa3758d872eefd431f9973f7d8eb64ec0869}
+  '@0xsarwagya/agnostic-web-ble@https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/91141d133c5877664639a8ae813010ac9d0ba380':
+    resolution: {tarball: https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/91141d133c5877664639a8ae813010ac9d0ba380}
     version: 0.1.0
 
   '@alloc/quick-lru@5.2.0':
@@ -810,8 +810,18 @@ packages:
     cpu: [x64]
     os: [darwin]
 
+  '@turbo/darwin-64@2.10.3':
+    resolution: {integrity: sha512-guuiO2kKc7yUQFU2jhWyM/BrYGD/brqb0+JvJIXTQ/QI1NlWfHZ1id50kkkOWqxmBiDc8DgW2orfY85pQIc7gw==}
+    cpu: [x64]
+    os: [darwin]
+
   '@turbo/darwin-arm64@2.10.2':
     resolution: {integrity: sha512-/Cq0joWnuMjDPfhjbFP4sv+C/7gkQ415zlaO4XUzD5EZxbtrKgXKvuuydMvogG8GeUnN1aDltW71RlmEfpjbyw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@turbo/darwin-arm64@2.10.3':
+    resolution: {integrity: sha512-UglEDl/r1/h5Vw6oS6cEE29Jugz2sDLxHCSupNznKatj1fDMRXFqYKFcbvm8RTFhtYPI45NxkrPNo9BqNychBg==}
     cpu: [arm64]
     os: [darwin]
 
@@ -820,8 +830,18 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  '@turbo/linux-64@2.10.3':
+    resolution: {integrity: sha512-KuQxaPWD7OBmwEZqO0sgijwcuXR5eMWbo7BEt2m1D2Q3RylJDj7WMcJ0Btv2VJA0QC+khzAaTAm1yWowJ0CWAw==}
+    cpu: [x64]
+    os: [linux]
+
   '@turbo/linux-arm64@2.10.2':
     resolution: {integrity: sha512-Wcng1i2kaKmXutmwxT9MUoYZvdaIekXAdlGr4+0TpgbhGLw7nDuEcRBFrxb5BbRoX1d1q8SpdRxLc45TvDZIdQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@turbo/linux-arm64@2.10.3':
+    resolution: {integrity: sha512-DPkIKQ+6p0sho3Cx/e/A3F+AKgXQJA+z//cHsTcyyM1YWRGSYA0UTP8NUpb4iS2tVBSniGwmjRUr73hpq8kcDg==}
     cpu: [arm64]
     os: [linux]
 
@@ -830,8 +850,18 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@turbo/windows-64@2.10.3':
+    resolution: {integrity: sha512-8NvFAze9D4PsosZAnK3aGqHz2vLzREz9lNIxLgfE0jRchq2sZQE190cwFm7WX17yg3ftPvwCvWH3rhLbG1UHCQ==}
+    cpu: [x64]
+    os: [win32]
+
   '@turbo/windows-arm64@2.10.2':
     resolution: {integrity: sha512-Gf+S7ICAdimT/n02bOuVWKvhHnct/HYjZg3oBNIz5hZ9ZyWHbQim9J3P5Qip8WpX0ksxF7eaBVziJCuLnjhqDg==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@turbo/windows-arm64@2.10.3':
+    resolution: {integrity: sha512-AqjqV5cHbFa0YRaQ+Dyw6lSm6as4h/Uf8LcZ7VN8i+Odr23ShFD5SUvVAR1d3rZqibFVs9c0VdtXdfQfkdcs3A==}
     cpu: [arm64]
     os: [win32]
 
@@ -2078,11 +2108,20 @@ packages:
     peerDependencies:
       react: ^19.2.0
 
+  react-dom@19.2.7:
+    resolution: {integrity: sha512-t0BRVXvbiE/o20Hfw669rLbMCDWtYZLvmJigy2f0MxsXF+71pxhR3xOkspmsO8h3ZlNzyibAmtCa3l4lYKk6gQ==}
+    peerDependencies:
+      react: ^19.2.7
+
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
   react@19.2.0:
     resolution: {integrity: sha512-tmbWg6W31tQLeB5cdIBOicJDJRR2KzXsV7uSK9iNfLWQ5bIZfxuPEHp7M8wiHyHnn0DD1i7w3Zmin0FtkrwoCQ==}
+    engines: {node: '>=0.10.0'}
+
+  react@19.2.7:
+    resolution: {integrity: sha512-HNe9WslTbXmFK8o8cmwgAeJFSBvt1bPdHCVKtaaV+WlAN36mpT4hcRpwbf3fY56ar2oIXzsBpOAiIRHAdY0OlQ==}
     engines: {node: '>=0.10.0'}
 
   recma-build-jsx@1.0.0:
@@ -2317,6 +2356,10 @@ packages:
     resolution: {integrity: sha512-wTExrNrRjB8qzIcg+ZLm0A3GFNLDsWNwdS/RBXB0FPrBDyzk3i96Yx+TxWZC7a0k1SIreFB8ciUbxjmEqTH8IQ==}
     hasBin: true
 
+  turbo@2.10.3:
+    resolution: {integrity: sha512-uZIqzfgtWbyqu1Tqwdd0giRnPGgL0ejbcdF8eZLJhtTTVSrOgArZGzYeXTD6XNcc7ANgdhqex11Y9bHBeyiQLQ==}
+    hasBin: true
+
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
@@ -2419,7 +2462,7 @@ packages:
 
 snapshots:
 
-  '@0xsarwagya/agnostic-web-ble@https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/f991fa3758d872eefd431f9973f7d8eb64ec0869': {}
+  '@0xsarwagya/agnostic-web-ble@https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/91141d133c5877664639a8ae813010ac9d0ba380': {}
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -2769,19 +2812,37 @@ snapshots:
   '@turbo/darwin-64@2.10.2':
     optional: true
 
+  '@turbo/darwin-64@2.10.3':
+    optional: true
+
   '@turbo/darwin-arm64@2.10.2':
+    optional: true
+
+  '@turbo/darwin-arm64@2.10.3':
     optional: true
 
   '@turbo/linux-64@2.10.2':
     optional: true
 
+  '@turbo/linux-64@2.10.3':
+    optional: true
+
   '@turbo/linux-arm64@2.10.2':
+    optional: true
+
+  '@turbo/linux-arm64@2.10.3':
     optional: true
 
   '@turbo/windows-64@2.10.2':
     optional: true
 
+  '@turbo/windows-64@2.10.3':
+    optional: true
+
   '@turbo/windows-arm64@2.10.2':
+    optional: true
+
+  '@turbo/windows-arm64@2.10.3':
     optional: true
 
   '@types/debug@4.1.13':
@@ -3298,11 +3359,11 @@ snapshots:
       string.prototype.matchall: 4.0.12
       string.prototype.repeat: 1.0.0
 
-  eslint-plugin-turbo@2.7.1(eslint@9.39.1(jiti@2.7.0))(turbo@2.10.2):
+  eslint-plugin-turbo@2.7.1(eslint@9.39.1(jiti@2.7.0))(turbo@2.10.3):
     dependencies:
       dotenv: 16.0.3
       eslint: 9.39.1(jiti@2.7.0)
-      turbo: 2.10.2
+      turbo: 2.10.3
 
   eslint-scope@8.4.0:
     dependencies:
@@ -4368,6 +4429,54 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
+  next@16.2.0(react-dom@19.2.7(react@19.2.0))(react@19.2.0):
+    dependencies:
+      '@next/env': 16.2.0
+      '@swc/helpers': 0.5.15
+      baseline-browser-mapping: 2.10.8
+      caniuse-lite: 1.0.30001761
+      postcss: 8.4.31
+      react: 19.2.0
+      react-dom: 19.2.7(react@19.2.0)
+      styled-jsx: 5.1.6(react@19.2.0)
+    optionalDependencies:
+      '@next/swc-darwin-arm64': 16.2.0
+      '@next/swc-darwin-x64': 16.2.0
+      '@next/swc-linux-arm64-gnu': 16.2.0
+      '@next/swc-linux-arm64-musl': 16.2.0
+      '@next/swc-linux-x64-gnu': 16.2.0
+      '@next/swc-linux-x64-musl': 16.2.0
+      '@next/swc-win32-arm64-msvc': 16.2.0
+      '@next/swc-win32-x64-msvc': 16.2.0
+      sharp: 0.34.5
+    transitivePeerDependencies:
+      - '@babel/core'
+      - babel-plugin-macros
+
+  next@16.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+    dependencies:
+      '@next/env': 16.2.0
+      '@swc/helpers': 0.5.15
+      baseline-browser-mapping: 2.10.8
+      caniuse-lite: 1.0.30001761
+      postcss: 8.4.31
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      styled-jsx: 5.1.6(react@19.2.7)
+    optionalDependencies:
+      '@next/swc-darwin-arm64': 16.2.0
+      '@next/swc-darwin-x64': 16.2.0
+      '@next/swc-linux-arm64-gnu': 16.2.0
+      '@next/swc-linux-arm64-musl': 16.2.0
+      '@next/swc-linux-x64-gnu': 16.2.0
+      '@next/swc-linux-x64-musl': 16.2.0
+      '@next/swc-win32-arm64-msvc': 16.2.0
+      '@next/swc-win32-x64-msvc': 16.2.0
+      sharp: 0.34.5
+    transitivePeerDependencies:
+      - '@babel/core'
+      - babel-plugin-macros
+
   object-assign@4.1.1: {}
 
   object-inspect@1.13.4: {}
@@ -4488,9 +4597,21 @@ snapshots:
       react: 19.2.0
       scheduler: 0.27.0
 
+  react-dom@19.2.7(react@19.2.0):
+    dependencies:
+      react: 19.2.0
+      scheduler: 0.27.0
+
+  react-dom@19.2.7(react@19.2.7):
+    dependencies:
+      react: 19.2.7
+      scheduler: 0.27.0
+
   react-is@16.13.1: {}
 
   react@19.2.0: {}
+
+  react@19.2.7: {}
 
   recma-build-jsx@1.0.0:
     dependencies:
@@ -4810,6 +4931,11 @@ snapshots:
       client-only: 0.0.1
       react: 19.2.0
 
+  styled-jsx@5.1.6(react@19.2.7):
+    dependencies:
+      client-only: 0.0.1
+      react: 19.2.7
+
   supports-color@7.2.0:
     dependencies:
       has-flag: 4.0.0
@@ -4847,6 +4973,15 @@ snapshots:
       '@turbo/linux-arm64': 2.10.2
       '@turbo/windows-64': 2.10.2
       '@turbo/windows-arm64': 2.10.2
+
+  turbo@2.10.3:
+    optionalDependencies:
+      '@turbo/darwin-64': 2.10.3
+      '@turbo/darwin-arm64': 2.10.3
+      '@turbo/linux-64': 2.10.3
+      '@turbo/linux-arm64': 2.10.3
+      '@turbo/windows-64': 2.10.3
+      '@turbo/windows-arm64': 2.10.3
 
   type-check@0.4.0:
     dependencies:
