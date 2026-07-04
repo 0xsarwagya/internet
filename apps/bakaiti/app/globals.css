@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@import "@0xsarwagya/ui/styles/tokens.css";
+@import "@0xsarwagya/ui/styles/dark.css";
+
+@source "../../../packages/ui/src";
+
+@layer base {
+  body {
+    font-family: var(--font-body);
+  }
+}
+
+/* The editor's red pen: sarcastic corrections in running text. */
+.redline {
+  text-decoration: line-through;
+  text-decoration-color: var(--color-rust);
+  text-decoration-thickness: 2px;
+  color: color-mix(in oklab, var(--color-ink) 50%, transparent);
+}
