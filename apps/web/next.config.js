@@ -8,6 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig = {
   pageExtensions: ["ts", "tsx", "js", "jsx", "md", "mdx"],
   outputFileTracingRoot: path.join(__dirname, "../../"),
+  transpilePackages: ["@0xsarwagya/ui"],
 };
 
 const withMDX = createMDX({

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { JsonLd } from "../../components/json-ld";
+import { JsonLd } from "@0xsarwagya/ui/json-ld";
 import { MarginsList } from "../../components/margins/margins-list";
 import { getAllNotes } from "../../lib/margins";
 import { SITE, absoluteUrl } from "../../lib/site";

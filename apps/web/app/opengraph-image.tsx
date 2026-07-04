@@ -1,33 +1,20 @@
 import { ImageResponse } from "next/og";
 
+import { OG_SIZE, loadGoogleFont } from "@0xsarwagya/ui/og";
+
 import { SITE } from "../lib/site";
 
 export const alt = `${SITE.name} — software, writing, systems`;
-export const size = { width: 1200, height: 630 };
+export const size = OG_SIZE;
 export const contentType = "image/png";
-
-async function loadInstrumentSerif(text: string): Promise<ArrayBuffer | null> {
-  try {
-    const css = await (
-      await fetch(
-        `https://fonts.googleapis.com/css2?family=Instrument+Serif&text=${encodeURIComponent(text)}`,
-      )
-    ).text();
-    const match = css.match(
-      /src: url\((.+?)\) format\('(?:opentype|truetype)'\)/,
-    );
-    if (!match?.[1]) return null;
-    const res = await fetch(match[1]);
-    return res.ok ? await res.arrayBuffer() : null;
-  } catch {
-    return null;
-  }
-}
 
 export default async function OpengraphImage() {
   const wordmark = "Sarwagya.";
   const tagline = "Making, in slow layers — thoughts, software, and the sentences between.";
-  const font = await loadInstrumentSerif(`${wordmark}${tagline}sarwagya.wtf`);
+  const font = await loadGoogleFont(
+    "Instrument Serif",
+    `${wordmark}${tagline}sarwagya.wtf`,
+  );
 
   return new ImageResponse(
     (

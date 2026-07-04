@@ -1,7 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import path from "node:path";
-
-import matter from "gray-matter";
+import { createContentSource } from "@0xsarwagya/ui/content";
 
 import type { MarginCategory } from "./margins-shared";
 
@@ -14,74 +11,26 @@ export type MarginMeta = {
   date: string;
   year: string;
   category: MarginCategory;
-  filepath: string;
   excerpt: string;
+  filepath: string;
 };
 
-function toExcerpt(markdown: string): string {
-  const firstParagraph = markdown
-    .split(/\n\s*\n/)
-    .map((block) => block.trim())
-    .find((block) => block.length > 0 && !block.startsWith("#"));
-  if (!firstParagraph) return "";
-  const plain = firstParagraph
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/[*_`>#]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (plain.length <= 160) return plain;
-  return `${plain.slice(0, 157).replace(/\s+\S*$/, "")}…`;
-}
-
-const ROOT = path.join(process.cwd(), "content", "margins");
-
-function walk(dir: string): string[] {
-  const files: string[] = [];
-  for (const entry of readdirSync(dir)) {
-    const full = path.join(dir, entry);
-    const st = statSync(full);
-    if (st.isDirectory()) {
-      files.push(...walk(full));
-    } else if (entry.endsWith(".mdx")) {
-      files.push(full);
-    }
-  }
-  return files;
-}
+const source = createContentSource("content/margins");
 
 let cache: MarginMeta[] | null = null;
 
 export function getAllNotes(): MarginMeta[] {
   if (cache) return cache;
-  const files = walk(ROOT);
-  const notes: MarginMeta[] = files.map((filepath) => {
-    const raw = readFileSync(filepath, "utf8");
-    const parsed = matter(raw);
-    const data = parsed.data as {
-      title?: unknown;
-      date?: unknown;
-      category?: unknown;
-    };
-    const slug = path.basename(filepath, ".mdx");
-    const title = String(data.title ?? slug);
-    const date =
-      data.date instanceof Date
-        ? data.date.toISOString().slice(0, 10)
-        : String(data.date ?? "1970-01-01");
-    const category = String(data.category ?? "philosophy") as MarginCategory;
-    return {
-      slug,
-      title,
-      date,
-      year: date.slice(0, 4),
-      category,
-      filepath,
-      excerpt: toExcerpt(parsed.content),
-    };
-  });
-  notes.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
-  cache = notes;
-  return notes;
+  cache = source.all().map((e) => ({
+    slug: e.slug,
+    title: e.title,
+    date: e.date,
+    year: e.year,
+    category: (e.category || "philosophy") as MarginCategory,
+    excerpt: e.excerpt,
+    filepath: e.filepath,
+  }));
+  return cache;
 }
 
 export function getNoteMetaBySlug(slug: string): MarginMeta | undefined {

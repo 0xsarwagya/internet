@@ -11,7 +11,7 @@ import { AmbientDust } from "../components/chrome/ambient-dust";
 import { ShootingStar } from "../components/chrome/shooting-star";
 import { ChromeIndex } from "../components/chrome/chrome-index";
 import { KonamiListener } from "../components/chrome/konami-listener";
-import { JsonLd } from "../components/json-ld";
+import { JsonLd } from "@0xsarwagya/ui/json-ld";
 import { getAllNotes } from "../lib/margins";
 import { SITE } from "../lib/site";
 
