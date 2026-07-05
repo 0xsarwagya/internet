@@ -227,7 +227,7 @@ export default function DurableLocalDemo() {
         )}
         {status && status.evictionRisk === "ios-capped" ? (
           <p className="mt-3 border-l-2 border-rust pl-3 text-[12px] text-rust">
-            Safari's ITP still evicts this tab after 7 days without
+            Safari&apos;s ITP still evicts this tab after 7 days without
             interaction. Install as a Home Screen web app to keep the
             workspace.
           </p>
@@ -248,7 +248,7 @@ export default function DurableLocalDemo() {
         <p className="mt-2 text-[13px] text-ink/80">
           Open this page in a second tab and change the workspace there.
           This tab updates. Storage is truth; the notification channel
-          just says "look again".
+          just says &ldquo;look again&rdquo;.
         </p>
       </section>
 
