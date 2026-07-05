@@ -118,6 +118,16 @@ const status = await durable.storage();
 const granted = await durable.requestPersistence();
 ```
 
+## Used in Local
+
+[Local](https://local.sarwagya.wtf) uses `durable-local` to keep each
+peer's chat history alive across reloads. One slot per peer, one
+`update()` per received message, atomic commits, no database. When a
+peer's public key changes on reconnect, the slot refuses to attach —
+that pinning is the only thing between recovered identity and silent
+peer substitution. Source:
+[github.com/0xsarwagya/local](https://github.com/0xsarwagya/local).
+
 <ProjectLinks
   docs="/durable-local/docs"
   demo="/durable-local/demo"
