@@ -1,0 +1,288 @@
+---
+title: "Custom adapters"
+description: "Implement the BluetoothAdapter contract and plug any transport into the same client surface — filesystem, WebSocket bridge, mock hardware."
+order: 4
+---
+
+<Callout type="note">
+The `BluetoothAdapter` interface is the stable public extension point. Everything else — `Bluetooth`, `BluetoothDevice`, `BluetoothConnection` — is what the library builds on top of it. If your adapter satisfies the contract, `createBluetooth` treats it identically to the shipped native adapter.
+</Callout>
+
+## The promise
+
+Write an object that implements `BluetoothAdapter`. Pass it to `createBluetooth`:
+
+```ts
+import { createBluetooth } from "@0xsarwagya/agnostic-web-ble";
+import { nativeWebBluetoothAdapter } from "@0xsarwagya/agnostic-web-ble/adapters/native";
+import { myAdapter } from "./my-adapter";
+
+const bt = createBluetooth({
+  adapters: [nativeWebBluetoothAdapter(), myAdapter()],
+});
+
+// Everything below this line is identical whether myAdapter or native wins.
+const device = await bt.requestDevice({ filters: [{ services: ["180f"] }] });
+```
+
+Selection is deterministic — `createBluetooth` awaits `isAvailable()` on each candidate in order and picks the first that returns truthy. Put more specific adapters earlier in the array.
+
+## The contract
+
+Verbatim from `src/types.ts`:
+
+```ts
+export type Unsubscribe = () => void;
+
+export type BluetoothCapabilities = {
+  requestDevice: boolean;
+  notifications: boolean;
+  writeWithoutResponse: boolean;
+  /** true when device access requires a user gesture (e.g. a click). */
+  requiresUserGesture: boolean;
+};
+
+export type AdapterAvailability = {
+  available: boolean;
+  reason?: string;
+  docsUrl?: string;
+};
+
+export interface BluetoothAdapter {
+  readonly id: string;
+  isAvailable(): boolean | Promise<boolean>;
+  describeAvailability?(): AdapterAvailability | Promise<AdapterAvailability>;
+  capabilities(): Promise<BluetoothCapabilities>;
+  requestDevice(options: RequestDeviceOptions): Promise<BluetoothDevice>;
+}
+```
+
+Method-by-method:
+
+- **`id`** — Stable string. Used in error messages and logs. Convention: kebab-case, transport-first (`native-web-bluetooth`, `websocket-bridge`, `fs-simulation`).
+- **`isAvailable()`** — Cheap synchronous or async probe. No side effects, no user prompts. Return `true` only if `requestDevice` has a real chance of succeeding in the current runtime.
+- **`describeAvailability()`** — Optional. Structured version of `isAvailable()`. Return a `reason` and `docsUrl` when unavailable so the client can render an honest "not supported here" state without a try/catch on `requestDevice`.
+- **`capabilities()`** — Honest report of what this adapter can actually do in this runtime. Called after selection; safe to be async and probe.
+- **`requestDevice(options)`** — Return a `BluetoothDevice` the caller can `connect()` to. Respect `options.signal`. Throw `BluetoothError` on failure.
+
+Everything downstream — `connect`, `getPrimaryService`, `readValue`, `subscribe` — lives on the objects your `requestDevice` returns. The adapter is the entry point; the rest is your own object graph.
+
+## Capability reporting
+
+`capabilities()` is not a wish list. It is what the client can rely on right now.
+
+| Field | Meaning |
+|---|---|
+| `requestDevice` | You can produce a `BluetoothDevice`. Almost always `true` if `isAvailable()` returned `true`. |
+| `notifications` | `characteristic.subscribe()` works. If `false`, callers should poll `readValue()`. |
+| `writeWithoutResponse` | `writeValue(v, { withoutResponse: true })` skips the ack round-trip. If `false`, the option is ignored and writes always ack. |
+| `requiresUserGesture` | Calling `requestDevice` outside a user gesture (click, keypress) will fail. Native is `true`; a WebSocket bridge or simulation is `false`. |
+
+Clients read this once via `bt.capabilities()` and branch UI on it. Lie in this object and you break every consumer.
+
+## Error taxonomy
+
+Every failure your adapter reports must be a `BluetoothError` with one of these codes (from `src/errors.ts`):
+
+```
+UNSUPPORTED               UNAVAILABLE               PERMISSION_DENIED
+DEVICE_NOT_FOUND          CONNECTION_FAILED         DISCONNECTED
+SERVICE_NOT_FOUND         CHARACTERISTIC_NOT_FOUND  READ_FAILED
+WRITE_FAILED              SUBSCRIPTION_FAILED       TIMEOUT
+ADAPTER_ERROR             UNKNOWN
+```
+
+Rule of thumb:
+
+- Runtime doesn't ship the API at all → `UNSUPPORTED`.
+- No adapter reports available in this runtime → `UNAVAILABLE` (thrown by the client, not by you).
+- Bridge / socket / helper crashed → `ADAPTER_ERROR`.
+- User dismissed the chooser → `DEVICE_NOT_FOUND`.
+- User denied a permission prompt → `PERMISSION_DENIED`.
+- Everything you can't classify → `UNKNOWN`.
+
+Preserve the original error via `cause`. Set `recoverable: true` only if a retry has a real chance of working (e.g. a transient disconnect, not a permission denial):
+
+```ts
+throw new BluetoothError({
+  code: "READ_FAILED",
+  message: `Read of ${uuid} failed: ${err.message}`,
+  operation: "readValue",
+  adapterId: "websocket-bridge",
+  recoverable: true,
+  cause: err,
+});
+```
+
+Always populate `operation` — it's what turns a generic failure into a debuggable one.
+
+## Example one — filesystem-backed simulation adapter
+
+Small. No networking. Reads canned devices from JSON. Useful for demos, tests, and reproducing bug reports.
+
+```ts
+import fs from "node:fs/promises";
+import type {
+  BluetoothAdapter,
+  RequestDeviceOptions,
+} from "@0xsarwagya/agnostic-web-ble";
+import { BluetoothError } from "@0xsarwagya/agnostic-web-ble";
+
+type Fixture = {
+  id: string;
+  name: string;
+  services: { uuid: string; characteristics: { uuid: string; value: string }[] }[];
+};
+
+export function fsSimulationAdapter(path: string): BluetoothAdapter {
+  const load = () =>
+    fs.readFile(path, "utf8").then((s) => JSON.parse(s) as Fixture[]);
+  return {
+    id: "fs-simulation",
+    async isAvailable() {
+      try { await fs.access(path); return true; } catch { return false; }
+    },
+    async capabilities() {
+      return {
+        requestDevice: true,
+        notifications: false,
+        writeWithoutResponse: false,
+        requiresUserGesture: false,
+      };
+    },
+    async requestDevice(options: RequestDeviceOptions) {
+      const fixtures = await load();
+      const picked = fixtures.find((f) => matches(f, options));
+      if (!picked) {
+        throw new BluetoothError({
+          code: "DEVICE_NOT_FOUND",
+          operation: "requestDevice",
+          adapterId: "fs-simulation",
+          message: "No fixture matched filters.",
+        });
+      }
+      return buildDevice(picked);
+    },
+  };
+}
+```
+
+Ship it as a peer package. Point tests at a fixtures directory. Reproducing a customer's exact device is now a JSON file.
+
+## Example two — WebSocket bridge adapter
+
+The interesting one. A tiny helper on the user's machine drives real Bluetooth (via BlueZ, CoreBluetooth, WinRT), and the browser talks to it over `ws://127.0.0.1`. This is how you get Bluetooth in Firefox, in Safari, in a WebView that lacks the API, or in an Electron renderer without dragging Node into your bundle.
+
+### The pattern
+
+- **Helper binds `127.0.0.1` only.** Never `0.0.0.0`. LAN is not your friend.
+- **Wire protocol is JSON over a single WebSocket.** Verbs map 1:1 to adapter methods: `requestDevice`, `connect`, `disconnect`, `getPrimaryService`, `getCharacteristic`, `readValue`, `writeValue`, `subscribe`, `unsubscribe`. Each request has `{ id, verb, params }`; each reply has `{ id, ok, result | error }`. Notifications from the helper are unsolicited frames with `{ event, handle, value? }`.
+- **Handles, not pointers.** The helper returns opaque string handles for devices, connections, services, characteristics. The client adapter wraps them in the object graph the library expects. Never leak handles into user-visible APIs.
+- **Origin allowlist.** The helper reads `Origin` on the WS upgrade and rejects anything not on its configured list. Ship an empty allowlist by default; the user adds their app's origin at install.
+- **Per-launch token, ≥128 bits.** The helper generates a fresh token on start, prints it to the terminal, and requires it in the first frame within **1 second**. Wrong token or timeout → close. **Three failed attempts from one origin → refuse further connections until helper restart.**
+- **Firefox has no Private Network Access.** A page on the open internet can, in principle, reach `127.0.0.1:port`. The token is the only real barrier. Treat it like a password: never log it, never persist it in the browser, never put it in a URL. Copy-paste from the terminal into a one-time prompt in your app.
+- **Ship prebuilt binaries.** Install UX is `curl | sh` for macOS/Linux, an `.exe` for Windows. Source available; ask the paranoid to build from it.
+
+### Sketch
+
+```ts
+import type {
+  BluetoothAdapter,
+  RequestDeviceOptions,
+} from "@0xsarwagya/agnostic-web-ble";
+import { BluetoothError } from "@0xsarwagya/agnostic-web-ble";
+
+export function websocketBridgeAdapter(opts: {
+  url: string;
+  token: string;
+}): BluetoothAdapter {
+  let socket: WebSocket | null = null;
+  const pending = new Map<
+    string,
+    { resolve: (v: unknown) => void; reject: (e: unknown) => void }
+  >();
+
+  const connect = () =>
+    new Promise<WebSocket>((resolve, reject) => {
+      if (socket && socket.readyState === WebSocket.OPEN) return resolve(socket);
+      const ws = new WebSocket(opts.url);
+      ws.onopen = () =>
+        ws.send(JSON.stringify({ verb: "hello", token: opts.token }));
+      ws.onmessage = (ev) => {
+        const msg = JSON.parse(String(ev.data));
+        if (msg.verb === "hello-ok") { socket = ws; resolve(ws); return; }
+        if (msg.verb === "hello-fail") {
+          ws.close();
+          reject(new BluetoothError({
+            code: "PERMISSION_DENIED",
+            operation: "requestDevice",
+            adapterId: "websocket-bridge",
+            message: "Bridge rejected token.",
+          }));
+          return;
+        }
+        // ...dispatch notifications, disconnects, request replies by id
+      };
+      ws.onerror = () =>
+        reject(new BluetoothError({
+          code: "ADAPTER_ERROR",
+          operation: "requestDevice",
+          adapterId: "websocket-bridge",
+          message: "Bridge socket errored.",
+        }));
+    });
+
+  const rpc = async <T>(
+    verb: string,
+    params: unknown,
+    signal?: AbortSignal,
+  ): Promise<T> => {
+    if (signal?.aborted) throw signal.reason;
+    const ws = await connect();
+    const id = crypto.randomUUID();
+    return new Promise<T>((resolve, reject) => {
+      pending.set(id, { resolve: resolve as (v: unknown) => void, reject });
+      signal?.addEventListener("abort", () => {
+        pending.delete(id);
+        // Production adapters should also send a `cancel` frame so the
+        // helper stops the underlying operation on its side.
+        reject(signal.reason);
+      });
+      ws.send(JSON.stringify({ id, verb, params }));
+    });
+  };
+
+  return {
+    id: "websocket-bridge",
+    async isAvailable() { try { await connect(); return true; } catch { return false; } },
+    async capabilities() { return rpc("capabilities", {}); },
+    async requestDevice(options: RequestDeviceOptions) {
+      const handle = await rpc<string>("requestDevice", options, options.signal);
+      return buildDevice(handle, rpc);
+    },
+  };
+}
+```
+
+`buildDevice` returns a `BluetoothDevice` whose `connect()` calls `rpc("connect", { handle })` and returns a `BluetoothConnection` wrapping the returned connection handle, and so on down the chain. Full production adapter is a few hundred lines. The interesting parts are all above.
+
+## What NOT to do
+
+<Callout type="warning">
+Common mistakes that will bite you or your users:
+
+- **Don't hard-code hex MAC addresses.** Web Bluetooth intentionally hides them. If your bridge returns raw hardware IDs, your adapter is a privacy regression versus native.
+- **Respect `options.signal`.** `requestDevice` and any long-running RPC must abort when the caller cancels. Check `signal.aborted` before you start; reject with `signal.reason` — don't wrap it in `BluetoothError`.
+- **Use the disconnect event.** Wire the underlying transport's disconnect signal into the `BluetoothDevice`'s `on("disconnect", …)` listeners. Callers rely on this to clean up subscriptions.
+- **Don't fake capabilities.** If your transport can't do notifications, return `notifications: false`. Callers will poll. Faking it and then never delivering values silently breaks apps.
+- **Don't throw raw errors.** Wrap everything in `BluetoothError` with a real `code`, `operation`, and `cause`. Native `Error`s bubble up as `code: "UNKNOWN"` in caller code.
+- **Don't leak transport handles.** Opaque strings inside the adapter, never on public interfaces.
+- **Don't bind to `0.0.0.0`.** If you ship a helper, it listens on loopback only.
+- **Don't skip the token.** Origin checks alone don't survive a phishing tab. Token first, origin second.
+</Callout>
+
+## Publish your adapter
+
+If you write one, open an issue on [`0xsarwagya/agnostic-web-ble`](https://github.com/0xsarwagya/agnostic-web-ble/issues) with the package name, a one-line pitch, and which runtime it unlocks. A running list lives in the README so people can find it. A good adapter is a small library — a filesystem simulator, a WebSocket bridge, a mock harness for a specific chipset. Each one is a runtime the client library now works in without changing a line of core.
+
+The contract is the boundary. Everything on your side of it is yours.
