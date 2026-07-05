@@ -27,8 +27,11 @@ export default function Home() {
           className="rise rise-2 mt-8 max-w-xl font-serif italic text-ink/80"
           style={{ fontSize: "clamp(19px, 2vw, 26px)", lineHeight: 1.3 }}
         >
-          Small libraries, built slowly, documented properly, and maintained
-          past the excitement that created them.
+          Problems I solved for myself. Apparently a few other people had them
+          too.
+        </p>
+        <p className="rise rise-2 mt-4 font-mono text-[11px] text-stone">
+          — Comrade Sarwagya
         </p>
       </section>
 

@@ -8,7 +8,7 @@ export const SITE: SiteIdentity = {
   titleDefault: "Sarwagya Singh — Open Source",
   titleTemplate: "%s — Sarwagya Singh",
   description:
-    "Open-source software by Sarwagya Singh — small libraries built slowly, documented properly, and maintained past the excitement that created them.",
+    "Open-source software by Sarwagya Singh — problems I solved for myself. Apparently a few other people had them too.",
   locale: "en_US",
   person: SARWAGYA,
   twitterHandle: "@0xsarwagya",
