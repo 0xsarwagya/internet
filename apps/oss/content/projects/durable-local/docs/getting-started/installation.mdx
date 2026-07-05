@@ -1,0 +1,52 @@
+---
+title: "Install"
+description: "Add the package and check what the runtime supports."
+order: 1
+---
+
+<Install package="@0xsarwagya/durable-local" />
+
+One entry point, zero runtime dependencies. Backed by IndexedDB; runs in
+any browser with a working IDB implementation (Chromium, Firefox, WebKit).
+
+The library will not run in Node — it does not fake persistence with an
+in-memory shim. If your application boots in an SSR context, guard the
+`createDurable()` call behind `typeof window !== "undefined"` and open
+slots after hydration.
+
+Probe the runtime before you commit valuable state:
+
+```ts
+import { createDurable } from "@0xsarwagya/durable-local";
+
+const durable = createDurable();
+const status = await durable.storage();
+
+// {
+//   persistent: false,
+//   quotaBytes: 12897234432,
+//   usageBytes: 45120,
+//   quotaRounded: false,
+//   privateMode: "no",
+//   evictionRisk: "best-effort",
+//   engine: "chromium",
+//   installedWebApp: false
+// }
+```
+
+`evictionRisk` tells you the honest truth:
+
+- `session` — Chrome Incognito / Firefox Private / Safari Private. Wiped
+  at session end.
+- `ephemeral` — persist denied or heuristic best-effort. Browser may
+  evict under pressure.
+- `best-effort` — default storage box. Not persisted, not necessarily
+  evicted.
+- `persistent` — the browser considers this origin protected from
+  automatic eviction.
+- `ios-capped` — Safari regular tab with `persist()=true`. Sounds
+  persistent; **ITP still evicts after 7 days of no interaction**. Ask
+  the user to install as a Home Screen web app.
+
+Call `durable.requestPersistence()` after the user does something that
+proves the value matters. See [durability](../concepts/durability).

@@ -157,6 +157,9 @@ importers:
       '@0xsarwagya/agnostic-web-ble':
         specifier: github:0xsarwagya/agnostic-web-ble
         version: https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/91141d133c5877664639a8ae813010ac9d0ba380
+      '@0xsarwagya/durable-local':
+        specifier: github:0xsarwagya/durable-local
+        version: https://codeload.github.com/0xsarwagya/durable-local/tar.gz/a5461b93df9ea0aa692ffa4295adc21aa3fcff92
       '@0xsarwagya/ghost':
         specifier: github:0xsarwagya/ghost
         version: https://codeload.github.com/0xsarwagya/ghost/tar.gz/b1172bd8c418b44928b8c760026ea521b9da2313
@@ -452,6 +455,10 @@ packages:
 
   '@0xsarwagya/agnostic-web-ble@https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/91141d133c5877664639a8ae813010ac9d0ba380':
     resolution: {tarball: https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/91141d133c5877664639a8ae813010ac9d0ba380}
+    version: 0.1.0
+
+  '@0xsarwagya/durable-local@https://codeload.github.com/0xsarwagya/durable-local/tar.gz/a5461b93df9ea0aa692ffa4295adc21aa3fcff92':
+    resolution: {tarball: https://codeload.github.com/0xsarwagya/durable-local/tar.gz/a5461b93df9ea0aa692ffa4295adc21aa3fcff92}
     version: 0.1.0
 
   '@0xsarwagya/ghost@https://codeload.github.com/0xsarwagya/ghost/tar.gz/b1172bd8c418b44928b8c760026ea521b9da2313':
@@ -2870,6 +2877,8 @@ packages:
 snapshots:
 
   '@0xsarwagya/agnostic-web-ble@https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/91141d133c5877664639a8ae813010ac9d0ba380': {}
+
+  '@0xsarwagya/durable-local@https://codeload.github.com/0xsarwagya/durable-local/tar.gz/a5461b93df9ea0aa692ffa4295adc21aa3fcff92': {}
 
   '@0xsarwagya/ghost@https://codeload.github.com/0xsarwagya/ghost/tar.gz/b1172bd8c418b44928b8c760026ea521b9da2313': {}
 

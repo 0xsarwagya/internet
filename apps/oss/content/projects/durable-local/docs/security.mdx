@@ -1,0 +1,84 @@
+---
+title: "Security model"
+description: "What durable-local protects, and what it does not."
+order: 2
+---
+
+This is not a footer. It is the definition of the product.
+
+## What durable-local provides
+
+**Persistence** — one named application value survives close and reload,
+inside the boundary the browser calls "site data."
+
+Nothing else.
+
+## What it does not provide
+
+**Confidentiality.** JavaScript executing at the application's origin
+can read every slot. Anything that runs in your page — the app's own
+code, third-party scripts you loaded, browser extensions with content-
+script access — can call `open()` and read your state. The library does
+not encrypt values.
+
+**Integrity against XSS.** If your page is XSS'd, the attacker's script
+runs at the same origin as the library. It can `open()`, `set()`,
+`destroy()`. The library will not stop them; nothing at the same origin
+can.
+
+**Server-side durability.** The state stays on this device. Losing the
+device loses the state.
+
+**Isolation between users on shared devices.** Anyone who uses this
+browser profile can read what is stored.
+
+**Tamper-evidence.** A user with DevTools open can rewrite records in
+IDB directly. Application logic that trusts stored state must validate
+it — that is why the library invokes `validate()` after every read.
+
+## The right shape for storing secrets
+
+Do not use `durable-local` to store secrets. Not tokens, not passwords,
+not encryption keys, not personal information the user would not want a
+malicious tab to read. If you need to persist a secret in the browser,
+use the Web Crypto API to hold the material as a **non-extractable**
+`CryptoKey` and store its identifier, not the material itself.
+
+That is exactly what `@0xsarwagya/ghost` does — the private key lives
+inside a non-extractable `CryptoKey`, and no JavaScript can read it.
+The library asks the browser to sign for it; the bytes never leave the
+browser's key store. If you find yourself wanting to encrypt values
+before putting them in `durable-local`, you almost certainly want
+Ghost instead.
+
+## Why no `encrypt: true` option
+
+Encryption where the key lives beside the ciphertext is theatre. A
+malicious script that can call `slot.value` can also call the
+decryption routine — the security ceiling is unchanged. The library
+will never ship a flag that suggests otherwise.
+
+If a future protocol version adds a real key-management model (backed
+by a non-extractable key that lives elsewhere), encryption becomes
+worth adding. Not before.
+
+## Threat model
+
+`durable-local` is designed to be correct against these:
+
+- **Reload.** State survives.
+- **Concurrent tabs.** Writes serialize; no torn state.
+- **Failed writes.** Previous value survives.
+- **Migration failures.** Previous value survives.
+- **Corrupted stored values.** Never returned as `T`; typed error
+  instead of silent corruption.
+
+It is not designed to be safe against these:
+
+- **XSS.** Nothing at the same origin can be.
+- **Malicious extensions with content-script access.**
+- **Physical device access.**
+- **A user reading your source code and rewriting IDB by hand.**
+
+If the value must survive any of those, the value is not one this
+library should hold.

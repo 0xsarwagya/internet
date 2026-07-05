@@ -1,0 +1,59 @@
+---
+title: "Compatibility"
+description: "What CI actually proves, per engine and per environment."
+order: 3
+---
+
+Every claim in the first table is exercised by CI on every commit —
+the lifecycle journey (open → set → reload → same value, then update,
+reset, destroy) runs in Chromium, Firefox, and WebKit via Playwright.
+
+<CompatibilityMatrix
+  columns={[
+    { key: "feature", label: "Feature" },
+    { key: "chromium", label: "Chromium" },
+    { key: "firefox", label: "Firefox" },
+    { key: "webkit", label: "WebKit" }
+  ]}
+  rows={[
+    { feature: "IndexedDB open + read + write", chromium: "Yes", firefox: "Yes", webkit: "Yes" },
+    { feature: "Atomic readwrite transaction", chromium: "Yes", firefox: "Yes", webkit: "Yes" },
+    { feature: "Cross-tab overlapping-scope serialization", chromium: "Yes", firefox: "Yes", webkit: "Yes" },
+    { feature: "BroadcastChannel for notifications", chromium: "Yes", firefox: "Yes", webkit: "Yes (15.4+)" },
+    { feature: "bfcache-safe subscribers (pageshow reconcile)", chromium: "Yes", firefox: "Yes", webkit: "Yes (workaround)", note: "WebKit silently drops BroadcastChannel messages to frozen pages. The library reconciles against IDB on pageshow with persisted:true." },
+    { feature: "navigator.storage.persist()", chromium: "Silent heuristic", firefox: "UI prompt", webkit: "17+, heuristic favors installed web apps" },
+    { feature: "navigator.storage.estimate()", chromium: "Yes", firefox: "Yes", webkit: "Yes (rounded)" },
+    { feature: "Private browsing", chromium: "Ephemeral (Incognito)", firefox: "Ephemeral (Private Windows, since FF 115)", webkit: "Ephemeral" },
+    { feature: "7-day inactivity eviction", chromium: "No (LRU under pressure only)", firefox: "No", webkit: "Yes (ITP) — Home Screen web apps exempt", note: "This is the ios-capped evictionRisk value. Prompt users to install as a Home Screen web app." }
+  ]}
+/>
+
+## The known trap by engine
+
+**Chromium** — `durability: "relaxed"` improves small-write throughput
+on Chromium and matches the semantics this library needs. Storage
+Buckets (Chromium 122+) are a proposed 0.2 target.
+
+**Firefox** — Private Windows use encrypted on-disk IDB since Firefox
+115, so writes succeed. Not visible in the Storage inspector. Historical
+Bugzilla 1193394 (async gap deactivates transactions early at the
+"meta-stable" state) is why the library never awaits non-IDB promises
+inside a transaction.
+
+**WebKit** — the strictest engine on the "no await inside the txn"
+rule; the library respects it in every code path. `navigator.storage.
+persist()` may return `true` in a regular Safari tab while ITP still
+evicts data after 7 days. The library surfaces this as
+`evictionRisk: "ios-capped"` so the application can prompt the user
+to install as a Home Screen web app, where the timer resets on
+interaction.
+
+## Node
+
+Not supported for reads or writes. The library will not fake persistence
+with an in-memory shim — a memory fallback violates the product
+promise. Guard `createDurable()` behind `typeof window !== "undefined"`
+in SSR code.
+
+For **unit tests** in Node, use `fake-indexeddb`. That is what the
+library's own test suite does; there is nothing special about the setup.

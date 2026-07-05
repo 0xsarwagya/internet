@@ -1,0 +1,68 @@
+---
+title: "Commits"
+description: "What atomic means here, and what it does not."
+order: 2
+---
+
+The most important promise this package makes:
+
+> When a write operation resolves, the value is committed to storage.
+
+Every `set()`, `update()`, and `reset()` follows the same lifecycle:
+
+1. The value is validated (structural + your `validate` fn if provided).
+2. A single `readwrite` IndexedDB transaction opens.
+3. The current envelope is read.
+4. Your updater runs synchronously; the result is written.
+5. The revision increments.
+6. The transaction commits.
+7. Only then does the write promise resolve.
+
+If any step fails, the transaction aborts. The previously committed
+value remains authoritative. Subscribers never observe an uncommitted
+value.
+
+## Revisions
+
+Every successful commit increments a monotonic per-slot revision.
+
+```
+revision 1  →  first open (initial value seeded)
+revision 2  →  first set()
+revision 3  →  update()
+...
+```
+
+Revisions exist to make cross-tab observation, stale-state detection,
+and debugging correct. They are **not** event sourcing, history, undo,
+or version control. Only the current committed envelope is stored.
+
+## What atomic means here
+
+- **Within a single transaction**, the read and write are serialized:
+  no other transaction with overlapping scope can interleave. `update()`
+  exploits this to make read-modify-write atomic without a separate
+  lock.
+- **Across tabs**, IndexedDB serializes `readwrite` transactions on
+  overlapping scope. Two tabs racing `update()` on the same slot land
+  at revision `N + 2`, not `N + 1`.
+- **Across a page reload**, the on-disk envelope is authoritative. Any
+  in-memory state that never made it to a committed transaction is
+  gone.
+
+## What atomic does not mean
+
+- Not distributed. The atomicity story ends at the browser process.
+- Not durable in the "will survive user action" sense. See
+  [durability](./durability) for what browsers actually promise about
+  keeping IDB data. `durable-local` commits correctly; the browser
+  chooses whether to keep the file.
+- Not multi-slot. Two `set()` calls on two different slots are not one
+  atomic operation. If you need multi-slot atomicity, store the whole
+  thing in one slot.
+
+## Ordering
+
+Sub­scribers see events in commit order. `revision` is monotonic; a
+subscriber that saw revision 8 will see revisions 9, 10, 11 in order
+before 12. This is true both within one tab and across tabs.

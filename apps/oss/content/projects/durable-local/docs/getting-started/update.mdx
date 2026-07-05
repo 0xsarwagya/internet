@@ -1,0 +1,71 @@
+---
+title: "Update state"
+description: "Two ways to change a slot atomically — set() and update()."
+order: 3
+---
+
+Two methods change a slot, and both commit atomically. The difference is
+who computes the next value.
+
+## `set(next)` — replace the value
+
+Use when the next value does not depend on the current value.
+
+```ts
+await workspace.set({
+  title: "New workspace",
+  blocks: [],
+});
+```
+
+`set()` validates the value, opens a `readwrite` transaction, writes the
+next revision, and resolves when the commit is durable. Subscribers see
+the new value; other tabs receive a notification and reconcile against
+storage.
+
+## `update(fn)` — atomic read-modify-write
+
+Use when the next value depends on the current value.
+
+```ts
+await workspace.update((current) => ({
+  ...current,
+  title: current.title + " (edited)",
+}));
+```
+
+The updater is invoked with the **committed** current value inside the
+same transaction that will write the result. This is why concurrent
+updates are safe — the transaction serializes reads and writes into one
+atomic step; you cannot lose a write to a race between reading and
+writing.
+
+<Callout type="warning">
+The updater must be **synchronous**. Awaiting a non-IndexedDB promise
+inside a transaction closes the transaction — WebKit is the strictest
+enforcer, but the behavior is spec-mandated. If you need to compute the
+next value asynchronously, resolve the promise first and then call
+`set()`.
+</Callout>
+
+## Why not `get() … then set()`?
+
+Because that is not atomic across tabs:
+
+```ts
+// Wrong. Do not do this.
+const current = workspace.value;
+const next = { ...current, count: current.count + 1 };
+await workspace.set(next); // another tab may have moved on already
+```
+
+`update()` runs the read and the write inside one transaction. IDB
+serializes overlapping `readwrite` transactions across all tabs on the
+origin, so two tabs both calling `slot.update((c) => ({ n: c.n + 1 }))`
+end at `n + 2`, not `n + 1`.
+
+## Both are subject to validation
+
+If you passed a `validate` function to `open()`, it runs on the next
+value before commit. A rejected value throws `STATE_INVALID` and the
+previously committed value remains authoritative.

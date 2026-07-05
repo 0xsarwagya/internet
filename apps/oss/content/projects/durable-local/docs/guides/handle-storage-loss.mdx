@@ -1,0 +1,104 @@
+---
+title: "Handle storage loss"
+description: "The failure modes that actually happen, and what to do about them."
+order: 3
+---
+
+Browser storage disappears sometimes. This page names the scenarios and
+what your application can do about each.
+
+## User cleared site data
+
+Nothing this package can do. The next `open()` behaves as first open —
+`initial` is committed at revision 1. If your app needs to warn before
+the clear, use the Storage API — the browser controls that flow.
+
+## Safari 7-day ITP eviction
+
+Safari evicts IDB, LocalStorage, ServiceWorker registrations and Cache
+Storage from any origin the user has not interacted with in the last
+seven days. The exemption is Home Screen web apps.
+
+**What to do:**
+
+1. On mount, call `durable.storage()`.
+2. If `evictionRisk === "ios-capped"`, show a small "install as web
+   app" nudge with the correct instructions for the user's platform
+   (Add to Home Screen on iOS, Add to Dock on macOS).
+3. If the user does install, `installedWebApp` flips true on next
+   load and `evictionRisk` becomes `"persistent"`.
+
+## Quota exceeded
+
+Handled by the library — the failing `set()` or `update()` rejects with
+`QUOTA_EXCEEDED` and the previously committed value remains
+authoritative.
+
+**What to do:**
+
+```ts
+try {
+  await slot.set(next);
+} catch (err) {
+  if (isDurableError(err) && err.code === "QUOTA_EXCEEDED") {
+    // Show a "storage full" UI. Offer to trim history, export, delete
+    // old attachments, or open Settings — whatever fits.
+    return;
+  }
+  throw err;
+}
+```
+
+Do not retry on `QUOTA_EXCEEDED` — nothing has changed on disk.
+
+## Chromium eviction of best-effort storage
+
+Chromium may evict origins under storage pressure, LRU-style. Non-
+persisted origins are candidates; persisted origins are exempt. Nothing
+detects "you were about to be evicted" — you find out on the next
+`open()` when the initial value is seeded again.
+
+**What to do:**
+
+- Ask for persistence when the value has become worth it (a first
+  meaningful edit, an explicit "save" affordance).
+- Consider a periodic silent write to a remote service if the state is
+  important. `durable-local` intentionally does not do this itself.
+
+## Private browsing
+
+`privateMode === "likely"` in the durability status. All commits still
+succeed; they just do not survive the session. Show a session banner
+so the user is not surprised.
+
+## Corrupt or invalid stored state
+
+`open()` throws `STATE_INVALID`. The library does not automatically
+delete anything. The application decides:
+
+```ts
+try {
+  const slot = await durable.open("workspace", { initial: EMPTY, validate });
+} catch (err) {
+  if (isDurableError(err) && err.code === "STATE_INVALID") {
+    // Inspect, prompt, export, then explicitly:
+    const rescue = await durable.open("workspace", { initial: EMPTY });
+    await rescue.reset();
+  }
+}
+```
+
+## Future version
+
+`FUTURE_VERSION` — this build cannot understand what a newer build
+wrote. The library refuses to open. Application options: prompt the
+user to reload the tab that wrote it, ship the newer build, or accept
+data loss and `reset()` explicitly.
+
+## The uncomfortable summary
+
+`durable-local` commits state correctly. Browsers may still take it
+away. Applications that hold anything worth protecting should treat
+this package as *part of* durability — not the whole story. What is
+worth surviving a lost device belongs on a server. What is worth
+surviving a refresh belongs here.

@@ -1,0 +1,64 @@
+---
+title: "Introduction"
+description: "Named durable values for the browser, without a database."
+order: 1
+---
+
+The browser already has storage. You have a value:
+
+```json
+{
+  "title": "Untitled",
+  "blocks": [],
+  "preferences": { "theme": "system" }
+}
+```
+
+You want:
+
+```
+close tab
+close browser
+come back tomorrow
+same value
+```
+
+The ecosystem answers with three separate layers. `localStorage` and
+IndexedDB store things. Dexie, RxDB, and TinyBase model and query them.
+Zustand persist and Jotai storage persist a particular state-management
+model. The missing primitive is:
+
+> I have a typed value. Keep it alive.
+
+`durable-local` is that primitive. It provides:
+
+- **named durable values**
+- **asynchronous opening**
+- **atomic commits**
+- **atomic updates**
+- **explicit state versions and migrations**
+- **runtime validation**
+- **cross-tab observation**
+- **durability status**
+- **deliberate reset and destruction**
+- **typed errors**
+
+It does not provide queries, tables, collections, indexes, relationships,
+sync, or collaboration. See [`docs/security`](./security) for the honest
+statement about what "durable" means on browser storage.
+
+## Where to start
+
+- [Install](./getting-started/installation) and read the first value.
+- [Update state](./getting-started/update) atomically.
+- [Observe state](./getting-started/observe) across tabs.
+- [Migrations](./concepts/migrations) for evolving your state shape.
+
+## Status
+
+<Callout type="warning">
+Experimental. The v1 API is frozen but this is a fresh package —
+integrations should treat 0.1 as the first stable target for the
+`open` / `set` / `update` / `subscribe` surface and hold off shipping
+downstream features that depend on internals.
+</Callout>

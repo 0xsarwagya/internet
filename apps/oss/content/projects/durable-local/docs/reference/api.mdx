@@ -1,0 +1,105 @@
+---
+title: "API"
+description: "Every public export, one page."
+order: 1
+---
+
+## `createDurable(options?)`
+
+```ts
+function createDurable(options?: {
+  namespace?: string;
+}): Durable;
+```
+
+Returns a `Durable` instance. `namespace` defaults to `"default"`.
+Two instances with different namespaces cannot collide, even for
+slots with the same name.
+
+## `Durable`
+
+```ts
+interface Durable {
+  readonly namespace: string;
+  open<T>(name: string, options: OpenSlotOptions<T>): Promise<Slot<T>>;
+  storage(): Promise<DurabilityStatus>;
+  requestPersistence(): Promise<boolean>;
+}
+```
+
+## `Durable.open(name, options)`
+
+```ts
+interface OpenSlotOptions<T> {
+  initial: T;
+  version?: number;              // default: 1
+  migrations?: MigrationMap;
+  validate?: (value: unknown) => T;
+}
+```
+
+Returns a `Slot<T>` after storage has opened, the value has been read,
+any needed migrations have run, and validation has succeeded.
+
+## `Slot<T>`
+
+```ts
+interface Slot<T> {
+  readonly name: string;
+  readonly stateVersion: number;
+  readonly value: T;
+  readonly revision: number;
+
+  set(next: T): Promise<void>;
+  update(updater: (current: T) => T): Promise<void>;
+  subscribe(listener: (value: T, event: SubscribeEvent) => void): () => void;
+  reset(): Promise<void>;
+  destroy(): Promise<void>;
+}
+```
+
+`SubscribeEvent`:
+
+```ts
+interface SubscribeEvent {
+  revision: number;
+  source: "local" | "external" | "migration" | "reset";
+}
+```
+
+## `Durable.storage()`
+
+```ts
+interface DurabilityStatus {
+  persistent: boolean;
+  quotaBytes: number | null;
+  usageBytes: number | null;
+  quotaRounded: boolean;
+  privateMode: "unknown" | "likely" | "no";
+  evictionRisk: "session" | "ephemeral" | "best-effort" | "persistent" | "ios-capped";
+  engine: "chromium" | "gecko" | "webkit" | "unknown";
+  installedWebApp: boolean;
+}
+```
+
+## `Durable.requestPersistence()`
+
+Asks the browser to move this origin to persistent storage mode.
+Returns whether the browser granted the request. Semantics vary by
+engine — see [durability](../concepts/durability).
+
+## Errors
+
+Everything the library throws is a `DurableError`:
+
+```ts
+class DurableError extends Error {
+  readonly code: DurableErrorCode;
+  readonly operation: DurableOperation;
+  readonly slot: string | undefined;
+}
+
+function isDurableError(value: unknown): value is DurableError;
+```
+
+Codes: see [errors](./errors).

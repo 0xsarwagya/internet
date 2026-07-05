@@ -1,0 +1,84 @@
+---
+title: "Validate state"
+description: "Runtime validation for stored values — bring your own schema."
+order: 1
+---
+
+TypeScript is not runtime validation. Storage that has lived on disk
+for six months may not still match the type your code declares.
+
+`durable-local` accepts an optional `validate(value)` function. It runs:
+
+- **after read**, on the raw stored value.
+- **after migration**, on the final migrated value.
+- **before commit**, on the value your `set()` or `update()` produced.
+
+The validator's contract is small:
+
+```ts
+type Validate<T> = (value: unknown) => T;
+```
+
+Return the (possibly corrected) value, or throw. That is it. Bring your
+own schema library — Zod, Valibot, Yup, hand-written — the package is
+not opinionated.
+
+## With Zod
+
+```ts
+import { z } from "zod";
+
+const Workspace = z.object({
+  title: z.string(),
+  blocks: z.array(z.object({ id: z.string(), text: z.string() })),
+});
+type Workspace = z.infer<typeof Workspace>;
+
+const workspace = await durable.open<Workspace>("workspace", {
+  initial: { title: "Untitled", blocks: [] },
+  validate: (value) => Workspace.parse(value),
+});
+```
+
+## With a hand-written check
+
+```ts
+const workspace = await durable.open<Workspace>("workspace", {
+  initial: EMPTY,
+  validate: (value) => {
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      "title" in value &&
+      typeof (value as { title: unknown }).title === "string"
+    ) {
+      return value as Workspace;
+    }
+    throw new Error("workspace must have a string title");
+  },
+});
+```
+
+## When validation fails
+
+If `validate()` throws while opening, `open()` rejects with
+`STATE_INVALID`. The library does **not**:
+
+- silently return the initial value
+- overwrite the stored value
+- delete anything
+
+User data is not disposable because validation failed. The application
+decides what to do — inspect the stored envelope, prompt the user,
+migrate manually, or `reset()`.
+
+If `validate()` throws during a `set()` or `update()`, the transaction
+aborts and the previously committed value remains authoritative.
+Subscribers do not observe the invalid value.
+
+## Cost
+
+Validation runs on every read and every write. For the tiny objects
+this package is designed to hold, that is fine. For very large
+structures, validate only the shape you actually rely on — do not
+re-parse every leaf on every commit.

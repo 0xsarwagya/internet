@@ -1,0 +1,125 @@
+---
+title: "durable-local"
+description: "Named durable values for the browser, without a database."
+---
+
+<ProjectHero package="@0xsarwagya/durable-local" status="experimental">
+Why does an object need a database to survive a refresh?
+</ProjectHero>
+
+I refuse to build a database because an object should survive a refresh.
+
+The browser already has storage. You have a value. You want to come back
+tomorrow and find it there. That does not need a query language.
+
+<Install package="@0xsarwagya/durable-local" />
+
+## The whole API
+
+```ts
+import { createDurable } from "@0xsarwagya/durable-local";
+
+const durable = createDurable();
+
+const workspace = await durable.open("workspace", {
+  initial: {
+    title: "Untitled",
+    blocks: [],
+  },
+});
+
+workspace.value; // { title: "Untitled", blocks: [] }
+
+await workspace.update((current) => ({
+  ...current,
+  title: "Something",
+}));
+
+// Close the tab. Come back tomorrow. Still there.
+```
+
+## The boundary
+
+<Graph3D
+  caption="Application owns the value. Package owns its survival. Browser storage is where they meet."
+  layout="layers"
+  nodes={[
+    { id: "app", label: "Your application", sub: "owns the value", kind: "primary", layer: 0 },
+    { id: "slot", label: "Slot", sub: "one named value", kind: "secondary", layer: 1 },
+    { id: "commit", label: "Atomic commit", sub: "readwrite txn", kind: "secondary", layer: 2, angle: 0.25 },
+    { id: "channel", label: "BroadcastChannel", sub: "cross-tab notice", kind: "secondary", layer: 2, angle: 0.75 },
+    { id: "idb", label: "IndexedDB", sub: "source of truth", kind: "accent", layer: 3 },
+    { id: "eviction", label: "Browser policy", sub: "eviction · quota · ITP", kind: "faint", layer: 4 }
+  ]}
+  edges={[
+    { from: "app", to: "slot" },
+    { from: "slot", to: "commit" },
+    { from: "slot", to: "channel" },
+    { from: "commit", to: "idb" },
+    { from: "channel", to: "idb", dashed: true },
+    { from: "idb", to: "eviction", dashed: true }
+  ]}
+/>
+
+## Not a database
+
+<Callout type="note">
+`durable-local` does not have queries, collections, indexes, joins,
+tables, or sync. If you need any of those, use a database. The library
+does one thing: it keeps a named value alive.
+</Callout>
+
+## What it guarantees
+
+<CompatibilityMatrix
+  columns={[
+    { key: "invariant", label: "Invariant" },
+    { key: "meaning", label: "Meaning" }
+  ]}
+  rows={[
+    { invariant: "Commit", meaning: "set() resolves → reload → same value." },
+    { invariant: "Failure", meaning: "Commit fails → previous committed value survives." },
+    { invariant: "Concurrency", meaning: "Two updates → no silent lost write. IDB serializes them." },
+    { invariant: "Cross-tab", meaning: "Tab A commits revision N → Tab B eventually observes N." },
+    { invariant: "Migration", meaning: "Migration fails → previous committed state remains recoverable." },
+    { invariant: "Validation", meaning: "Invalid stored value → never returned as T. Typed error instead." }
+  ]}
+/>
+
+## Storage is not confidentiality
+
+<Callout type="warning">
+Anything at the same origin can read a slot. No encryption in the box.
+If you need to protect a secret, use a non-extractable Web Crypto key —
+that is what [Ghost](/ghost) is for.
+</Callout>
+
+## The API surface
+
+```ts
+const durable = createDurable({ namespace?: string });
+
+const slot = await durable.open<T>(name, {
+  initial: T,
+  version?: number,
+  migrations?: { [n: number]: (value) => value },
+  validate?: (value: unknown) => T,
+});
+
+slot.value;
+slot.revision;
+await slot.set(next);
+await slot.update((current) => ({ ...current }));
+const unsubscribe = slot.subscribe((value, event) => { ... });
+await slot.reset();
+await slot.destroy();
+
+const status = await durable.storage();
+const granted = await durable.requestPersistence();
+```
+
+<ProjectLinks
+  docs="/durable-local/docs"
+  demo="/durable-local/demo"
+  repository="https://github.com/0xsarwagya/durable-local"
+/>

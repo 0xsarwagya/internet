@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "mdxVersion": 1,
+  "slug": "durable-local",
+  "name": "durable-local",
+  "packageName": "@0xsarwagya/durable-local",
+  "description": "Named durable values for the browser, without a database.",
+  "status": "experimental",
+  "license": "MIT",
+  "repository": "https://github.com/0xsarwagya/durable-local",
+  "landing": "site/landing.mdx",
+  "docs": "docs",
+  "assets": "site/assets",
+  "demo": "site/demo",
+  "links": {
+    "repository": "https://github.com/0xsarwagya/durable-local"
+  }
+}

@@ -13,6 +13,7 @@
   "dependencies": {
     "@0xsarwagya/agnostic-web-ble": "github:0xsarwagya/agnostic-web-ble",
     "@0xsarwagya/ghost": "github:0xsarwagya/ghost",
+    "@0xsarwagya/durable-local": "github:0xsarwagya/durable-local",
     "@0xsarwagya/handoff": "github:0xsarwagya/handoff",
     "@0xsarwagya/ui": "workspace:*",
     "@mdx-js/loader": "^3",

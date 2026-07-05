@@ -1,0 +1,66 @@
+---
+title: "Multi-tab applications"
+description: "What works out of the box, and where you still need to think."
+order: 2
+---
+
+The user opens your app in a second tab. Now what?
+
+By default, `durable-local` does the correct thing:
+
+- Both tabs read the same committed state at the same slot name.
+- Writes from Tab A become observable in Tab B via `subscribe()`.
+- Concurrent `update()` calls do not silently lose writes, because IDB
+  serializes overlapping `readwrite` transactions across tabs.
+
+You do not need to install any coordination primitive to get that.
+
+## What "eventually observes" means
+
+Tab A commits revision 8. Tab B's subscribers see revision 8 *after*:
+
+1. Tab A's transaction completes.
+2. Tab A posts on the shared `BroadcastChannel`.
+3. Tab B's channel listener fires.
+4. Tab B reads the envelope from IDB (the message carries no value).
+5. Tab B's subscribers fire with `source: "external"`.
+
+In practice this is a few milliseconds. It is not synchronous.
+
+## The bfcache trap
+
+WebKit silently drops `BroadcastChannel` messages to bfcached pages.
+When your page returns from bfcache, subscribers may have missed
+notifications. The library handles this automatically: on `pageshow`
+with `event.persisted === true`, every subscriber re-reads the envelope
+from IDB and fires if the revision moved.
+
+Application-side implication: **do not** treat the absence of a
+`subscribe` event as proof that state did not change. If your UI depends
+on freshness at a specific moment (say, when the user takes an action),
+read `slot.value` at that moment; do not cache it in a variable that
+outlives many render cycles.
+
+## Same-tab handles
+
+Opening the same slot twice in one JavaScript context returns the same
+underlying handle. Both handles observe the same commits, share the
+same subscriber list, and are backed by the same envelope. This is
+different from most database libraries where multiple `open()` calls
+give you disconnected connections — `durable-local` deliberately does
+not.
+
+## What multi-tab still cannot do
+
+- **Multi-slot atomicity.** Writing to slot `A` and slot `B` from one
+  tab is two commits, not one. Another tab may observe A's new value
+  before B's. If you need multi-slot atomicity, model the two things
+  as one slot with a nested value.
+- **Locking.** No `slot.lock()` or `withLock()` API. In IDB, per-slot
+  atomicity is implied by the transaction; cross-tab logical locking
+  across multiple transactions requires a different primitive — the
+  Web Locks API — which the library does not currently wrap.
+- **Message-based application protocols.** Cross-tab notification is a
+  poke, not a channel for your data. Do not encode application events
+  into slot writes to piggy-back on the broadcast; write the events to
+  their own slot, or use `BroadcastChannel` directly.

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 200" role="img" aria-label="durable-local flow: application updates a slot, the slot atomically commits to IndexedDB, and the same slot survives reload. A BroadcastChannel notifies other tabs which reconcile from IndexedDB.">
+  <style>
+    text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fill: currentColor; }
+    .box { fill: none; stroke: currentColor; stroke-opacity: 0.35; }
+    .sub { font-size: 10px; opacity: 0.6; }
+    .main { font-size: 13px; }
+  </style>
+  <rect class="box" x="20" y="70" width="180" height="80" />
+  <text class="main" x="40" y="103">Application</text>
+  <text class="sub" x="40" y="122">workspace.update(fn)</text>
+
+  <rect class="box" x="270" y="70" width="180" height="80" />
+  <text class="main" x="290" y="103">Slot</text>
+  <text class="sub" x="290" y="122">readwrite txn</text>
+
+  <rect class="box" x="520" y="70" width="220" height="80" />
+  <text class="main" x="540" y="103">IndexedDB</text>
+  <text class="sub" x="540" y="122">source of truth</text>
+
+  <line x1="200" y1="110" x2="270" y2="110" stroke="currentColor" stroke-opacity="0.55" />
+  <line x1="450" y1="110" x2="520" y2="110" stroke="currentColor" stroke-opacity="0.55" />
+
+  <text class="sub" x="220" y="70">value</text>
+  <text class="sub" x="470" y="70">commit</text>
+  <text class="sub" x="340" y="180" opacity="0.55">BroadcastChannel · other tabs reconcile from IDB</text>
+</svg>

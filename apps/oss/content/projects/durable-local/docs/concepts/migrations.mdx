@@ -1,0 +1,98 @@
+---
+title: "Migrations"
+description: "How stored state evolves without losing user data."
+order: 4
+---
+
+Applications change. Stored state changes with them. `durable-local`
+treats this as first-class: your slot declares a state version, and if
+the stored value is older, sequential migrations walk it forward before
+`open()` resolves.
+
+```ts
+const workspace = await durable.open("workspace", {
+  version: 3,
+  initial: EMPTY_V3,
+  migrations: {
+    1: (value) => migrateFrom1To2(value),
+    2: (value) => migrateFrom2To3(value),
+  },
+});
+```
+
+Key `N` is the migration that takes a value at state version `N` and
+returns a value at state version `N + 1`. The chain runs `1 → 2 → 3`
+against a copy of the previous committed value; only after every step
+succeeds is the new envelope committed atomically.
+
+## What happens
+
+1. Stored envelope is read. If its `stateVersion` equals the declared
+   `version`, no migration runs — the value is validated and returned.
+2. If `stateVersion` is **less than** `version`, the migration chain is
+   invoked step by step in memory.
+3. The final value is validated against your `validate` fn.
+4. A single `readwrite` transaction commits the new envelope with the
+   new `stateVersion` and an incremented `revision`.
+
+The old committed envelope remains authoritative until step 4 succeeds.
+If any step throws, the whole commit is skipped.
+
+## Migration failure
+
+Non-negotiable invariant:
+
+```
+migration fails
+    ↓
+previous committed state remains recoverable
+```
+
+Never:
+
+```
+migration begins
+    ↓
+old state overwritten
+    ↓
+migration fails
+    ↓
+user data gone
+```
+
+If a migration throws, `open()` rejects with `MIGRATION_FAILED`. The
+error identifies which step failed (via `cause`). The stored envelope is
+unchanged. The application decides what happens next — retry, prompt
+the user, show a diagnostic, deliberately `reset()`. The package will
+never silently discard state you could not migrate.
+
+## Missing migrations
+
+If `stateVersion` is `1` and your build declares `version: 3` with only
+migration `2` provided, `open()` rejects with `MIGRATION_REQUIRED`. The
+gap is named in the error message. This catches "I bumped the version
+number and forgot the migration" at load time, not at commit time.
+
+## Future versions
+
+If `stateVersion` is **greater than** `version` — the stored state was
+written by a newer build than the one currently running — `open()`
+rejects with `FUTURE_VERSION`. The package will never automatically
+downgrade unknown state into your older schema and pretend it is
+valid.
+
+Application-level recovery options: ask the user to open the tab that
+wrote this newer version, prompt them to reset, or ship a build that
+understands the newer version.
+
+## Small tips
+
+- Migrations are pure functions. They receive a `DurableValue` and
+  return a `DurableValue`. Do not do IO inside a migration; the
+  transaction is running while migrations execute for a slot.
+- Never change what an older migration does. Once shipped, migration
+  `N → N+1` is frozen. If it was wrong, add a corrective migration
+  further along the chain.
+- Validate at every step. The whole point of running validation after
+  each migration is to fail loud if a step produced bad output — better
+  to reject at load time than corrupt the next commit.

@@ -1,0 +1,95 @@
+---
+title: "Durability"
+description: "What browsers actually promise about storage, said plainly."
+order: 3
+---
+
+Browser storage is not automatically permanent. Every value this package
+writes lives inside a set of policy decisions the browser controls: LRU
+eviction, ITP timeouts, private-mode ephemerality, quota limits.
+
+The library's promise is:
+
+> The package commits state correctly to browser storage and exposes
+> the browser's durability status.
+
+The library **does not** promise:
+
+> Your state can never disappear.
+
+State may disappear because of:
+
+- explicit site-data clearing
+- browser profile loss
+- device loss
+- private-browsing lifecycle
+- browser eviction of best-effort storage
+
+## The status object
+
+`durable.storage()` returns an honest snapshot:
+
+```ts
+{
+  persistent: boolean,       // navigator.storage.persisted()
+  quotaBytes: number | null, // navigator.storage.estimate().quota
+  usageBytes: number | null, // navigator.storage.estimate().usage
+  quotaRounded: boolean,     // true on WebKit + private modes
+  privateMode: "unknown" | "likely" | "no",
+  evictionRisk: "session" | "ephemeral" | "best-effort" | "persistent" | "ios-capped",
+  engine: "chromium" | "gecko" | "webkit" | "unknown",
+  installedWebApp: boolean,
+}
+```
+
+`evictionRisk` is the field to branch UI on. Especially:
+
+- **`ios-capped`** — this is Safari's specific trap. Even when
+  `navigator.storage.persist()` resolves `true`, ITP still evicts a
+  regular Safari tab's data after 7 days without user interaction. The
+  only way out is for the user to install the site as a Home Screen web
+  app; then their interaction with the app resets the timer. Surface
+  this to the user; do not paper over it.
+
+## Requesting persistence
+
+```ts
+const granted = await durable.requestPersistence();
+```
+
+Chromium auto-decides silently based on engagement. Firefox shows a UI
+prompt. Safari uses heuristics that favor installed web apps. Do **not**
+call this at page load; call it when the user has done something that
+proves the value has become worth protecting — the first significant
+write, a "save" affordance, a settings change. Asking too early gets
+denied and the browser remembers the denial.
+
+## Quota
+
+If a commit would exceed the origin's quota, IndexedDB aborts the
+transaction with `QuotaExceededError`. The library re-throws as
+`QUOTA_EXCEEDED`. The previous committed value remains authoritative.
+Subscribers do not see the failed value.
+
+## Private browsing
+
+Detected heuristically via quota size. If `privateMode` is `"likely"`
+your storage may vanish when the private tab closes; treat every commit
+as belonging to that session only. Chrome Incognito, Firefox Private
+Windows, and Safari Private all fall into this bucket.
+
+## What to do with all of this
+
+At startup:
+
+1. Call `durable.storage()`.
+2. If `evictionRisk === "session"`, tell the user their work will not
+   persist beyond this window.
+3. If `evictionRisk === "ios-capped"`, offer the "install as web app"
+   nudge.
+4. If quota is very low (`quotaBytes < 50 MB`), warn before allowing
+   heavy edits.
+
+At write time, do not do any of this — just call the API and let it
+succeed or throw. Chatter at startup is the honest place; chatter at
+write time is UX noise.

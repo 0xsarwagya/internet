@@ -1,0 +1,71 @@
+---
+title: "Slots"
+description: "One name, one value, one envelope."
+order: 1
+---
+
+A **slot** is the fundamental unit: one named durable value inside a
+namespace. Conceptually:
+
+```
+browser origin
+│
+└── namespace
+    │
+    ├── workspace
+    ├── preferences
+    └── draft
+```
+
+Every slot stores exactly one application value. The library owns the
+envelope around it; the application owns the value itself.
+
+The envelope on disk looks like:
+
+```ts
+{
+  protocolVersion: 1,   // owned by durable-local
+  stateVersion: 3,      // owned by the application
+  revision: 42,         // monotonic commit counter
+  updatedAt: "...",     // ISO timestamp
+  value: { ... },       // the application value
+}
+```
+
+Applications never see this shape. They see `slot.value`, and they
+choose the schema.
+
+## What can be a value
+
+JSON-compatible values only:
+
+- `null`
+- `boolean`
+- `number` (must be finite — no `NaN`, no `Infinity`)
+- `string`
+- `array` of the above
+- plain `object` whose values are the above
+
+Not supported in v1: `undefined`, functions, class instances, `Date`,
+`Blob`, `ArrayBuffer`, `Map`, `Set`, `BigInt`, cyclic graphs, DOM nodes.
+IndexedDB's structured clone accepts many of these; the v1 contract is
+deliberately smaller than the storage engine so it can grow without
+breaking. Serialize dates as ISO strings, bytes as base64, and so on.
+
+An invalid value throws `UNSUPPORTED_VALUE` at the boundary — before
+the transaction is opened.
+
+## Slot names
+
+Grammar: 1 to 128 characters, lowercase letters, digits, `.`, `_`, `-`.
+Must start with a letter or digit. Names like `Workspace!` or
+`user@example.com` are rejected with `SLOT_NAME_INVALID`. The names
+appear in error messages and in DevTools' Storage inspector; the
+grammar keeps both readable.
+
+## One slot ≠ one database
+
+The physical layout — one IndexedDB database, one object store, keyed
+by `namespace/name` — is an internal detail. It may change between
+minor versions; the slot name never does. Do not open the database in
+DevTools and rewrite records; that behavior is not part of the contract.

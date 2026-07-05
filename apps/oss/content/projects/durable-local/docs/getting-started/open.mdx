@@ -1,0 +1,66 @@
+---
+title: "Open state"
+description: "Create a durable slot and read its value."
+order: 2
+---
+
+`open()` is deliberately asynchronous — persistent browser storage is
+not synchronous, and pretending it is invites hidden hydration bugs.
+
+```ts
+import { createDurable } from "@0xsarwagya/durable-local";
+
+const durable = createDurable();
+
+const workspace = await durable.open("workspace", {
+  initial: {
+    title: "Untitled",
+    blocks: [],
+  },
+});
+
+console.log(workspace.value);   // { title: "Untitled", blocks: [] }
+console.log(workspace.revision); // 1
+```
+
+When `open()` resolves, storage has been opened, the slot has been read,
+migrations (if any) have completed, validation (if any) has run, and the
+returned value is ready to use. There is no hidden hydration phase.
+
+## First open vs later open
+
+- **First open (nothing stored):** the `initial` value is committed at
+  revision 1 and returned.
+- **Later open:** the stored value is returned; `initial` is ignored.
+
+Changing `initial` in application code never mutates existing user data.
+If you need to change the shape of stored state, that is a
+[migration](../concepts/migrations).
+
+## Same-context coherence
+
+Opening the same slot twice in one JavaScript context returns the same
+underlying handle. Two `open()` calls do not become independent realities
+— they share committed observation.
+
+```ts
+const a = await durable.open("workspace", { initial: EMPTY });
+const b = await durable.open("workspace", { initial: EMPTY });
+
+await a.set({ title: "Hello", blocks: [] });
+b.value.title; // "Hello"
+```
+
+This is the same-tab equivalent of the cross-tab observation guarantee.
+
+## Namespacing
+
+Applications with more than one instance can namespace their slots:
+
+```ts
+const editor = createDurable({ namespace: "editor" });
+const settings = createDurable({ namespace: "settings" });
+```
+
+Slots under different namespaces cannot collide even when they share a
+name.

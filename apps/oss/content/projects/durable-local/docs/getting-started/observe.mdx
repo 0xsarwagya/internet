@@ -1,0 +1,60 @@
+---
+title: "Observe state"
+description: "Subscribe to committed changes — same tab and across tabs."
+order: 4
+---
+
+Subscribers see committed values, never speculative in-memory mutations.
+
+```ts
+const unsubscribe = workspace.subscribe((value, event) => {
+  console.log(event.revision, event.source, value);
+});
+```
+
+The event object carries:
+
+- `revision` — the monotonic revision number after the commit.
+- `source` — where the commit came from:
+  - `local` — a `set()` or `update()` in this tab.
+  - `external` — another tab's commit reconciled from storage.
+  - `migration` — a schema migration ran on this open.
+  - `reset` — `reset()` was called.
+
+Call `unsubscribe()` to detach. A subscriber that throws does not
+silence the others.
+
+## Cross-tab
+
+When another tab commits a slot, this tab's subscribers are notified.
+The mechanism is:
+
+1. Tab A commits and increments the revision.
+2. Tab A broadcasts `{ slot, revision, source }` on a shared
+   `BroadcastChannel`.
+3. Tab B receives the message, sees the revision is higher than what
+   it has, and reads the current envelope from IndexedDB.
+4. Tab B's subscribers observe the new value with `source: "external"`.
+
+Storage is the source of truth. Cross-context messaging is a poke that
+says "look again". A dropped message does not corrupt state — the next
+`open()` or the next `pageshow` reconciliation recovers it.
+
+## The bfcache trap
+
+WebKit silently drops `BroadcastChannel` messages to bfcached (frozen)
+pages. When your page returns from bfcache, subscribers may have missed
+notifications. `durable-local` handles this: on `pageshow` with
+`event.persisted === true`, every subscriber re-reads from storage and
+fires if the revision moved.
+
+You do not need to call anything for this — it is automatic. But it is
+why subscribers see events labelled `external` shortly after a bfcache
+restore even when they thought they had been quiet.
+
+## The library never broadcasts values
+
+Only notices — never the value itself. The value comes from storage.
+This keeps the notification channel small, the source of truth in one
+place, and the correctness story simple: a lost message can never be
+the reason a subscriber sees stale data.

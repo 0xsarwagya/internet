@@ -1,0 +1,69 @@
+---
+title: "Errors"
+description: "Every failure is a typed DurableError with a stable code."
+order: 2
+---
+
+Every failure the library throws is a `DurableError` with a `code`, the
+`operation` that failed, an optional `slot`, and the underlying error
+attached as `cause`.
+
+## Codes
+
+| Code | Meaning | Recovery |
+|---|---|---|
+| `UNSUPPORTED` | Runtime does not implement IndexedDB. | Not recoverable; the library will not work here. |
+| `STORAGE_UNAVAILABLE` | Browser refused to open IndexedDB (private mode restriction, disk error, blocked by another tab). | Try again after user interaction; report honestly. |
+| `OPEN_FAILED` | The initial read of a slot failed. | Retry `open()`; if persistent, log the `cause`. |
+| `STATE_INVALID` | The validator rejected the stored value (or a migrated value). | Application decides; the library never auto-discards. |
+| `MIGRATION_REQUIRED` | The stored state version is older than declared and no migration step is provided. | Ship the missing migration in the next release. |
+| `MIGRATION_FAILED` | A migration step threw. Previous committed state is unchanged. | Application-defined; retry, prompt, or explicitly `reset()`. |
+| `FUTURE_VERSION` | Stored state is newer than the declared version. | Ship a newer build, or explicitly `reset()`. |
+| `COMMIT_FAILED` | A write transaction aborted for a non-quota reason. | Retry; if persistent, log the `cause`. |
+| `QUOTA_EXCEEDED` | The write would exceed the origin's storage quota. | Do not retry blind. Show a "storage full" UI. |
+| `UNSUPPORTED_VALUE` | The value contained a shape v1 does not persist (Date, Blob, Map, class instance, cycle, etc.). | Serialize to JSON-compatible shape before writing. |
+| `SLOT_DESTROYED` | A write was attempted after `destroy()`. | Reopen the slot before writing. |
+| `SLOT_NAME_INVALID` | The slot name does not match the required grammar. | Use a name matching `/^[a-z0-9][a-z0-9._-]{0,127}$/`. |
+| `CONFLICT` | Reserved for future concurrency invariants; not raised by v1. | — |
+
+## Shape
+
+```ts
+{
+  name: "DurableError",
+  code: "MIGRATION_FAILED",
+  operation: "migrate",
+  slot: "default/workspace",
+  message: "Migration 1 → 2 threw. The previous committed value is unchanged.",
+  cause: OriginalError,
+}
+```
+
+Application state is never placed inside `message`. If your logging
+pipeline captures error messages, they will not accidentally spill
+stored values.
+
+## Discriminating errors
+
+```ts
+import { isDurableError } from "@0xsarwagya/durable-local";
+
+try {
+  await workspace.set(next);
+} catch (err) {
+  if (isDurableError(err)) {
+    switch (err.code) {
+      case "QUOTA_EXCEEDED":
+        showStorageFullUi();
+        break;
+      case "UNSUPPORTED_VALUE":
+        // programmer error; log and fix
+        break;
+      default:
+        reportUnexpected(err);
+    }
+  } else {
+    throw err;
+  }
+}
+```
