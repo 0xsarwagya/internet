@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 const LOGO_SECRET_THRESHOLD = 7;
 const SECRET_VISIBLE_MS = 3_600;
@@ -81,6 +81,17 @@ export function ChromeIndex({ notesCount }: Props) {
           </span>
         </Link>
 
+        <nav
+          aria-label="Family sites"
+          className="flex items-baseline gap-x-3 font-mono text-[10px] uppercase tracking-[var(--tracking-mono)] text-ink/55 sm:text-[11px]"
+        >
+          <FamilyLink href="https://eng.sarwagya.wtf">eng</FamilyLink>
+          <span aria-hidden className="text-ink/20">·</span>
+          <FamilyLink href="https://bakaiti.sarwagya.wtf">bakaiti</FamilyLink>
+          <span aria-hidden className="text-ink/20">·</span>
+          <FamilyLink href="https://oss.sarwagya.wtf">oss</FamilyLink>
+        </nav>
+
         {secretVisible ? (
           <span className="label pointer-events-none text-rust">
             You found nothing. Exactly.
@@ -88,5 +99,30 @@ export function ChromeIndex({ notesCount }: Props) {
         ) : null}
       </div>
     </div>
+  );
+}
+
+function FamilyLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="group inline-flex items-baseline gap-1 outline-none transition-colors hover:text-rust focus:text-rust"
+    >
+      <span>{children}</span>
+      <span
+        aria-hidden
+        className="text-ink/30 transition-colors group-hover:text-rust group-focus:text-rust"
+      >
+        ↗
+      </span>
+    </a>
   );
 }

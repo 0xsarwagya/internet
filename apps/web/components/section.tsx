@@ -26,7 +26,7 @@ export function Section({ id, label, index, children, className }: Props) {
       id={id}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.15 }}
+      viewport={{ once: true, amount: "some" }}
       variants={RISE}
       className={`relative mx-auto w-full max-w-[1440px] px-5 sm:px-6 md:px-12 ${className ?? ""}`}
     >
