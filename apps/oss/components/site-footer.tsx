@@ -30,7 +30,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="mt-14 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-baseline sm:gap-6 md:mt-20">
-        <span className="label">The workshop of sarwagya.wtf</span>
+        <span className="label">A workshop of sarwagya.wtf</span>
         <span className="label">© {new Date().getFullYear()} · Sarwagya Singh</span>
       </div>
     </footer>
