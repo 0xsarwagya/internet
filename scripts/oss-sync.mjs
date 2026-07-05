@@ -13,6 +13,7 @@
  */
 
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { execSync } from "node:child_process";
 import path from "node:path";
 import process from "node:process";
@@ -101,6 +102,26 @@ function validateMdx(filePath, { requireTitle }) {
   return null;
 }
 
+/** Stable digest of every snapshot file except .provenance.json. */
+function snapshotDigest(dir) {
+  const hash = createHash("sha256");
+  const walk = (current) => {
+    for (const entry of readdirSync(current).sort()) {
+      const full = path.join(current, entry);
+      if (statSync(full).isDirectory()) {
+        walk(full);
+      } else if (path.relative(dir, full) !== ".provenance.json") {
+        hash.update(path.relative(dir, full));
+        hash.update("\0");
+        hash.update(readFileSync(full));
+        hash.update("\0");
+      }
+    }
+  };
+  walk(dir);
+  return hash.digest("hex");
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const { projectPath } = args;
@@ -170,6 +191,15 @@ function main() {
   // Build the snapshot — scoped strictly to this project's own slug.
   const outRoot = path.resolve(args.out);
   const snapshotDir = path.join(outRoot, manifest.slug);
+  const previousDigest = existsSync(snapshotDir) ? snapshotDigest(snapshotDir) : null;
+  let previousProvenance = null;
+  try {
+    previousProvenance = JSON.parse(
+      readFileSync(path.join(snapshotDir, ".provenance.json"), "utf8"),
+    );
+  } catch {
+    previousProvenance = null;
+  }
   rmSync(snapshotDir, { recursive: true, force: true });
   mkdirSync(snapshotDir, { recursive: true });
 
@@ -195,19 +225,31 @@ function main() {
     ? JSON.parse(readFileSync(packageJsonPath, "utf8")).version
     : undefined;
 
+  const provenance = {
+    sourceRepository: args.repo ?? "local",
+    sourceCommit,
+    ...(version ? { version } : {}),
+    publishedAt: new Date().toISOString(),
+    manifestSchemaVersion: manifest.schemaVersion,
+  };
+  // A re-sync that changes nothing keeps its original timestamp, so the
+  // publish workflow's "no content changes" guard actually fires instead
+  // of opening timestamp-only PRs.
+  const unchanged =
+    previousDigest !== null &&
+    previousProvenance !== null &&
+    snapshotDigest(snapshotDir) === previousDigest &&
+    previousProvenance.sourceRepository === provenance.sourceRepository &&
+    previousProvenance.sourceCommit === provenance.sourceCommit &&
+    previousProvenance.version === provenance.version &&
+    previousProvenance.manifestSchemaVersion === provenance.manifestSchemaVersion;
+  if (unchanged) {
+    provenance.publishedAt = previousProvenance.publishedAt;
+  }
+
   writeFileSync(
     path.join(snapshotDir, ".provenance.json"),
-    JSON.stringify(
-      {
-        sourceRepository: args.repo ?? "local",
-        sourceCommit,
-        ...(version ? { version } : {}),
-        publishedAt: new Date().toISOString(),
-        manifestSchemaVersion: manifest.schemaVersion,
-      },
-      null,
-      2,
-    ) + "\n",
+    JSON.stringify(provenance, null, 2) + "\n",
   );
 
   console.log(`Synchronized ${manifest.slug} → ${snapshotDir}`);
