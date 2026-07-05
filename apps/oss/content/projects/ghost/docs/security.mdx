@@ -1,0 +1,92 @@
+---
+title: "Security model"
+description: "The threat model, the XSS boundary, and what Ghost does not prove."
+order: 2
+---
+
+Ghost is smaller than an auth platform. It is not less security-sensitive.
+This page is core product documentation, not a footer.
+
+## The fundamental statement
+
+Ghost authenticates a key, not a person.
+
+A successful verification proves exactly one sentence: *the requester
+possesses the private key corresponding to this ghost ID.* It does not
+prove a human, a device, a unique individual, or the same person as last
+time — only the same key. Everything stronger requires systems Ghost
+deliberately does not include.
+
+## What Ghost does not prove
+
+- **Not a person.** A browser-held key is not a human. Do not call the key
+  holder a verified user.
+- **Not uniqueness.** Anyone can mint unlimited fresh identities by
+  clearing storage or opening profiles. Ghost has no sybil resistance.
+- **Not anonymity.** Ghost is pseudonymous. Your application can still link
+  a ghost to IPs, behaviour, payments, or anything typed into a form.
+- **Not recoverability.** A lost key is a lost identity, by design.
+
+If the application needs legal identity, verified email, organizations,
+SSO, payment identity, or account-recovery guarantees — it needs an account
+system, not Ghost.
+
+## Threat model
+
+Assets: the private key, the identity, signed proofs, and whatever your
+application lets a ghost own.
+
+**Threats Ghost defends against:**
+
+- *Key exfiltration via script.* The key is a non-extractable `CryptoKey`.
+  There is no code path — in Ghost or in the platform — that returns the
+  raw private bytes to JavaScript.
+- *Replay.* Nonces verify exactly once; challenges expire in minutes.
+- *Cross-site proof reuse.* `audience` is inside the signed bytes; a proof
+  for one audience is typed garbage at another.
+- *Consent scope creep.* `action` is inside the signed bytes; a login proof
+  cannot authorize a deletion.
+- *Identity spoofing.* The verifier recomputes the ghost ID from the public
+  key; the ID field is never trusted.
+- *Cross-origin correlation.* Storage is origin-scoped, so identities are
+  pairwise by default.
+
+**Threats Ghost cannot solve alone:** malicious JavaScript running in your
+origin (see XSS below), a compromised browser or OS, physical access to an
+unlocked device, and authorization bugs in your own server. No client
+library fixes those.
+
+## The XSS boundary — read this one
+
+Non-extractable keys change what XSS steals, not whether XSS is bad.
+
+If an attacker runs script in your origin, they **cannot exfiltrate the
+key**: the identity cannot be cloned onto their machine, and cleaning up
+the injection genuinely ends the compromise. That is a real, meaningful
+improvement over a stolen password or long-lived token.
+
+But while their script runs, they can **use** the key: call `sign()` on
+challenges of their choosing and act as the ghost. Non-extractable does not
+make XSS harmless — it converts permanent identity theft into abuse bounded
+by the duration of the injection. Short challenge TTLs and per-action
+proofs shrink that window; your CSP and output escaping remain the actual
+defense.
+
+## Storage loss is a feature with consequences
+
+Cleared site data, evicted storage, a reinstalled browser: the key is gone,
+the identity is unrecoverable, and Ghost will silently mint a fresh one on
+the next `createGhost()`. Design for it: treat ghost-owned data as
+reclaimable (or exportable through your own flows), and say "this note
+belongs to this browser" in your UI, not "your account".
+
+## Practices the packages enforce or expect
+
+- Challenges are random (32-byte nonces), short-lived, and single-use — the
+  provided `createChallenge` and stores make the safe path the easy path.
+- Signatures cover deterministic canonical bytes, never ad-hoc JSON.
+- Verification failures are generic to clients, specific in your logs.
+- Signatures may be engine-randomized (WebKit hedges Ed25519): treat them
+  as opaque valid/invalid values, never as identifiers or cache keys.
+- No telemetry, no central service, no third-party requests — the
+  dependency surface of both entry points is zero packages.

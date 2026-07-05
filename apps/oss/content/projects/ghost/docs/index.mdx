@@ -1,0 +1,56 @@
+---
+title: "Introduction"
+description: "What Ghost is, what it refuses to be, and where to start."
+order: 1
+---
+
+Ghost gives web applications persistent cryptographic identity without user
+accounts.
+
+Most applications that build sign-up flows never needed to know who you
+are. They needed to know something smaller: *is this the same browser that
+was here yesterday?* Ghost answers exactly that question. The browser
+generates a keypair, keeps the private half where JavaScript cannot read
+it, and proves possession when your server asks. The public key becomes the
+identity.
+
+<Graph3D
+  caption="First visit generates a key. Every return proves it."
+  layout="layers"
+  nodes={[
+    { id: "app", label: "Your app", sub: "browser", kind: "primary", layer: 0 },
+    { id: "create", label: "createGhost()", sub: "load or generate", kind: "secondary", layer: 1 },
+    { id: "key", label: "Private key", sub: "non-extractable, IndexedDB", kind: "faint", layer: 2, angle: 0.25 },
+    { id: "id", label: "ghost_1_…", sub: "public identity", kind: "accent", layer: 2, angle: 0.75 },
+    { id: "sign", label: "sign(challenge)", sub: "proof of possession", kind: "secondary", layer: 3 },
+    { id: "server", label: "Your server", sub: "verifyGhostProof()", kind: "primary", layer: 4 }
+  ]}
+  edges={[
+    { from: "app", to: "create" },
+    { from: "create", to: "key", dashed: true },
+    { from: "create", to: "id" },
+    { from: "id", to: "sign" },
+    { from: "key", to: "sign", dashed: true },
+    { from: "sign", to: "server" }
+  ]}
+/>
+
+Ghost is not Auth0, Clerk, passkeys, OAuth, or "auth without passwords". It
+is not an account system at all. It is continuity without accounts — and it
+authenticates a key, not a person.
+
+## Where to start
+
+- [Installation](/ghost/docs/getting-started/installation) — add the package and check runtime support.
+- [Your first identity](/ghost/docs/getting-started/first-identity) — create, sign, verify, end to end.
+- [Identity](/ghost/docs/concepts/identity) — what a ghost ID is and why it belongs to one origin.
+- [Security model](/ghost/docs/security) — the threat model, and what Ghost does not prove.
+
+## Status
+
+<Callout type="warning">
+Ghost is experimental. The v1 wire protocol is versioned and pinned by test
+vectors, but the API may still change before 1.0. Do not use Ghost where
+you need legal identity, account recovery, or regulatory guarantees — read
+[what Ghost does not prove](/ghost/docs/security) first.
+</Callout>

@@ -1,0 +1,36 @@
+---
+title: "Installation"
+description: "Add the package and check what the runtime supports."
+order: 1
+---
+
+<Install package="@0xsarwagya/ghost" />
+
+The package has two entry points and zero dependencies:
+
+- `@0xsarwagya/ghost` — the browser API: identity lifecycle and signing.
+- `@0xsarwagya/ghost/server` — the verifier: challenges, proofs, replay
+  protection. Runs anywhere `globalThis.crypto` exists — Node 20+, Deno,
+  Bun, and edge runtimes. Node 18.17+ works but 20+ is recommended.
+
+## Runtime requirements
+
+The browser side needs Web Crypto Ed25519 and IndexedDB — baseline in
+Chromium 137+, Firefox 129+, and Safari 17+. Instead of memorizing that,
+ask the runtime:
+
+```ts
+import { capabilities } from "@0xsarwagya/ghost";
+
+const caps = await capabilities();
+if (!caps.supported) {
+  // Render an honest unsupported state. caps.webCrypto, caps.ed25519,
+  // and caps.indexedDB say exactly what is missing.
+}
+```
+
+<Callout type="note">
+Ghost works offline for everything local — creating, loading, and signing
+never touch the network. Only your own server's challenge and verify
+endpoints do.
+</Callout>

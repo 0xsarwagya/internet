@@ -1,0 +1,68 @@
+---
+title: "Challenges and proofs"
+description: "How possession is proven: one-time challenges, canonical bytes, self-contained proofs."
+order: 2
+---
+
+Ghost proves one sentence:
+
+> The requester possesses the private key corresponding to this ghost ID.
+
+It proves it with a challenge–response, never with a static credential.
+
+## The challenge
+
+Your server issues a short-lived, single-use challenge:
+
+```json
+{
+  "version": 1,
+  "nonce": "…32 random bytes, base64url…",
+  "audience": "https://app.example",
+  "action": "login",
+  "expiresAt": 1783075200000
+}
+```
+
+Every field is load-bearing. The `nonce` makes the challenge single-use.
+`audience` stops a proof harvested for one site being replayed against
+another. `action` scopes the proof to one intent — a "login" proof can
+never authorize "delete-account". `expiresAt` (epoch milliseconds) bounds
+the window. An optional `ghostId` binds the challenge to one identity, and
+only that ghost will sign it.
+
+## The canonical bytes
+
+The browser does not sign JSON. It signs a fixed-order, length-prefixed
+byte encoding of the challenge fields, with a protocol context string in
+front. Deterministic bytes mean no canonicalization rules, no number
+formatting surprises, and no way to smuggle content across field
+boundaries. The exact layout is in the
+[protocol reference](/ghost/docs/reference/protocol), and
+`canonicalChallengeBytes()` is exported so you can audit precisely what
+gets signed.
+
+## The proof
+
+```json
+{
+  "version": 1,
+  "algorithm": "ed25519",
+  "ghostId": "ghost_1_…",
+  "publicKey": "…base64url…",
+  "challenge": { "…echoed verbatim…": true },
+  "signature": "…base64url…"
+}
+```
+
+The proof is self-contained — the public key travels inside it, so your
+server needs no key registry before the first proof arrives. The verifier
+recomputes the ghost ID from the public key; the `ghostId` field is a
+claim, and the key is the evidence.
+
+<Callout type="warning">
+A cryptographically valid signature is not an authenticated request.
+Expiry, audience, action, binding, and one-time nonce consumption are what
+turn a signature into a proof — and the verifier enforces all of them. See
+[verifying proofs](/ghost/docs/guides/server-verification).
+</Callout>

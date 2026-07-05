@@ -1,0 +1,110 @@
+---
+title: "Protocol reference"
+description: "The exact v1 wire format: identity encoding, canonical bytes, proof envelope, test vectors."
+order: 1
+---
+
+Protocol v1 is Ed25519 signatures with SHA-256 identity derivation. The `1`
+in every version-carrying string means exactly this suite — algorithm
+changes are version changes.
+
+## Public key
+
+The canonical public key form is the raw 32-byte Ed25519 key (RFC 8032).
+On the wire it is base64url without padding. SPKI, JWK, and PEM are never
+used in the protocol.
+
+## Ghost ID
+
+```
+ghostId = "ghost_1_" + base32( SHA-256( "ghost-id-v1:" ‖ publicKeyRaw )[0..20) )
+```
+
+- `"ghost-id-v1:"` is a UTF-8 domain-separation prefix.
+- The SHA-256 digest is truncated to 20 bytes (160 bits) — the same
+  fingerprint length git and SSH used for decades.
+- base32 is RFC 4648, lowercase, no padding: alphabet `a-z2-7`.
+- Grammar: `^ghost_1_[a-z2-7]{32}$` — 40 characters, URL-safe, case-safe.
+
+## Challenge
+
+```json
+{
+  "version": 1,
+  "nonce": "base64url, 32 random bytes",
+  "audience": "https://app.example",
+  "action": "login",
+  "expiresAt": 1783075200000,
+  "ghostId": "optional — binds the challenge to one identity"
+}
+```
+
+`expiresAt` is Unix epoch **milliseconds** as a JSON number. It is rendered
+as a base-10 ASCII string inside the signed bytes, so no floating-point or
+timezone formatting can enter the signature.
+
+## Canonical signed bytes
+
+The message that gets signed is the concatenation, in fixed order, of each
+field prefixed by its byte length as an unsigned 32-bit big-endian integer:
+
+| # | Field |
+| --- | --- |
+| 1 | `"ghost-proof-v1"` (constant context string) |
+| 2 | `nonce` |
+| 3 | `audience` |
+| 4 | `action` |
+| 5 | `expiresAt` as base-10 ASCII |
+| 6 | `ghostId`, or the empty field when absent |
+
+All fields are UTF-8. Length prefixes make field boundaries unforgeable —
+no delimiter can be smuggled inside a value — and an absent `ghostId`
+(length 0) can never collide with a present one, because a valid ghost ID
+is never empty. There is no JSON canonicalization anywhere in the protocol.
+
+`canonicalChallengeBytes()` is exported from both entry points so any
+implementation can be audited against these bytes.
+
+## Proof envelope
+
+```json
+{
+  "version": 1,
+  "algorithm": "ed25519",
+  "ghostId": "ghost_1_…",
+  "publicKey": "base64url, raw 32 bytes",
+  "challenge": { "… echoed verbatim …": true },
+  "signature": "base64url, 64 bytes"
+}
+```
+
+Verifiers MUST recompute the ghost ID from `publicKey` and reject on
+mismatch, MUST validate expiry/audience/action/binding, and MUST consume
+the nonce at most once. A valid signature alone authenticates nothing.
+
+<Callout type="warning">
+Ed25519 signatures are deterministic in RFC 8032 but engines may add
+hedging noise as side-channel hardening — WebKit does. Two valid
+signatures over the same bytes can differ. Treat signatures as opaque
+valid/invalid values; never compare, deduplicate, or index by signature
+bytes.
+</Callout>
+
+## Test vectors
+
+The fixture keypair is RFC 8032 §7.1 TEST 1. For its public key
+`d75a9801…511a`:
+
+```
+ghostId        ghost_1_crhgcniramqtgfpib5uiaautocwdigbt
+challenge      { version: 1, nonce: "dGVzdC1ub25jZS0wMDAwMDAwMDAwMDAwMDAwMDAwMDAw",
+                 audience: "https://ghost.test", action: "login",
+                 expiresAt: 4102444800000 }
+canonical      0000000e 67686f73742d70726f6f662d7631 …  (see repository)
+```
+
+The complete pinned vectors — canonical bytes and a known-good signature
+for the unbound and identity-bound cases — live in
+[`tests/protocol-vectors.ts`](https://github.com/0xsarwagya/ghost/blob/main/tests/protocol-vectors.ts)
+and are recomputed by CI in Node, Chromium, Firefox, and WebKit on every
+run. An independent implementation that reproduces them speaks protocol v1.

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 220" role="img" aria-label="Ghost proof flow: server issues a one-time challenge, the browser signs it with a non-extractable key, the server verifies the proof.">
+  <style>
+    text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fill: currentColor; }
+    .box { fill: none; stroke: currentColor; stroke-opacity: 0.35; }
+    .arrow { stroke: currentColor; stroke-opacity: 0.55; fill: none; }
+    .sub { font-size: 10px; opacity: 0.6; }
+    .main { font-size: 13px; }
+  </style>
+  <rect class="box" x="20" y="70" width="200" height="80" />
+  <text class="main" x="40" y="103">Your server</text>
+  <text class="sub" x="40" y="125">challenge: nonce · audience</text>
+  <text class="sub" x="40" y="139">action · expiresAt</text>
+
+  <rect class="box" x="280" y="70" width="200" height="80" />
+  <text class="main" x="300" y="103">Browser</text>
+  <text class="sub" x="300" y="125">signs canonical bytes</text>
+  <text class="sub" x="300" y="139">key never leaves</text>
+
+  <rect class="box" x="540" y="70" width="200" height="80" />
+  <text class="main" x="560" y="103">Your server</text>
+  <text class="sub" x="560" y="125">verify · expiry · audience</text>
+  <text class="sub" x="560" y="139">action · one-time nonce</text>
+
+  <path class="arrow" d="M220 95 L272 95" marker-end="url(#a)" />
+  <path class="arrow" d="M480 95 L532 95" marker-end="url(#a)" />
+  <text class="sub" x="228" y="88">challenge</text>
+  <text class="sub" x="497" y="88">proof</text>
+
+  <text class="sub" x="280" y="185">ghost_1_… — the public key is the identity. No account was created.</text>
+
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="currentColor" fill-opacity="0.55" />
+    </marker>
+  </defs>
+</svg>

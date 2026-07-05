@@ -1,0 +1,77 @@
+---
+title: "Your first identity"
+description: "Create an identity, sign a challenge, verify the proof."
+order: 2
+---
+
+Three moves: the browser creates (or loads) its identity, your server
+issues a one-time challenge, the browser answers it with a signature your
+server verifies.
+
+## 1. Create the identity
+
+```ts
+import { createGhost } from "@0xsarwagya/ghost";
+
+const ghost = await createGhost();
+
+ghost.id;        // "ghost_1_crhgcniramqtgfpib5uiaautocwdigbt"
+ghost.publicKey; // base64url of the raw Ed25519 public key
+```
+
+The first call generates a non-extractable keypair and persists it in
+IndexedDB. Every later call — tomorrow, next month — loads the same key and
+derives the same ID. No network, no user gesture, no dashboard.
+
+## 2. Issue a challenge on your server
+
+```ts
+import { createChallenge, InMemoryChallengeStore } from "@0xsarwagya/ghost/server";
+
+const store = new InMemoryChallengeStore();
+
+// GET /ghost/challenge
+const challenge = createChallenge({
+  audience: "https://app.example",
+  action: "login",
+});
+// → { version: 1, nonce, audience, action, expiresAt }
+```
+
+Send it to the browser as JSON. Challenges expire (two minutes by default)
+and verify exactly once.
+
+## 3. Sign it in the browser
+
+```ts
+const proof = await ghost.sign(challenge);
+// POST /ghost/verify with the proof
+```
+
+## 4. Verify the proof on your server
+
+```ts
+import { verifyGhostProof } from "@0xsarwagya/ghost/server";
+
+const result = await verifyGhostProof(proof, {
+  expectedAudience: "https://app.example",
+  expectedAction: "login",
+  challengeStore: store,
+});
+
+if (result.ok) {
+  // result.ghostId is proven: this client holds the private key.
+  // Store it next to whatever this ghost owns, or start your session.
+}
+```
+
+`verifyGhostProof` never throws for bad proofs — it returns
+`{ ok: false, code }` so a hostile request is a result, not an exception.
+The verifier enforces signature, expiry, audience, action, identity
+binding, and one-time nonce use; a valid signature alone is never enough.
+
+<Callout type="note">
+What happens after verification is yours: set a cookie session, mint a
+token, or authorize the single action and stop. Ghost ends at
+[verification on purpose](/ghost/docs/guides/server-verification).
+</Callout>

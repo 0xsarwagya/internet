@@ -1,0 +1,48 @@
+---
+title: "Errors"
+description: "Every failure is a typed GhostError with a stable code."
+order: 2
+---
+
+Everything Ghost throws is a `GhostError` with a stable `code`, the
+`operation` that failed, a human message, and the native `cause` when there
+is one. The server verifier is the exception by design: it returns failure
+codes instead of throwing, because bad proofs are expected traffic.
+
+```ts
+import { createGhost, isGhostError } from "@0xsarwagya/ghost";
+
+try {
+  const ghost = await createGhost();
+} catch (error) {
+  if (isGhostError(error) && error.code === "UNSUPPORTED") {
+    // render the unsupported state
+  }
+}
+```
+
+## Codes
+
+| Code | Fires when |
+| --- | --- |
+| `UNSUPPORTED` | The runtime has no usable Web Crypto. Check `capabilities()` first. |
+| `STORAGE_UNAVAILABLE` | IndexedDB is missing or failing (some private-browsing modes, storage pressure). |
+| `KEY_GENERATION_FAILED` | The runtime refused to generate an Ed25519 keypair. |
+| `KEY_NOT_FOUND` | Signing was attempted on an identity that has been `reset()`. |
+| `IDENTITY_CORRUPTED` | The stored record is unreadable. `reset()` discards it and starts over. |
+| `SIGNING_FAILED` | The runtime failed during the signature operation itself. |
+| `INVALID_CHALLENGE` | A challenge or proof is malformed, bound to a different identity, or fails an expectation you configured. |
+| `CHALLENGE_EXPIRED` | `expiresAt` has passed — locally at `sign()`, or at the verifier. |
+| `CHALLENGE_REUSED` | The nonce was already consumed. Replay, double-submit, or a shared store misconfiguration. |
+| `AUDIENCE_MISMATCH` | The proof was issued for a different audience than this verifier serves. |
+| `INVALID_SIGNATURE` | The signature does not verify, or the ghost ID does not match the public key. |
+| `UNSUPPORTED_VERSION` | A protocol version or algorithm this build does not speak. |
+
+Errors never contain key material. The `cause` chain preserves the native
+DOMException when you need to debug an engine quirk.
+
+<Callout type="note">
+Treat verifier codes as *categories*, not oracles. Return a generic 401 to
+clients; log the specific code for yourself. Detailed rejection reasons are
+for your logs, not for whoever is probing your endpoint.
+</Callout>

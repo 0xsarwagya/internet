@@ -1,0 +1,92 @@
+---
+title: "Verifying proofs on the server"
+description: "verifyGhostProof, replay protection stores, and where Ghost deliberately stops."
+order: 1
+---
+
+The server package is one verifier, one challenge factory, and one replay
+store. It has no framework adapters and no runtime dependencies — it runs
+anywhere `globalThis.crypto` exists.
+
+## The two endpoints you write
+
+```ts
+import {
+  createChallenge,
+  InMemoryChallengeStore,
+  verifyGhostProof,
+} from "@0xsarwagya/ghost/server";
+
+const AUDIENCE = "https://app.example";
+const store = new InMemoryChallengeStore();
+
+// GET /ghost/challenge?action=login
+function challengeHandler(action: string) {
+  return createChallenge({ audience: AUDIENCE, action });
+}
+
+// POST /ghost/verify
+async function verifyHandler(body: unknown) {
+  const result = await verifyGhostProof(body, {
+    expectedAudience: AUDIENCE,
+    expectedAction: "login",
+    challengeStore: store,
+  });
+  if (!result.ok) {
+    return { status: 401, code: result.code };
+  }
+  // result.ghostId is proven. Do your thing: create your own session,
+  // upsert a row keyed by ghostId, or authorize this one action.
+  return { status: 200, ghostId: result.ghostId };
+}
+```
+
+`verifyGhostProof` returns a discriminated union — `{ ok: true, ghostId,
+publicKey, action }` or `{ ok: false, code, message }`. It throws only for
+your own misconfiguration (missing store or audience), never for hostile
+input.
+
+## What the verifier enforces, in order
+
+1. Proof shape, protocol version, algorithm.
+2. Expiry (`CHALLENGE_EXPIRED`).
+3. Audience (`AUDIENCE_MISMATCH`) and action.
+4. Identity binding — the challenge's `ghostId` and your `expectedGhostId`.
+5. The ghost ID actually matches the public key.
+6. The Ed25519 signature over the canonical bytes.
+7. Nonce consumption, last (`CHALLENGE_REUSED`) — so a failed proof never
+   burns an unused challenge.
+
+## Replay stores
+
+`InMemoryChallengeStore` is correct for a single process: one `Map`, atomic
+consume, lazy sweep of expired nonces.
+
+<Callout type="warning">
+In-memory state does not survive restarts and is not shared between
+instances. Behind a load balancer, implement `ChallengeStore` against
+shared storage. The contract is one method.
+</Callout>
+
+```ts
+import type { ChallengeStore } from "@0xsarwagya/ghost/server";
+
+// Redis: SET NX with expiry is exactly a one-time nonce.
+const redisStore: ChallengeStore = {
+  async consume(nonce, expiresAt) {
+    const ttlMs = Math.max(1, expiresAt - Date.now());
+    const set = await redis.set(`ghost:nonce:${nonce}`, "1", "PX", ttlMs, "NX");
+    return set === "OK";
+  },
+};
+```
+
+A database row with a unique constraint on the nonce works the same way:
+insert succeeds → consumed; conflict → replay.
+
+## Where Ghost stops
+
+Verification is the end of Ghost's job. Sessions, cookies, tokens, and
+authorization are your application's — Ghost stays out of them so it can
+stay small. A common pattern: verify once per browser session, then use
+your normal session machinery keyed by `ghostId`.

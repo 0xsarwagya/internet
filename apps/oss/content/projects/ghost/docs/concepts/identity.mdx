@@ -1,0 +1,56 @@
+---
+title: "Identity"
+description: "What a ghost ID is, where it lives, and why reset is not logout."
+order: 1
+---
+
+A Ghost identity is a keypair, nothing more. The private key is a
+non-extractable `CryptoKey` in IndexedDB. The public key's fingerprint is
+the identifier:
+
+```
+ghost_1_crhgcniramqtgfpib5uiaautocwdigbt
+└───┬──┘└──────────────┬───────────────┘
+ version    SHA-256 of the public key,
+  prefix    truncated, base32
+```
+
+The ID is deterministic, URL-safe, case-safe, and versioned — the `1`
+names the exact cryptographic suite, so the scheme can evolve without
+ambiguity. Full byte-level detail lives in the
+[protocol reference](/ghost/docs/reference/protocol).
+
+## One origin, one identity
+
+An identity belongs to a browser profile **and** an origin, because that is
+how browser storage works — and Ghost treats it as a feature. The same
+browser gets a different, unlinkable ghost on `app-a.example` and
+`app-b.example`. There is no universal identifier following anyone across
+the internet; Ghost is pairwise by default.
+
+Ghost is **pseudonymous, not anonymous**. Your application can still link a
+ghost to an IP address, behaviour, or anything a user types. Ghost adds no
+tracking — it also cannot subtract any.
+
+## Durability
+
+The identity is exactly as durable as the origin's storage:
+
+- Clearing site data destroys it.
+- Browser resets, profile loss, and storage eviction destroy it.
+- Private browsing windows get an identity that dies with the window.
+- There is no recovery. Ghost core does not promise any.
+
+This is the fundamental tradeoff, not an edge case. If losing the identity
+must be impossible, the application needs a real account system — use one.
+
+## Reset is not logout
+
+```ts
+await ghost.reset();
+```
+
+`reset()` deletes the local key. The old identity becomes permanently
+inaccessible — nothing signed by it can ever be produced again — and the
+next `createGhost()` mints a fresh one. It is deliberately not called
+"logout": there is no account to log out of, and nothing to log back into.

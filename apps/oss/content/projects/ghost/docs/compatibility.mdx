@@ -1,0 +1,71 @@
+---
+title: "Compatibility"
+description: "What CI actually proves, per engine and per runtime."
+order: 3
+---
+
+Every claim on this page is exercised by CI on every commit — the identity
+journey (generate → persist → reload → same ID → sign → verify → reset)
+runs in all three engines via Playwright.
+
+<CompatibilityMatrix
+  columns={[
+    { key: "feature", label: "Feature" },
+    { key: "chromium", label: "Chromium" },
+    { key: "firefox", label: "Firefox" },
+    { key: "webkit", label: "WebKit" }
+  ]}
+  rows={[
+    {
+      feature: "Non-extractable Ed25519 keypair",
+      chromium: "yes",
+      firefox: "yes",
+      webkit: "yes",
+      note: "Web Crypto baseline: Chrome 137+, Firefox 129+, Safari 17+."
+    },
+    {
+      feature: "Key persists across reloads (IndexedDB)",
+      chromium: "yes",
+      firefox: "yes",
+      webkit: "yes",
+      note: "Structured clone of a non-extractable CryptoKey — the load-bearing assumption, proven in CI."
+    },
+    {
+      feature: "Challenge signing + server verification",
+      chromium: "yes",
+      firefox: "yes",
+      webkit: "yes",
+      note: "Proof signed in-browser, verified by the real server package in Node."
+    },
+    {
+      feature: "Deterministic signature bytes",
+      chromium: "yes",
+      firefox: "yes",
+      webkit: "no",
+      note: "WebKit hedges Ed25519 signatures. Valid everywhere; byte-reproducible nowhere you should rely on."
+    }
+  ]}
+/>
+
+## Browsers
+
+Chromium 137+, Firefox 129+, and Safari 17+ carry everything Ghost needs.
+Older browsers fail loudly and early: `capabilities()` reports
+`supported: false` with per-feature flags, and `createGhost()` throws a
+typed `UNSUPPORTED` or `KEY_GENERATION_FAILED` — never a silent fallback to
+weaker storage.
+
+Private browsing generally works but the identity dies with the session in
+most modes — see [identity durability](/ghost/docs/concepts/identity).
+
+## Server runtimes
+
+`@0xsarwagya/ghost/server` touches exactly one platform API:
+`globalThis.crypto`. Node 20+, Deno, Bun, and edge workers all provide it.
+Node 18.17+ works; Node 20+ is what CI runs and what we recommend.
+
+<Callout type="note">
+The protocol test vectors are pinned in the repository and recomputed in
+Node and in all three browser engines on every CI run. If an engine ever
+drifts on encoding or verification, CI catches it before you do.
+</Callout>

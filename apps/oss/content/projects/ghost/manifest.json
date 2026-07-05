@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "mdxVersion": 1,
+  "slug": "ghost",
+  "name": "Ghost",
+  "packageName": "@0xsarwagya/ghost",
+  "description": "Persistent cryptographic identity for web apps without accounts.",
+  "status": "experimental",
+  "license": "MIT",
+  "repository": "https://github.com/0xsarwagya/ghost",
+  "landing": "site/landing.mdx",
+  "docs": "docs",
+  "assets": "site/assets",
+  "demo": "site/demo",
+  "links": {
+    "repository": "https://github.com/0xsarwagya/ghost"
+  }
+}
