@@ -16,12 +16,13 @@ import { createGhost } from "@0xsarwagya/ghost";
 const ghost = await createGhost();
 
 ghost.id;        // "ghost_1_crhgcniramqtgfpib5uiaautocwdigbt"
+ghost.credentialId; // "cred_1_…"
 ghost.publicKey; // base64url of the raw Ed25519 public key
 ```
 
 The first call generates a non-extractable keypair and persists it in
 IndexedDB. Every later call — tomorrow, next month — loads the same key and
-derives the same ID. No network, no user gesture, no dashboard.
+returns the same Ghost ID. No network, no user gesture, no dashboard.
 
 ## 2. Issue a challenge on your server
 
@@ -60,7 +61,7 @@ const result = await verifyGhostProof(proof, {
 });
 
 if (result.ok) {
-  // result.ghostId is proven: this client holds the private key.
+  // result.ghostId is proven: this client holds an active credential.
   // Store it next to whatever this ghost owns, or start your session.
 }
 ```

@@ -30,6 +30,7 @@ try {
 | `KEY_GENERATION_FAILED` | The runtime refused to generate an Ed25519 keypair. |
 | `KEY_NOT_FOUND` | Signing was attempted on an identity that has been `reset()`. |
 | `IDENTITY_CORRUPTED` | The stored record is unreadable. `reset()` discards it and starts over. |
+| `RECOVERY_FAILED` | A recovery secret or recovery record is malformed or does not match. |
 | `SIGNING_FAILED` | The runtime failed during the signature operation itself. |
 | `INVALID_CHALLENGE` | A challenge or proof is malformed, bound to a different identity, or fails an expectation you configured. |
 | `CHALLENGE_EXPIRED` | `expiresAt` has passed — locally at `sign()`, or at the verifier. |

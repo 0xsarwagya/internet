@@ -6,7 +6,7 @@ order: 2
 
 Ghost proves one sentence:
 
-> The requester possesses the private key corresponding to this ghost ID.
+> The requester possesses an active credential for this ghost ID.
 
 It proves it with a challenge–response, never with a static credential.
 
@@ -49,6 +49,7 @@ gets signed.
   "version": 1,
   "algorithm": "ed25519",
   "ghostId": "ghost_1_…",
+  "credentialId": "cred_1_…",
   "publicKey": "…base64url…",
   "challenge": { "…echoed verbatim…": true },
   "signature": "…base64url…"
@@ -56,9 +57,9 @@ gets signed.
 ```
 
 The proof is self-contained — the public key travels inside it, so your
-server needs no key registry before the first proof arrives. The verifier
-recomputes the ghost ID from the public key; the `ghostId` field is a
-claim, and the key is the evidence.
+server can verify the signature bytes directly. For recoverable Ghost IDs,
+your server also checks that `credentialId` is active for `ghostId`; this
+is what lets a Ghost rotate credentials without becoming a new Ghost.
 
 <Callout type="warning">
 A cryptographically valid signature is not an authenticated request.

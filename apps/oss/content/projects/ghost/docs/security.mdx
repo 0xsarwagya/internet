@@ -12,10 +12,10 @@ This page is core product documentation, not a footer.
 Ghost authenticates a key, not a person.
 
 A successful verification proves exactly one sentence: *the requester
-possesses the private key corresponding to this ghost ID.* It does not
-prove a human, a device, a unique individual, or the same person as last
-time — only the same key. Everything stronger requires systems Ghost
-deliberately does not include.
+possesses an active credential for this ghost ID.* It does not prove a
+human, a device, a unique individual, or the same person as last time —
+only the same Ghost credential state. Everything stronger requires systems
+Ghost deliberately does not include.
 
 ## What Ghost does not prove
 
@@ -25,7 +25,8 @@ deliberately does not include.
   clearing storage or opening profiles. Ghost has no sybil resistance.
 - **Not anonymity.** Ghost is pseudonymous. Your application can still link
   a ghost to IPs, behaviour, payments, or anything typed into a form.
-- **Not recoverability.** A lost key is a lost identity, by design.
+- **Not guaranteed recoverability.** Recovery exists only when the user
+  opted in and still has the recovery secret.
 
 If the application needs legal identity, verified email, organizations,
 SSO, payment identity, or account-recovery guarantees — it needs an account
@@ -47,7 +48,8 @@ application lets a ghost own.
 - *Consent scope creep.* `action` is inside the signed bytes; a login proof
   cannot authorize a deletion.
 - *Identity spoofing.* The verifier recomputes the ghost ID from the public
-  key; the ID field is never trusted.
+  key for legacy identities, or checks the active credential registry for
+  stable recoverable identities. The ID field is never trusted by itself.
 - *Cross-origin correlation.* Storage is origin-scoped, so identities are
   pairwise by default.
 
@@ -72,19 +74,25 @@ by the duration of the injection. Short challenge TTLs and per-action
 proofs shrink that window; your CSP and output escaping remain the actual
 defense.
 
-## Storage loss is a feature with consequences
+## Storage loss and recovery
 
 Cleared site data, evicted storage, a reinstalled browser: the key is gone,
-the identity is unrecoverable, and Ghost will silently mint a fresh one on
-the next `createGhost()`. Design for it: treat ghost-owned data as
-reclaimable (or exportable through your own flows), and say "this note
-belongs to this browser" in your UI, not "your account".
+and Ghost will mint a fresh one on the next `createGhost()` unless recovery
+was enabled. If recovery was enabled, the user-held recovery secret plus
+your app-stored recovery record can attach a fresh non-extractable
+credential to the same Ghost ID.
+
+Recovery is not an account reset. Ghost does not email a link, phone home
+to a central service, import the old private key, or silently cloud-sync
+the secret. If the user loses the recovery secret, Ghost cannot help.
 
 ## Practices the packages enforce or expect
 
 - Challenges are random (32-byte nonces), short-lived, and single-use — the
   provided `createChallenge` and stores make the safe path the easy path.
 - Signatures cover deterministic canonical bytes, never ad-hoc JSON.
+- Stable Ghost IDs require an application credential registry; do not treat
+  a random claimed `ghostId` plus a valid signature as sufficient.
 - Verification failures are generic to clients, specific in your logs.
 - Signatures may be engine-randomized (WebKit hedges Ed25519): treat them
   as opaque valid/invalid values, never as identifiers or cache keys.

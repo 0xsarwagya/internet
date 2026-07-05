@@ -11,8 +11,8 @@ Most applications that build sign-up flows never needed to know who you
 are. They needed to know something smaller: *is this the same browser that
 was here yesterday?* Ghost answers exactly that question. The browser
 generates a keypair, keeps the private half where JavaScript cannot read
-it, and proves possession when your server asks. The public key becomes the
-identity.
+it, and proves possession when your server asks. The Ghost ID is the stable
+identity; the public key is the active credential.
 
 <Graph3D
   caption="First visit generates a key. Every return proves it."

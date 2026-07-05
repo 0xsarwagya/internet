@@ -26,7 +26,7 @@
   <text class="sub" x="228" y="88">challenge</text>
   <text class="sub" x="497" y="88">proof</text>
 
-  <text class="sub" x="280" y="185">ghost_1_… — the public key is the identity. No account was created.</text>
+  <text class="sub" x="280" y="185">ghost_1_… with cred_1_… — no account was created.</text>
 
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">

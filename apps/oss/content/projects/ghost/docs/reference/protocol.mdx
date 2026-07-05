@@ -4,9 +4,9 @@ description: "The exact v1 wire format: identity encoding, canonical bytes, proo
 order: 1
 ---
 
-Protocol v1 is Ed25519 signatures with SHA-256 identity derivation. The `1`
-in every version-carrying string means exactly this suite — algorithm
-changes are version changes.
+Protocol v1 is stable Ghost IDs plus Ed25519 credentials. The `1` in every
+version-carrying string means exactly this suite — algorithm changes are
+version changes.
 
 ## Public key
 
@@ -14,17 +14,25 @@ The canonical public key form is the raw 32-byte Ed25519 key (RFC 8032).
 On the wire it is base64url without padding. SPKI, JWK, and PEM are never
 used in the protocol.
 
-## Ghost ID
+## Ghost ID and credential ID
 
 ```
-ghostId = "ghost_1_" + base32( SHA-256( "ghost-id-v1:" ‖ publicKeyRaw )[0..20) )
+ghostId = "ghost_1_" + base32( SHA-256( "ghost-id-v1:" ‖ identityMaterial )[0..20) )
+credentialId = "cred_1_" + base32( SHA-256( "ghost-credential-v1:" ‖ publicKeyRaw )[0..20) )
 ```
 
-- `"ghost-id-v1:"` is a UTF-8 domain-separation prefix.
+- The Ghost ID is the stable application identity.
+- The credential ID identifies the active browser-held public key.
+- `"ghost-id-v1:"` and `"ghost-credential-v1:"` are UTF-8 domain-separation prefixes.
 - The SHA-256 digest is truncated to 20 bytes (160 bits) — the same
   fingerprint length git and SSH used for decades.
 - base32 is RFC 4648, lowercase, no padding: alphabet `a-z2-7`.
 - Grammar: `^ghost_1_[a-z2-7]{32}$` — 40 characters, URL-safe, case-safe.
+- Credential grammar: `^cred_1_[a-z2-7]{32}$`.
+
+Early experimental Ghost IDs were derived directly from the public key.
+That shape remains valid as a legacy self-certifying ID, but recoverable
+Ghosts use a stable ID above individual credentials.
 
 ## Challenge
 
@@ -72,15 +80,36 @@ implementation can be audited against these bytes.
   "version": 1,
   "algorithm": "ed25519",
   "ghostId": "ghost_1_…",
+  "credentialId": "cred_1_…",
   "publicKey": "base64url, raw 32 bytes",
   "challenge": { "… echoed verbatim …": true },
   "signature": "base64url, 64 bytes"
 }
 ```
 
-Verifiers MUST recompute the ghost ID from `publicKey` and reject on
+Verifiers MUST recompute the credential ID from `publicKey` and reject on
 mismatch, MUST validate expiry/audience/action/binding, and MUST consume
-the nonce at most once. A valid signature alone authenticates nothing.
+the nonce at most once. For stable Ghost IDs, verifiers MUST also check
+that the credential is active for the Ghost. A valid signature alone
+authenticates nothing.
+
+## Recovery record
+
+Recovery is opt-in and app-stored:
+
+```json
+{
+  "version": 1,
+  "method": "recovery-secret",
+  "ghostId": "ghost_1_…",
+  "authorityId": "recauth_1_…",
+  "createdAt": 1783075200000
+}
+```
+
+The user-held recovery secret derives `authorityId`. Recovery never imports
+the old private key; it creates a fresh non-extractable credential and
+attaches it to the same Ghost ID in the application credential registry.
 
 <Callout type="warning">
 Ed25519 signatures are deterministic in RFC 8032 but engines may add
@@ -96,7 +125,8 @@ The fixture keypair is RFC 8032 §7.1 TEST 1. For its public key
 `d75a9801…511a`:
 
 ```
-ghostId        ghost_1_crhgcniramqtgfpib5uiaautocwdigbt
+legacy ghostId ghost_1_crhgcniramqtgfpib5uiaautocwdigbt
+credentialId   cred_1_3dveqtnobb556nsxhfyhh6qbn5lhsseb
 challenge      { version: 1, nonce: "dGVzdC1ub25jZS0wMDAwMDAwMDAwMDAwMDAwMDAwMDAw",
                  audience: "https://ghost.test", action: "login",
                  expiresAt: 4102444800000 }
