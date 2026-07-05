@@ -54,6 +54,15 @@ statement about what "durable" means on browser storage.
 - [Observe state](./getting-started/observe) across tabs.
 - [Migrations](./concepts/migrations) for evolving your state shape.
 
+## Used in Local
+
+<Callout type="note">
+[Local](https://local.sarwagya.wtf) uses `durable-local` to keep each
+peer's chat history alive across reloads. One slot per peer, one
+`update()` per received message, atomic commits, no database. Source:
+[github.com/0xsarwagya/local](https://github.com/0xsarwagya/local).
+</Callout>
+
 ## Status
 
 <Callout type="warning">

@@ -97,6 +97,15 @@ browser context must decode to identical state in a fresh one, per engine.
   ]}
 />
 
+## Used in Local
+
+[Local](https://local.sarwagya.wtf) uses Handoff to move the WebRTC
+offer/answer bootstrap between two browsers as a QR code (or a link).
+Handoff carries the connection state; the messages themselves flow
+directly peer-to-peer once the ceremony completes. No signaling server
+in the middle. Source:
+[github.com/0xsarwagya/local](https://github.com/0xsarwagya/local).
+
 <ProjectLinks
   docs="/handoff/docs"
   demo="/handoff/demo"

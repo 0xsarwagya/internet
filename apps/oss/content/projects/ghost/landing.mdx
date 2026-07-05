@@ -117,6 +117,14 @@ IndexedDB across a reload.
   ]}
 />
 
+## Used in Local
+
+[Local](https://local.sarwagya.wtf) uses Ghost as the identity primitive
+between two chatting browsers. Each peer signs a nonce chosen by the
+other; the conversation history is pinned to the peer's Ghost ID, and
+reconnecting with a mismatched public key refuses to attach silently.
+Source: [github.com/0xsarwagya/local](https://github.com/0xsarwagya/local).
+
 <ProjectLinks
   docs="/ghost/docs"
   demo="/ghost/demo"
