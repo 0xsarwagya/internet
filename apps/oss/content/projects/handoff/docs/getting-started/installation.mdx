@@ -1,0 +1,35 @@
+---
+title: "Installation"
+description: "Add the package and check what the runtime supports."
+order: 1
+---
+
+<Install package="@0xsarwagya/handoff" />
+
+One entry point, zero dependencies. The protocol primitives
+(`encodeHandoff`, `decodeHandoff`) run anywhere with `TextEncoder` and
+JSON — every browser, Node 18+, Deno, Bun, workers. The browser
+conveniences (`createHandoff`, fragment reading) additionally use
+`location` and `history` where available.
+
+## Runtime requirements
+
+Compression uses the Compression Streams API — baseline in Chromium,
+Firefox, and WebKit since May 2023. It is optional by design:
+
+```ts
+import { capabilities } from "@0xsarwagya/handoff";
+
+capabilities();
+// { compression: true, supported: true }
+```
+
+Without Compression Streams, encoding degrades to uncompressed artifacts
+(they still work, just bigger); receiving a *compressed* artifact in such
+a runtime fails with a typed `UNSUPPORTED` error.
+
+<Callout type="note">
+Handoff needs no network at all. Encoding, decoding, and the transfer
+itself happen entirely between the two devices — the only URL involved is
+your own application's receive route.
+</Callout>

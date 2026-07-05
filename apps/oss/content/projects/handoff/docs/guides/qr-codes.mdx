@@ -1,0 +1,41 @@
+---
+title: "Rendering a QR code"
+description: "The artifact is the payload; the QR library is your choice."
+order: 1
+---
+
+Handoff core contains no QR rendering on purpose — a QR code is one way to
+*display* an artifact, and the protocol must not depend on how the
+artifact is drawn. Any QR library that renders a string works:
+
+```tsx
+import { renderSVG } from "uqr";
+
+const offer = await handoff.create(state);
+
+if (offer.qrFriendly) {
+  const svg = renderSVG(offer.url);
+  element.innerHTML = svg;
+}
+```
+
+Render `offer.url` (not the bare artifact) so any camera app opens the
+receive page directly — the scan *is* the navigation.
+
+## Making codes that actually scan
+
+- **Respect `qrFriendly`.** Past ~1,000 artifact characters, show a
+  copyable link instead. Dense codes fail quietly and users blame their
+  phones.
+- **Render big and high-contrast.** On screens, 240px+ with black modules
+  on white survives glare and cheap cameras; skip styling gimmicks.
+- **Medium error correction is plenty** for screen-to-camera. High EC
+  levels shrink capacity for damage resistance that screens don't need.
+- **Leave the quiet zone alone.** The white border is part of the spec,
+  not wasted space.
+
+<Callout type="note">
+A QR code, a copyable link, and a clipboard button are three presentations
+of one artifact — not three transports. Offer at least the link fallback:
+same-device handoffs (browser to browser) have no camera involved.
+</Callout>

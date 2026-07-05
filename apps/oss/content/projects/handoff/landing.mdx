@@ -1,0 +1,104 @@
+---
+title: "Handoff"
+description: "Move application state between devices without an account or cloud sync."
+---
+
+<ProjectHero package="@0xsarwagya/handoff" status="experimental">
+Why does moving something to another device require putting it on someone else's computer first?
+</ProjectHero>
+
+I refuse to build cloud sync because someone wants to move something once.
+
+You have state here. You want it there. The industry answer is an account,
+an upload to a server in another country, a database row, a sync engine —
+and then a download onto the device sitting next to you. Transfer is not
+sync. Handoff is the smaller primitive: the state becomes a QR code or a
+link, and the other device receives it. The state may exist for ten
+seconds. No server keeps a copy. That absence is the product.
+
+<Install package="@0xsarwagya/handoff" />
+
+## The whole API
+
+```ts
+import { createHandoff } from "@0xsarwagya/handoff";
+
+const handoff = createHandoff({ receiveUrl: "https://app.example/receive" });
+
+// device A
+const offer = await handoff.create({ type: "draft", text: "finish on my phone" });
+offer.url;        // https://app.example/receive#handoff=ho1_…
+offer.qrFriendly; // true while it will actually scan
+
+// device B
+const state = await handoff.receive();
+```
+
+## The move
+
+<Graph3D
+  caption="The state is the artifact. Nobody's server is on the path."
+  layout="layers"
+  nodes={[
+    { id: "a", label: "Device A", sub: "your app", kind: "primary", layer: 0 },
+    { id: "encode", label: "create(state)", sub: "encode · compress", kind: "secondary", layer: 1 },
+    { id: "artifact", label: "ho1_…", sub: "URL-fragment artifact", kind: "accent", layer: 2 },
+    { id: "qr", label: "QR / link / copy", sub: "one artifact, three faces", kind: "secondary", layer: 3, angle: 0.2 },
+    { id: "cloud", label: "The cloud", sub: "not invited", kind: "faint", layer: 3, angle: 0.7 },
+    { id: "receive", label: "receive()", sub: "decode · validate", kind: "secondary", layer: 4 },
+    { id: "b", label: "Device B", sub: "same state", kind: "primary", layer: 5 }
+  ]}
+  edges={[
+    { from: "a", to: "encode" },
+    { from: "encode", to: "artifact" },
+    { from: "artifact", to: "qr" },
+    { from: "qr", to: "receive" },
+    { from: "receive", to: "b" }
+  ]}
+/>
+
+No account. No sync engine. No permanent storage. The payload rides the
+URL *fragment*, which browsers never send in HTTP requests — your own
+server does not log what moved.
+
+<Callout type="warning">
+The artifact is the capability: anyone with the complete link or QR
+payload can receive its contents. That sentence is the security model,
+stated up front — Handoff never promises self-destructing links it cannot
+enforce.
+</Callout>
+
+## Compatibility
+
+Reported from what CI actually exercises — an artifact created in one
+browser context must decode to identical state in a fresh one, per engine.
+
+<CompatibilityMatrix
+  columns={[
+    { key: "feature", label: "Feature" },
+    { key: "chromium", label: "Chromium" },
+    { key: "firefox", label: "Firefox" },
+    { key: "webkit", label: "WebKit" }
+  ]}
+  rows={[
+    {
+      feature: "Cross-context URL transfer",
+      chromium: "Tested in CI",
+      firefox: "Tested in CI",
+      webkit: "Tested in CI"
+    },
+    {
+      feature: "Compression + bounded hostile decoding",
+      chromium: "Tested in CI",
+      firefox: "Tested in CI",
+      webkit: "Tested in CI",
+      note: "Physical QR scanning (laptop→phone, iPhone→Android, …) is a manual matrix — tracked honestly in the compatibility docs, not claimed here."
+    }
+  ]}
+/>
+
+<ProjectLinks
+  docs="/handoff/docs"
+  demo="/handoff/demo"
+  repository="https://github.com/0xsarwagya/handoff"
+/>

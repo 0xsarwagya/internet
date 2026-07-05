@@ -1,0 +1,61 @@
+---
+title: "Creating a handoff"
+description: "Turn state into a shareable artifact."
+order: 2
+---
+
+```ts
+import { createHandoff } from "@0xsarwagya/handoff";
+
+const handoff = createHandoff({
+  receiveUrl: "https://app.example/receive",
+});
+
+const offer = await handoff.create({
+  type: "draft",
+  version: 2,
+  text: "finish this on my phone",
+});
+```
+
+The offer is everything you need to move the state:
+
+```ts
+offer.url;        // https://app.example/receive#handoff=ho1_…
+offer.artifact;   // the bare ho1_… string — render it as a QR code
+offer.size;       // serialized state size in bytes
+offer.qrFriendly; // true while the artifact will scan reliably
+offer.transport;  // "inline" — the state travels inside the artifact
+```
+
+Show `offer.url` as a link, copy it to the clipboard, or render
+`offer.artifact` as a QR code — those are three representations of the
+same transfer, not three transports.
+
+<Callout type="warning">
+The artifact is the capability. Anyone with the complete link or QR
+payload can receive its contents — treat it like the state itself, because
+it is the state itself. There is no revoking a copied string.
+</Callout>
+
+## Size limits
+
+Inline transfer is for small state. `create` rejects anything whose JSON
+exceeds the limit (default 8 KiB) with `PAYLOAD_TOO_LARGE` — before
+generating an artifact nothing can scan:
+
+```ts
+await handoff.create(bigState, { limit: 16384 }); // explicit opt-up
+```
+
+`offer.qrFriendly` flips false past ~1,000 artifact characters — links
+still work fine there, but cameras stop cooperating. See
+[size limits](/handoff/docs/concepts/size-limits) for the physical
+reality behind the numbers.
+
+## What state can travel
+
+JSON-compatible values only: `null`, booleans, finite numbers, strings,
+arrays, plain objects. Dates, Maps, class instances, `NaN`, and cycles are
+rejected with `ENCODING_FAILED` instead of being silently reshaped —
+if JSON would corrupt it, Handoff refuses it.

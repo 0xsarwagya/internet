@@ -1,0 +1,86 @@
+---
+title: "Protocol reference"
+description: "The exact v1 wire format: pipeline, envelope, grammar, limits, vectors."
+order: 1
+---
+
+Protocol v1 is: JSON state, optional `deflate-raw` compression, a one-byte
+envelope, base64url. The `1` in the artifact prefix names exactly this
+pipeline — any incompatible change is a new version, not a new flag.
+
+## Pipeline
+
+```
+state
+  → JSON.stringify            (strict: values JSON would corrupt are rejected)
+  → UTF-8 bytes
+  → deflate-raw               (only if it makes the payload smaller)
+  → envelope                  (1 flags byte ‖ payload)
+  → base64url, no padding
+  → "ho1_" + encoded
+```
+
+## Envelope
+
+| Byte | Meaning |
+| --- | --- |
+| 0 | flags — bit 0: payload is deflate-raw compressed; bits 1–7 reserved, MUST be zero |
+| 1… | payload — UTF-8 JSON, possibly compressed |
+
+A v1 decoder MUST reject reserved flag bits with `UNSUPPORTED_VERSION`
+rather than guessing — unknown flags mean an artifact from a future
+protocol this build cannot honor.
+
+## Artifact grammar
+
+```
+^ho1_[A-Za-z0-9_-]+$
+```
+
+URL-safe, case-sensitive, no padding. Decoders MUST bound input length
+(32,768 chars) before parsing, and MUST enforce a decompression output
+budget (1 MiB) while inflating — never after.
+
+## URL form
+
+```
+<receiveUrl>#handoff=<artifact>
+```
+
+The artifact rides in the fragment, composable with other fragment params
+via `&`. It is never placed in a query parameter — fragments stay out of
+HTTP requests, server logs, and caches.
+
+## JSON semantics inherited on purpose
+
+`-0` collapses to `0`, object key order is preserved by JSON but carries
+no meaning, and numbers are IEEE 754 doubles. Values JSON would silently
+corrupt — `NaN`, `Infinity`, `Date`, `Map`, class instances, cycles — are
+rejected at encode time with `ENCODING_FAILED` instead of being reshaped.
+
+## Test vectors
+
+Pinned in
+[`tests/protocol-vectors.ts`](https://github.com/0xsarwagya/handoff/blob/main/tests/protocol-vectors.ts)
+and recomputed by CI in Node, Chromium, Firefox, and WebKit:
+
+- The **uncompressed** vector is byte-exact: small state skips
+  compression, so the artifact is fully deterministic.
+- The **compressed** vector pins the decode direction only. Deflate output
+  is not guaranteed byte-identical across engines; inflating pinned bytes
+  is deterministic everywhere. Round-trip equality covers the encode side.
+
+An independent implementation that reproduces these vectors speaks
+protocol v1.
+
+## Errors
+
+| Code | Fires when |
+| --- | --- |
+| `UNSUPPORTED` | Compressed artifact in a runtime without DecompressionStream; no location to read in a non-browser receive. |
+| `INVALID_HANDOFF` | Input fails the grammar, bounds, base64url, or envelope shape; bad options. |
+| `UNSUPPORTED_VERSION` | `ho2_`+ artifacts, or reserved envelope flags. |
+| `PAYLOAD_TOO_LARGE` | State over the create limit, or artifact over the hard cap. |
+| `ENCODING_FAILED` | State contains values JSON would corrupt; compression failed. |
+| `DECODING_FAILED` | Payload is not valid UTF-8 JSON, or inflates past the output budget. |
+| `DECOMPRESSION_FAILED` | Compressed payload is not valid deflate-raw data. |

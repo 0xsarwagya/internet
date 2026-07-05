@@ -1,0 +1,50 @@
+---
+title: "Artifacts"
+description: "The self-contained transfer object, and why it lives in a URL fragment."
+order: 2
+---
+
+A handoff artifact is one URL-safe string that contains the entire
+transfer:
+
+```
+ho1_AHsidHlwZSI6Im5vdGUiLCJ2IjoxLCJ0ZXh0IjoiaGkg4pyTIn0
+└┬┘ └────────────────────┬─────────────────────────────┘
+version                 base64url(envelope)
+```
+
+The envelope is one flags byte (compressed or not; the other bits are
+reserved) followed by the payload. Everything else — QR code, link,
+clipboard — is presentation. Three ways to show the same string are not
+three transports.
+
+## Why the fragment
+
+The artifact travels in the URL *fragment*, never a query parameter:
+
+```
+https://app.example/receive#handoff=ho1_…
+```
+
+Browsers do not send fragments in HTTP requests, so your own server never
+logs the payload, CDNs never cache it, and analytics on the receive page
+never see it in the request line. That is a real privacy property — and
+only that. A copied link still passes through messaging apps, clipboard
+sync, and link previews. The fragment boundary is not secrecy; see the
+[security model](/handoff/docs/security).
+
+## Possession is the capability
+
+Because the state lives inside the artifact, whoever holds the complete
+artifact holds the state. That has two honest consequences:
+
+- **No revocation.** A copied artifact can be received again. "This link
+  self-destructs" cannot be true for inline transfer, so Handoff never
+  claims it.
+- **No advisory expiry.** An `expiresAt` field a modified client can
+  ignore is not expiry — it is decoration. v1 leaves it out rather than
+  pretend.
+
+Applications that need one-time semantics enforce them at the application
+layer — for example, by including a nonce in the state and accepting it
+once server-side.

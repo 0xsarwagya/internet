@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 200" role="img" aria-label="Handoff flow: device A encodes state into a URL-fragment artifact shown as a QR code; device B scans it and decodes the same state. No server holds a copy.">
+  <style>
+    text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fill: currentColor; }
+    .box { fill: none; stroke: currentColor; stroke-opacity: 0.35; }
+    .arrow { stroke: currentColor; stroke-opacity: 0.55; fill: none; }
+    .sub { font-size: 10px; opacity: 0.6; }
+    .main { font-size: 13px; }
+  </style>
+  <rect class="box" x="20" y="60" width="200" height="80" />
+  <text class="main" x="40" y="93">Device A</text>
+  <text class="sub" x="40" y="115">state → encode → compress</text>
+  <text class="sub" x="40" y="129">no upload</text>
+
+  <rect class="box" x="280" y="60" width="200" height="80" />
+  <text class="main" x="300" y="93">ho1_… artifact</text>
+  <text class="sub" x="300" y="115">URL fragment · QR · link</text>
+  <text class="sub" x="300" y="129">the state IS the artifact</text>
+
+  <rect class="box" x="540" y="60" width="200" height="80" />
+  <text class="main" x="560" y="93">Device B</text>
+  <text class="sub" x="560" y="115">decode → validate → continue</text>
+  <text class="sub" x="560" y="129">no account</text>
+
+  <path class="arrow" d="M220 100 L272 100" marker-end="url(#a)" />
+  <path class="arrow" d="M480 100 L532 100" marker-end="url(#a)" />
+
+  <text class="sub" x="253" y="170">No server on the path. Transfer is not sync.</text>
+
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="currentColor" fill-opacity="0.55" />
+    </marker>
+  </defs>
+</svg>

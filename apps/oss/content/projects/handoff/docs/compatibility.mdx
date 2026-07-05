@@ -1,0 +1,69 @@
+---
+title: "Compatibility"
+description: "What CI actually proves, per engine — and what still needs a human with two phones."
+order: 3
+---
+
+Every claim in the first table is exercised by CI on every commit: an
+offer created in one browser context must decode to identical state in a
+fresh one, per engine.
+
+<CompatibilityMatrix
+  columns={[
+    { key: "feature", label: "Feature" },
+    { key: "chromium", label: "Chromium" },
+    { key: "firefox", label: "Firefox" },
+    { key: "webkit", label: "WebKit" }
+  ]}
+  rows={[
+    {
+      feature: "URL-fragment transfer across contexts",
+      chromium: "Tested in CI",
+      firefox: "Tested in CI",
+      webkit: "Tested in CI"
+    },
+    {
+      feature: "deflate-raw compression",
+      chromium: "Tested in CI",
+      firefox: "Tested in CI",
+      webkit: "Tested in CI",
+      note: "Compression Streams are Baseline since May 2023. Without them, encoding degrades to uncompressed artifacts — tested too."
+    },
+    {
+      feature: "Adversarial decoding (bombs, bad flags, bad versions)",
+      chromium: "Tested in CI",
+      firefox: "Tested in CI",
+      webkit: "Tested in CI"
+    },
+    {
+      feature: "Fragment scrubbed from history after receive",
+      chromium: "Tested in CI",
+      firefox: "Tested in CI",
+      webkit: "Tested in CI"
+    }
+  ]}
+/>
+
+## Server runtimes
+
+`encodeHandoff` / `decodeHandoff` run anywhere with `TextEncoder` and
+Compression Streams — Node 18+, Deno, Bun, and edge workers all qualify.
+The browser conveniences no-op gracefully where `location` and `history`
+do not exist.
+
+## Real devices — the honest gap
+
+QR scanning lives in physical reality: cameras, glare, cracked screens.
+CI cannot prove it, so this matrix ships as *pending* until measured
+against the live demo:
+
+| Path | Status |
+| --- | --- |
+| Laptop → phone | pending manual verification |
+| Phone → laptop | pending manual verification |
+| iPhone → Android | pending manual verification |
+| Android → iPhone | pending manual verification |
+
+The `qrFriendly` threshold (1,000 artifact characters) encodes published
+scanning research; the measured device numbers will replace it here when
+the matrix is run.

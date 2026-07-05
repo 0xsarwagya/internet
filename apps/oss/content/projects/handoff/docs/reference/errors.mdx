@@ -1,0 +1,38 @@
+---
+title: "Errors"
+description: "Every failure is a typed HandoffError with a stable code."
+order: 2
+---
+
+Everything Handoff throws is a `HandoffError` carrying a stable `code`,
+the `operation` that failed, a human message, and the native `cause` when
+one exists.
+
+```ts
+import { isHandoffError } from "@0xsarwagya/handoff";
+
+try {
+  const state = await handoff.receive();
+} catch (error) {
+  if (isHandoffError(error) && error.code === "PAYLOAD_TOO_LARGE") {
+    // tell the human, in human words
+  }
+}
+```
+
+## Codes
+
+| Code | Fires when |
+| --- | --- |
+| `UNSUPPORTED` | The runtime lacks something required for *this* input: receiving a compressed artifact without DecompressionStream, or `receive()` with no argument outside a browser. |
+| `INVALID_HANDOFF` | The input is not a handoff: fails the grammar, the length bound, base64url, or the envelope shape. Also bad options (`receiveUrl`, `limit`). |
+| `UNSUPPORTED_VERSION` | The artifact declares a future protocol version (`ho2_`…) or uses reserved envelope flags. Usually means the sender runs a newer app. |
+| `PAYLOAD_TOO_LARGE` | State exceeds the create limit, or the artifact exceeds the hard cap. The message carries both numbers. |
+| `ENCODING_FAILED` | The state contains values JSON would silently corrupt — `NaN`, `Date`, `Map`, class instances, cycles — or compression itself failed. |
+| `DECODING_FAILED` | The payload is not valid UTF-8 JSON, or decompression exceeded the 1 MiB output budget (bomb defense). |
+| `DECOMPRESSION_FAILED` | The compressed payload is not valid deflate-raw data — corruption or truncation in transit. |
+
+For users, translate codes into sentences: a truncated QR scan surfaces as
+`INVALID_HANDOFF` or `DECOMPRESSION_FAILED`, and "this handoff could not
+be read — try scanning again" beats both. Error messages never contain the
+payload.

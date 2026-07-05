@@ -1,0 +1,69 @@
+---
+title: "Security model"
+description: "Capability links, the fragment boundary, and the decoder as attack surface."
+order: 2
+---
+
+Handoff is smaller than a sync platform. It is not less security-sensitive.
+
+## The capability model
+
+The artifact is the capability:
+
+> Anyone with the complete Handoff link or QR payload can receive its
+> contents.
+
+This is the whole access-control model, stated where it belongs. A QR code
+shown across a desk is a naturally narrow channel — the payload travels
+from one screen into one camera. A copied link is as wide as wherever it
+goes: messaging infrastructure, clipboard sync, chat backups, link
+previews. If the state is sensitive, prefer the QR path and treat links
+like the state itself.
+
+## What the fragment boundary is, and is not
+
+The artifact rides in the URL fragment, which browsers never send in HTTP
+requests. That protects against your own infrastructure: server access
+logs, CDN caches, and request-line analytics never see the payload.
+
+It does not protect against anyone who obtains the URL. It is a privacy
+property, not encryption.
+
+## Why v1 has no encryption
+
+For encryption to add security, the key must travel on a different channel
+than the ciphertext. In an inline artifact, both would sit in the same
+string — someone holding the artifact holds the key. That protects
+against nothing the fragment boundary doesn't already cover, while
+inviting developers to believe something false. When Handoff gains a
+transport where the key genuinely travels separately, encryption becomes
+meaningful; until then, honesty beats theater.
+
+## The decoder is an attack surface
+
+The demo — and your receive page — will eventually be handed hostile URLs
+by the internet. The decoder treats every input accordingly:
+
+- Input length is bounded **before** any parsing or allocation.
+- The artifact grammar is one strict regex; anything else is
+  `INVALID_HANDOFF`.
+- Unknown versions and reserved envelope flags fail typed instead of being
+  guessed at.
+- Decompression runs against a streamed output budget — a bomb that
+  inflates past the cap dies mid-stream, not after eating memory.
+- The payload must be valid UTF-8 JSON; anything else is `DECODING_FAILED`.
+
+All of this is exercised by adversarial tests in CI, in Node and in all
+three browser engines.
+
+## Received state is your input to validate
+
+Handoff verifies its envelope, not your schema. A well-formed artifact can
+still carry JSON crafted by an attacker — validate received state exactly
+like a request body, before acting on it. See
+[validating received state](/handoff/docs/guides/validate-state).
+
+## What Handoff never does
+
+No telemetry, no central service, no third-party requests, no storage of
+any kind. The dependency count of the published package is zero.

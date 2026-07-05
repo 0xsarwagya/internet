@@ -1,0 +1,52 @@
+---
+title: "Receiving a handoff"
+description: "Turn an artifact back into state, safely."
+order: 3
+---
+
+On the page that `receiveUrl` points at:
+
+```ts
+import { createHandoff } from "@0xsarwagya/handoff";
+
+const handoff = createHandoff({ receiveUrl: "/receive" });
+
+if (handoff.peek()) {
+  const state = await handoff.receive();
+}
+```
+
+With no argument, `receive()` reads the current location's fragment. After
+a successful receive it removes the fragment from the address bar and
+session history via `history.replaceState` — the artifact should not
+linger where it can be re-copied accidentally. Pass
+`{ scrub: false }` to keep it.
+
+`receive` also takes explicit input — a full URL or a bare artifact —
+which is what non-browser runtimes use:
+
+```ts
+const state = await handoff.receive(scannedUrl);
+const state = await handoff.receive("ho1_…");
+```
+
+## Received state is untrusted input
+
+A handoff URL can arrive from anywhere the internet can type. Handoff
+verifies its own envelope — versions, bounds, compression budgets — and
+hands you JSON. What that JSON *means* is your application's contract, so
+validate it like any other untrusted input:
+
+```ts
+const draft = draftSchema.parse(await handoff.receive());
+```
+
+Use whatever schema library you already have; Handoff deliberately does
+not pick one. See [validating received state](/handoff/docs/guides/validate-state).
+
+## Failure is typed
+
+Malformed fragments, future protocol versions, oversized inputs, corrupt
+compression, and decompression bombs each produce a `HandoffError` with a
+stable code — never a mystery exception from deep inside a decoder. The
+full list is in the [errors reference](/handoff/docs/reference/errors).

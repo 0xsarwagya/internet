@@ -1,0 +1,42 @@
+---
+title: "Transfer vs sync"
+description: "The distinction the whole product stands on."
+order: 1
+---
+
+Modern application architecture routinely confuses two different problems:
+
+**Transfer** — put this state on that device, once. The state may exist
+for ten seconds. No copy needs to outlive the move.
+
+**Sync** — keep N devices convergent forever. Requires durable storage, an
+authority, conflict resolution, and infrastructure that never sleeps.
+
+The web usually solves both with the same hammer: a backend. You create an
+account, upload state to someone else's computer, store it indefinitely,
+and download it three feet away. For genuine sync, that machinery earns
+its keep. For a transfer, the actual requirement was:
+
+```
+Device A → Device B
+```
+
+Handoff does transfer and only transfer. That refusal is what keeps it
+small enough to have no server, no account, and an API that fits on one
+screen.
+
+## When you need sync, use sync
+
+If the requirement is continuous synchronization, multi-user
+collaboration, durable backup, conflict resolution, or delivery to a
+device that comes online next Tuesday — Handoff is the wrong primitive,
+and stretching it would just rebuild the cloud badly. Use a sync system.
+
+## The workshop pattern
+
+- Agnostic Web BLE removes runtime coupling: the app knows the device, the
+  adapter knows the runtime.
+- Ghost removes account coupling: the app knows you came back, not who you
+  are.
+- Handoff removes cloud-sync coupling: the app knows what should move, and
+  never builds synchronization to move it.

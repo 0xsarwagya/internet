@@ -1,0 +1,45 @@
+---
+title: "Size limits"
+description: "The physics of QR codes and URLs, measured rather than imagined."
+order: 3
+---
+
+Inline transfer has physical limits, and they are much smaller than the
+specifications suggest.
+
+## QR reality
+
+A version-40 QR code holds 2,953 bytes on paper. In reality, scanning
+reliability collapses long before that: dense codes need perfect focus,
+strong light, and a patient human, and common decoder libraries manage
+single-digit success rates at version 20+. Screen-to-camera is more
+forgiving than print — a laptop screen is bright and high-contrast — but
+"scans on the first try" still ends somewhere around a thousand
+characters.
+
+Handoff encodes that reality instead of the specification:
+
+| Constant | Value | Meaning |
+| --- | --- | --- |
+| `qrFriendly` threshold | 1,000 artifact chars | past this, offer.qrFriendly is false — link it, don't scan it |
+| default `limit` | 8,192 state bytes | create() rejects bigger state with `PAYLOAD_TOO_LARGE` |
+| hard artifact cap | 32,768 chars | decoder refuses longer input before any allocation |
+| decode output cap | 1 MiB | decompression budget — bombs die mid-stream |
+
+## What compression buys
+
+Repetitive JSON — the common case for drafts, configurations, and
+composed state — routinely shrinks 3–6× under deflate. Handoff compresses
+only when it actually wins; tiny payloads skip it because deflate overhead
+would make them bigger. `offer.size` always reports the honest serialized
+size.
+
+## When state outgrows inline
+
+`PAYLOAD_TOO_LARGE` is the product telling you this transfer needs a
+different transport, not a bigger QR code. Today that means: move less
+state (send the document ID and fetch it, keep the draft text but drop the
+undo history), or raise `limit` and share as a link instead of a QR. A
+connected transport for genuinely large state is a
+[possible future](/handoff/docs/reference/protocol), only if real
+applications earn it.

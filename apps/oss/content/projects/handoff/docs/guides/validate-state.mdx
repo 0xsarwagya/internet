@@ -1,0 +1,67 @@
+---
+title: "Validating received state"
+description: "Handoff hands you JSON. Your schema decides if it is your JSON."
+order: 2
+---
+
+Handoff owns moving the bytes. Your application owns what they mean —
+which is why `receive()` returns `HandoffState` (JSON), not your types.
+
+Version your own payload inside the state, separately from the protocol:
+
+```ts
+// sending
+await handoff.create({
+  type: "draft",
+  version: 2,
+  data: { text, updatedAt },
+});
+```
+
+The `ho1_` protocol version belongs to Handoff; `type` and `version`
+belong to you. A v1 artifact can carry your version-7 payload — the two
+evolve independently.
+
+## Parse, don't trust
+
+Received state is untrusted input arriving via a URL anyone can craft:
+
+```ts
+import { z } from "zod";
+
+const draftSchema = z.object({
+  type: z.literal("draft"),
+  version: z.literal(2),
+  data: z.object({ text: z.string().max(10_000), updatedAt: z.number() }),
+});
+
+const raw = await handoff.receive();
+const draft = draftSchema.parse(raw); // throws on anything unexpected
+```
+
+Any schema library works — zod, valibot, arktype, or a hand-written
+guard. Handoff deliberately depends on none of them and has no registry of
+application schemas; a transfer library that understood your domain would
+be a framework.
+
+## Handle the failure paths a user will actually hit
+
+```ts
+import { isHandoffError } from "@0xsarwagya/handoff";
+
+try {
+  const draft = draftSchema.parse(await handoff.receive());
+} catch (error) {
+  if (isHandoffError(error)) {
+    // truncated scan, stale link, artifact from a newer app version …
+    show(`This handoff could not be read (${error.code}).`);
+  } else {
+    // valid artifact, unexpected shape — likely a version skew
+    show("This handoff came from an incompatible version of the app.");
+  }
+}
+```
+
+A half-scanned QR code and a link mangled by a chat app are normal events,
+not edge cases. Both surface as typed `HandoffError`s — give them a human
+sentence.

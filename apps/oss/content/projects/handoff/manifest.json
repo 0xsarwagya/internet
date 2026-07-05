@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "mdxVersion": 1,
+  "slug": "handoff",
+  "name": "Handoff",
+  "packageName": "@0xsarwagya/handoff",
+  "description": "Move application state between devices without an account or cloud sync.",
+  "status": "experimental",
+  "license": "MIT",
+  "repository": "https://github.com/0xsarwagya/handoff",
+  "landing": "site/landing.mdx",
+  "docs": "docs",
+  "assets": "site/assets",
+  "demo": "site/demo",
+  "links": {
+    "repository": "https://github.com/0xsarwagya/handoff"
+  }
+}

@@ -1,0 +1,55 @@
+---
+title: "Introduction"
+description: "What Handoff is, what it refuses to be, and where to start."
+order: 1
+---
+
+Handoff moves application state between devices without requiring an
+account or cloud sync.
+
+You have state here. You want it there. The industry answer is an account,
+a server in another country, a database row, and a sync engine — to move
+something across the room, once. Handoff is the smaller primitive: the
+state becomes a self-contained artifact that travels as a QR code or a
+link, and the receiving device becomes the sending device, exactly.
+
+<Graph3D
+  caption="The state is the artifact. No server holds a copy."
+  layout="layers"
+  nodes={[
+    { id: "a", label: "Device A", sub: "your app", kind: "primary", layer: 0 },
+    { id: "create", label: "create(state)", sub: "encode · compress", kind: "secondary", layer: 1 },
+    { id: "artifact", label: "ho1_…", sub: "URL fragment artifact", kind: "accent", layer: 2 },
+    { id: "qr", label: "QR / link", sub: "how it travels", kind: "faint", layer: 3, angle: 0.25 },
+    { id: "cloud", label: "Nobody's server", sub: "not involved", kind: "faint", layer: 3, angle: 0.75 },
+    { id: "receive", label: "receive()", sub: "decode · validate", kind: "secondary", layer: 4 },
+    { id: "b", label: "Device B", sub: "same state", kind: "primary", layer: 5 }
+  ]}
+  edges={[
+    { from: "a", to: "create" },
+    { from: "create", to: "artifact" },
+    { from: "artifact", to: "qr", dashed: true },
+    { from: "qr", to: "receive" },
+    { from: "receive", to: "b" }
+  ]}
+/>
+
+Handoff is not Dropbox, AirDrop, cloud sync, or a collaboration backend.
+It is not even "sync without accounts" — that would be a much larger
+product. [Transfer is not sync](/handoff/docs/concepts/transfer-vs-sync),
+and Handoff only transfers.
+
+## Where to start
+
+- [Installation](/handoff/docs/getting-started/installation) — add the package.
+- [Creating a handoff](/handoff/docs/getting-started/creating) — state to artifact.
+- [Receiving a handoff](/handoff/docs/getting-started/receiving) — artifact to state.
+- [Security model](/handoff/docs/security) — the artifact is the capability; read this early.
+
+## Status
+
+<Callout type="warning">
+Handoff is experimental. The v1 wire protocol is versioned and pinned by
+test vectors, but the API may still change before 1.0. Inline transfer is
+the only transport — by design, until it earns a second one.
+</Callout>
