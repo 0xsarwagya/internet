@@ -1,59 +1,66 @@
 import { Fragment } from "react";
 
-export type CompatibilityRow = {
-  runtime: string;
-  adapter: string;
-  request: string;
-  connect: string;
-  read: string;
-  write: string;
-  notify: string;
+export type CompatibilityRow = Record<string, string | undefined> & {
   note?: string;
 };
 
-const COLUMNS = [
-  ["runtime", "Runtime"],
-  ["adapter", "Adapter"],
-  ["request", "Request"],
-  ["connect", "Connect"],
-  ["read", "Read"],
-  ["write", "Write"],
-  ["notify", "Notify"],
-] as const;
+export type CompatibilityColumn = {
+  key: string;
+  label: string;
+};
 
-export function CompatibilityMatrix({ rows }: { rows: CompatibilityRow[] }) {
+// The original vocabulary (agnostic-web-ble) stays the default so existing
+// content renders unchanged; projects with different semantics pass their
+// own columns.
+const DEFAULT_COLUMNS: CompatibilityColumn[] = [
+  { key: "runtime", label: "Runtime" },
+  { key: "adapter", label: "Adapter" },
+  { key: "request", label: "Request" },
+  { key: "connect", label: "Connect" },
+  { key: "read", label: "Read" },
+  { key: "write", label: "Write" },
+  { key: "notify", label: "Notify" },
+];
+
+export function CompatibilityMatrix({
+  rows,
+  columns = DEFAULT_COLUMNS,
+}: {
+  rows: CompatibilityRow[];
+  columns?: CompatibilityColumn[];
+}) {
   return (
     <figure className="overflow-x-auto">
       <table className="w-full border-collapse font-mono text-[12px]">
         <thead>
           <tr>
-            {COLUMNS.map(([, label]) => (
+            {columns.map((column) => (
               <th
-                key={label}
+                key={column.key}
                 className="label border-b border-ink/20 px-3 py-2 text-left font-normal"
               >
-                {label}
+                {column.label}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <Fragment key={`${row.runtime}-${row.adapter}`}>
+          {rows.map((row, index) => (
+            <Fragment key={columns.map((column) => row[column.key]).join("-") || index}>
               <tr>
-                {COLUMNS.map(([key]) => (
+                {columns.map((column) => (
                   <td
-                    key={key}
+                    key={column.key}
                     className="border-b border-ink/10 px-3 py-3 text-ink/80"
                   >
-                    {row[key]}
+                    {row[column.key]}
                   </td>
                 ))}
               </tr>
               {row.note ? (
                 <tr>
                   <td
-                    colSpan={COLUMNS.length}
+                    colSpan={columns.length}
                     className="border-b border-ink/10 px-3 pb-3 pt-0 text-[11px] italic text-stone"
                   >
                     {row.note}
