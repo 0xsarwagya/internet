@@ -4,7 +4,7 @@
 
 import { Html, Line, OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
 
 import { resolvePositions } from "./layout";
@@ -13,7 +13,6 @@ import {
   KIND_LABEL_FAMILY,
   KIND_LABEL_SIZE,
   KIND_SIZE,
-  KIND_WIRE_COLOR,
   KIND_WIRE_OPACITY,
   PAPER,
   RUST,
@@ -26,29 +25,80 @@ type ResolvedNode = Graph3DNode & {
   position: [number, number, number];
 };
 
+type ThemeColors = {
+  paper: string;
+  ink: string;
+  stone: string;
+  rust: string;
+};
+
+const FALLBACK_COLORS: ThemeColors = {
+  paper: PAPER,
+  ink: INK,
+  stone: STONE,
+  rust: RUST,
+};
+
+function useThemeColors(): ThemeColors {
+  const [colors, setColors] = useState<ThemeColors>(FALLBACK_COLORS);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const root = document.documentElement;
+    const read = () => {
+      const s = getComputedStyle(root);
+      setColors({
+        paper: s.getPropertyValue("--color-paper").trim() || FALLBACK_COLORS.paper,
+        ink: s.getPropertyValue("--color-ink").trim() || FALLBACK_COLORS.ink,
+        stone: s.getPropertyValue("--color-stone").trim() || FALLBACK_COLORS.stone,
+        rust: s.getPropertyValue("--color-rust").trim() || FALLBACK_COLORS.rust,
+      });
+    };
+    read();
+    const mm = window.matchMedia("(prefers-color-scheme: dark)");
+    mm.addEventListener("change", read);
+    const observer = new MutationObserver(read);
+    observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => {
+      mm.removeEventListener("change", read);
+      observer.disconnect();
+    };
+  }, []);
+
+  return colors;
+}
+
+function kindWireColor(kind: Graph3DNodeKind, theme: ThemeColors): string {
+  if (kind === "faint") return theme.stone;
+  if (kind === "accent") return theme.rust;
+  return theme.ink;
+}
+
 function Node({
   node,
   hovered,
+  theme,
   onEnter,
   onLeave,
   onSelect,
 }: {
   node: ResolvedNode;
   hovered: boolean;
+  theme: ThemeColors;
   onEnter: () => void;
   onLeave: () => void;
   onSelect: () => void;
 }) {
   const size = KIND_SIZE[node.kind];
-  const wireColor = hovered ? RUST : KIND_WIRE_COLOR[node.kind];
+  const wireColor = hovered ? theme.rust : kindWireColor(node.kind, theme);
   const wireOpacity = hovered ? 0.6 : KIND_WIRE_OPACITY[node.kind];
   const labelColor = hovered
-    ? RUST
+    ? "var(--color-rust)"
     : node.kind === "faint"
-      ? STONE
+      ? "var(--color-stone)"
       : node.kind === "accent"
-        ? RUST
-        : INK;
+        ? "var(--color-rust)"
+        : "var(--color-ink)";
 
   return (
     <group position={node.position}>
@@ -73,9 +123,9 @@ function Node({
       >
         <sphereGeometry args={[size, 32, 32]} />
         <meshStandardMaterial
-          color={PAPER}
-          emissive={hovered ? RUST : "#000"}
-          emissiveIntensity={hovered ? 0.15 : 0}
+          color={theme.paper}
+          emissive={hovered ? theme.rust : "#000"}
+          emissiveIntensity={hovered ? 0.18 : 0}
           roughness={0.72}
           metalness={0.02}
         />
@@ -123,7 +173,7 @@ function Node({
                 fontSize: 8.5,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                color: hovered ? RUST : STONE,
+                color: hovered ? "var(--color-rust)" : "var(--color-stone)",
               }}
             >
               {node.sub}
@@ -139,10 +189,12 @@ function Edges({
   nodes,
   edges,
   activeId,
+  theme,
 }: {
   nodes: Map<string, ResolvedNode>;
   edges: NonNullable<Graph3DProps["edges"]>;
   activeId: string | null;
+  theme: ThemeColors;
 }) {
   return (
     <>
@@ -151,9 +203,9 @@ function Edges({
         const to = nodes.get(edge.to);
         if (!from || !to) return null;
         const touched = activeId === edge.from || activeId === edge.to;
-        const baseOpacity = edge.dashed ? 0.14 : 0.32;
+        const baseOpacity = edge.dashed ? 0.18 : 0.38;
         const opacity = touched ? 0.85 : baseOpacity;
-        const color = touched ? RUST : INK;
+        const color = touched ? theme.rust : theme.ink;
         return (
           <Line
             key={`${edge.from}-${edge.to}`}
@@ -183,6 +235,8 @@ export function Graph3DScene({
   autoRotate = true,
   caption,
 }: Graph3DProps) {
+  const theme = useThemeColors();
+
   const resolved = useMemo<ResolvedNode[]>(() => {
     const positions = resolvePositions(rawNodes, layout);
     return rawNodes.map((node) => ({
@@ -235,15 +289,21 @@ export function Graph3DScene({
           <ambientLight intensity={0.85} />
           <directionalLight position={[6, 8, 4]} intensity={0.35} />
           <directionalLight position={[-4, -2, -6]} intensity={0.15} />
-          <fog attach="fog" args={[PAPER, 12, 26]} />
+          <fog attach="fog" args={[theme.paper, 12, 26]} />
 
-          <Edges nodes={nodeMap} edges={edges} activeId={hoveredId} />
+          <Edges
+            nodes={nodeMap}
+            edges={edges}
+            activeId={hoveredId}
+            theme={theme}
+          />
 
           {resolved.map((node) => (
             <Node
               key={node.id}
               node={node}
               hovered={hoveredId === node.id}
+              theme={theme}
               onEnter={() => setHoveredId(node.id)}
               onLeave={() =>
                 setHoveredId((current) =>
