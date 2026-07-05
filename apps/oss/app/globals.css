@@ -9,3 +9,20 @@
     font-family: var(--font-body);
   }
 }
+
+/* Syntax highlighting (rehype-pretty-code). Every token carries
+   --shiki-light and --shiki-dark; pick one with the same
+   system-preference + data-theme mechanism as dark.css. */
+code[data-theme] span {
+  color: var(--shiki-light);
+}
+
+html[data-theme="dark"] code[data-theme] span {
+  color: var(--shiki-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) code[data-theme] span {
+    color: var(--shiki-dark);
+  }
+}

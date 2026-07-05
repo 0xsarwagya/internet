@@ -27,8 +27,10 @@
     "postcss": "^8.5.16",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "rehype-pretty-code": "^0.14.3",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.0",
+    "shiki": "^4.3.1",
     "tailwindcss": "^4",
     "three": "^0.185.1"
   },

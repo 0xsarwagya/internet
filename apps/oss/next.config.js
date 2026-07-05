@@ -21,6 +21,19 @@ const withMDX = createMDX({
       ["remark-gfm"],
       [path.join(__dirname, "lib/remark-oss-assets.mjs")],
     ],
+    rehypePlugins: [
+      [
+        "rehype-pretty-code",
+        {
+          // Both themes are emitted as CSS variables per token; globals.css
+          // picks one following the same system-preference + data-theme
+          // mechanism as the rest of the site.
+          theme: { light: "min-light", dark: "min-dark" },
+          defaultColor: false,
+          keepBackground: false,
+        },
+      ],
+    ],
   },
 });
 
