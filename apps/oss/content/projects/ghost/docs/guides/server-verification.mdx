@@ -14,11 +14,13 @@ anywhere `globalThis.crypto` exists.
 import {
   createChallenge,
   InMemoryChallengeStore,
+  InMemoryGhostCredentialStore,
   verifyGhostProof,
 } from "@0xsarwagya/ghost/server";
 
 const AUDIENCE = "https://app.example";
 const store = new InMemoryChallengeStore();
+const credentials = new InMemoryGhostCredentialStore();
 
 // GET /ghost/challenge?action=login
 function challengeHandler(action: string) {
@@ -31,6 +33,7 @@ async function verifyHandler(body: unknown) {
     expectedAudience: AUDIENCE,
     expectedAction: "login",
     challengeStore: store,
+    credentialStore: credentials,
   });
   if (!result.ok) {
     return { status: 401, code: result.code };
@@ -42,9 +45,9 @@ async function verifyHandler(body: unknown) {
 ```
 
 `verifyGhostProof` returns a discriminated union — `{ ok: true, ghostId,
-publicKey, action }` or `{ ok: false, code, message }`. It throws only for
-your own misconfiguration (missing store or audience), never for hostile
-input.
+credentialId, publicKey, action }` or `{ ok: false, code, message }`. It
+throws only for your own misconfiguration (missing store or audience),
+never for hostile input.
 
 ## What the verifier enforces, in order
 
@@ -52,7 +55,8 @@ input.
 2. Expiry (`CHALLENGE_EXPIRED`).
 3. Audience (`AUDIENCE_MISMATCH`) and action.
 4. Identity binding — the challenge's `ghostId` and your `expectedGhostId`.
-5. The ghost ID actually matches the public key.
+5. The credential ID matches the public key, and the credential is active
+   for the Ghost when the Ghost ID is stable.
 6. The Ed25519 signature over the canonical bytes.
 7. Nonce consumption, last (`CHALLENGE_REUSED`) — so a failed proof never
    burns an unused challenge.

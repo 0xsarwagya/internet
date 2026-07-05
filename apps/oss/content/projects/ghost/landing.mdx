@@ -13,9 +13,10 @@ to know who you are.
 Most applications never needed your name, your email, or an identity
 provider. They needed continuity: *is this the same browser that was here
 yesterday?* Ghost answers exactly that. The browser generates a keypair and
-keeps the private half where JavaScript cannot read it. The public key
-becomes the identity. Your server verifies signatures. There is no user
-table, and no Ghost service — that absence is the product.
+keeps the private half where JavaScript cannot read it. The Ghost ID is the
+stable identity; the public key is the active credential. Your server
+verifies signatures. There is no user table, and no Ghost service — that
+absence is the product.
 
 <Install package="@0xsarwagya/ghost" />
 
@@ -27,6 +28,7 @@ import { createGhost } from "@0xsarwagya/ghost";
 
 const ghost = await createGhost();
 ghost.id;                         // ghost_1_crhgcniramqtgfpib5uiaautocwdigbt
+ghost.credentialId;               // cred_1_…
 const proof = await ghost.sign(challenge);
 
 // your server
@@ -68,11 +70,10 @@ No email. No password. No OAuth. No user database.
 ## Ghost authenticates a key, not a person.
 
 That sentence is the security model. A verified proof means the requester
-holds the private key for this identity — not that they are a human, a
+holds an active credential for this identity — not that they are a human, a
 unique individual, or anyone in particular. Identities are origin-bound and
-pairwise, so nothing follows anyone across the internet. And if the browser
-loses the key, the identity is gone: continuity, with the honest tradeoffs
-of continuity.
+pairwise, so nothing follows anyone across the internet. Recovery is
+optional and user-held, without accounts.
 
 <Callout type="note">
 `reset()` is deliberately not called logout. It destroys the local key;

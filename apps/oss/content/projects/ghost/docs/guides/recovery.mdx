@@ -1,0 +1,112 @@
+---
+title: "Recovery"
+description: "Opt-in Ghost recovery without accounts."
+order: 3
+---
+
+Ghost is still zero-setup. `createGhost()` works without email, password,
+OAuth, or recovery.
+
+Recovery is for the moment when your application lets a Ghost own something
+durable. Ask then:
+
+> Want to make this Ghost recoverable?
+
+## Enable recovery
+
+```ts
+const { recoverySecret, recoveryRecord } = await ghost.enableRecovery();
+```
+
+Show `recoverySecret` once and ask the user to save it outside the
+browser. Store `recoveryRecord` next to your app's Ghost row. The record is
+not secret; it is the public recovery authority state your app needs later.
+
+## Recover
+
+```ts
+import { recoverGhost } from "@0xsarwagya/ghost";
+
+const ghost = await recoverGhost({
+  recoverySecret,
+  recoveryRecord,
+});
+```
+
+The recovered browser gets the same `ghost.id` and a fresh
+`ghost.credentialId`. If a different Ghost already lives in this browser,
+`recoverGhost` refuses with `RECOVERY_FAILED` instead of destroying its
+key — the app must call `reset()` deliberately first.
+
+## Verify recovery on your server
+
+The client-side check above is UX, not security — a hostile client can
+skip it. Your server must verify the secret itself before it registers the
+new credential, in one request that also proves possession of the new key:
+
+```ts
+import {
+  deriveRecoveryAuthorityId,
+  InMemoryGhostCredentialStore,
+  verifyGhostProof,
+} from "@0xsarwagya/ghost/server";
+
+// POST /ghost/recover  { ghostId, recoverySecret, proof }
+async function recoverHandler(body: {
+  ghostId: string;
+  recoverySecret: string;
+  proof: unknown;
+}) {
+  // 1. The secret must hash to the authority your app stored at setup.
+  const record = await db.loadRecoveryRecord(body.ghostId);
+  const authorityId = await deriveRecoveryAuthorityId(body.recoverySecret);
+  if (record === null || authorityId !== record.authorityId) {
+    return { status: 401 };
+  }
+
+  // 2. The proof must show possession of the NEW credential. Verify it
+  //    against a one-off store containing just the claimed credential —
+  //    it is not active in your real store yet.
+  const pending = new InMemoryGhostCredentialStore();
+  const claimed = body.proof as { credentialId: string; publicKey: string };
+  pending.register({
+    ghostId: body.ghostId,
+    credentialId: claimed.credentialId,
+    publicKey: claimed.publicKey,
+  });
+  const result = await verifyGhostProof(body.proof, {
+    expectedAudience: AUDIENCE,
+    expectedAction: "recover",
+    expectedGhostId: body.ghostId,
+    challengeStore: store,
+    credentialStore: pending,
+  });
+  if (!result.ok) {
+    return { status: 401 };
+  }
+
+  // 3. Only now persist the credential as active. Your app decides what
+  //    happens to the old one: keep, supersede, or revoke.
+  await db.addCredential(body.ghostId, result.credentialId, result.publicKey, {
+    addedThroughRecovery: true,
+  });
+  return { status: 200 };
+}
+```
+
+The server compares hashes and never stores the secret; the secret crosses
+the wire once, over TLS, like a password-reset token. The proof rides the
+normal challenge flow, so credential addition inherits replay protection.
+Mark recovered credentials (`addedThroughRecovery` above) — apps are
+allowed to trust them differently.
+
+## Rotating the recovery secret
+
+Calling `enableRecovery()` again mints a fresh secret and record. Records
+your app already stores keep verifying against their own secrets —
+rotation completes only when your app replaces the stored record, and it
+should do that only for a request authenticated by an active credential.
+
+Recovery does not import the old private key, contact a Ghost service,
+send email, use OAuth, or silently back anything up. If the user loses the
+recovery secret, Ghost cannot recreate it.

@@ -6,13 +6,16 @@ import {
   capabilities,
   createGhost,
   isGhostError,
+  recoverGhost,
   type Ghost,
   type GhostCapabilities,
   type GhostProof,
+  type GhostRecoverySetup,
 } from "@0xsarwagya/ghost";
 import {
   createChallenge,
   InMemoryChallengeStore,
+  InMemoryGhostCredentialStore,
   verifyGhostProof,
 } from "@0xsarwagya/ghost/server";
 
@@ -125,12 +128,43 @@ function IdentitySection({
   onReset: (ghost: Ghost) => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [recovery, setRecovery] = useState<GhostRecoverySetup | null>(null);
+  const [recoveryStatus, setRecoveryStatus] = useState<string | null>(null);
 
   const destroy = async () => {
     setBusy(true);
     try {
       await ghost.reset();
       onReset(await createGhost());
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const enable = async () => {
+    setBusy(true);
+    try {
+      const setup = await ghost.enableRecovery();
+      setRecovery(setup);
+      setRecoveryStatus("recovery secret created");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const recover = async () => {
+    if (recovery === null) return;
+    setBusy(true);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const request = indexedDB.deleteDatabase("ghost");
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+        request.onblocked = () => reject(new Error("storage deletion blocked"));
+      });
+      const recovered = await recoverGhost(recovery);
+      onReset(recovered);
+      setRecoveryStatus("same Ghost recovered with a fresh credential");
     } finally {
       setBusy(false);
     }
@@ -149,13 +183,36 @@ function IdentitySection({
         an account.
       </p>
       <p className="mt-5 break-all font-mono text-sm text-rust">{ghost.id}</p>
+      <p className="mt-2 break-all font-mono text-[11px] text-stone">
+        credential {ghost.credentialId}
+      </p>
       <div className="mt-4 flex flex-wrap gap-3">
+        <DemoButton
+          onClick={enable}
+          disabled={busy}
+          label="Make recoverable"
+        />
+        <DemoButton
+          onClick={recover}
+          disabled={busy || recovery === null}
+          label="Recover after storage loss"
+        />
         <DemoButton
           onClick={destroy}
           disabled={busy}
           label="Destroy this identity"
         />
       </div>
+      {recovery !== null ? (
+        <p className="mt-3 max-w-2xl break-all font-mono text-[11px] text-stone">
+          {recovery.recoverySecret}
+        </p>
+      ) : null}
+      {recoveryStatus !== null ? (
+        <p className="mt-3 max-w-2xl font-mono text-[11px] text-rust">
+          {recoveryStatus}
+        </p>
+      ) : null}
       <p className="mt-3 max-w-2xl font-mono text-[11px] text-stone">
         Not a logout. The key is deleted; the old identity is gone for good
         and everything it owned becomes someone else&apos;s lost property.
@@ -167,8 +224,13 @@ function IdentitySection({
 function ProofSection({ ghost }: { ghost: Ghost }) {
   const { entries, log } = useLog();
   const storeRef = useRef(new InMemoryChallengeStore());
+  const credentialStoreRef = useRef(new InMemoryGhostCredentialStore());
   const lastProofRef = useRef<GhostProof | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    credentialStoreRef.current.register(ghost);
+  }, [ghost]);
 
   const prove = async () => {
     setBusy(true);
@@ -182,6 +244,7 @@ function ProofSection({ ghost }: { ghost: Ghost }) {
         expectedAudience: AUDIENCE,
         expectedAction: "login",
         challengeStore: storeRef.current,
+        credentialStore: credentialStoreRef.current,
       });
       log(
         result.ok
@@ -205,6 +268,7 @@ function ProofSection({ ghost }: { ghost: Ghost }) {
       expectedAudience: AUDIENCE,
       expectedAction: "login",
       challengeStore: storeRef.current,
+      credentialStore: credentialStoreRef.current,
     });
     log(
       result.ok
@@ -250,6 +314,7 @@ function loadNotes(): Note[] {
 
 function NotesSection({ ghost }: { ghost: Ghost }) {
   const storeRef = useRef(new InMemoryChallengeStore());
+  const credentialStoreRef = useRef(new InMemoryGhostCredentialStore());
   const [notes, setNotes] = useState<Note[]>([]);
   const [draft, setDraft] = useState("");
   const [status, setStatus] = useState<string | null>(null);
@@ -257,6 +322,10 @@ function NotesSection({ ghost }: { ghost: Ghost }) {
   useEffect(() => {
     setNotes(loadNotes());
   }, []);
+
+  useEffect(() => {
+    credentialStoreRef.current.register(ghost);
+  }, [ghost]);
 
   const add = async () => {
     const text = draft.trim();
@@ -273,6 +342,7 @@ function NotesSection({ ghost }: { ghost: Ghost }) {
       expectedAction: "create-note",
       expectedGhostId: ghost.id,
       challengeStore: storeRef.current,
+      credentialStore: credentialStoreRef.current,
     });
     if (!result.ok) {
       setStatus(`rejected: ${result.code}`);
