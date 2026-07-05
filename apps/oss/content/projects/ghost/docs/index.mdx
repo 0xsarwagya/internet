@@ -46,6 +46,15 @@ authenticates a key, not a person.
 - [Identity](/ghost/docs/concepts/identity) — what a ghost ID is and why it belongs to one origin.
 - [Security model](/ghost/docs/security) — the threat model, and what Ghost does not prove.
 
+## Used in Local
+
+<Callout type="note">
+[Local](https://local.sarwagya.wtf) uses Ghost as the identity primitive
+between two chatting browsers. Each peer signs a nonce chosen by the
+other; conversation history is pinned to the peer's Ghost ID. Source:
+[github.com/0xsarwagya/local](https://github.com/0xsarwagya/local).
+</Callout>
+
 ## Status
 
 <Callout type="warning">
