@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@0xsarwagya/agnostic-web-ble": "github:0xsarwagya/agnostic-web-ble",
+    "@0xsarwagya/ghost": "github:0xsarwagya/ghost",
     "@0xsarwagya/ui": "workspace:*",
     "@mdx-js/loader": "^3",
     "@mdx-js/react": "^3",

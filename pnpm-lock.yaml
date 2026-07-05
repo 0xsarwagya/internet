@@ -157,6 +157,9 @@ importers:
       '@0xsarwagya/agnostic-web-ble':
         specifier: github:0xsarwagya/agnostic-web-ble
         version: https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/91141d133c5877664639a8ae813010ac9d0ba380
+      '@0xsarwagya/ghost':
+        specifier: github:0xsarwagya/ghost
+        version: https://codeload.github.com/0xsarwagya/ghost/tar.gz/a0758ae7455d3203dec8387e6b2bbc6160989cb6
       '@0xsarwagya/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -437,6 +440,10 @@ packages:
 
   '@0xsarwagya/agnostic-web-ble@https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/91141d133c5877664639a8ae813010ac9d0ba380':
     resolution: {tarball: https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/91141d133c5877664639a8ae813010ac9d0ba380}
+    version: 0.1.0
+
+  '@0xsarwagya/ghost@https://codeload.github.com/0xsarwagya/ghost/tar.gz/a0758ae7455d3203dec8387e6b2bbc6160989cb6':
+    resolution: {tarball: https://codeload.github.com/0xsarwagya/ghost/tar.gz/a0758ae7455d3203dec8387e6b2bbc6160989cb6}
     version: 0.1.0
 
   '@alloc/quick-lru@5.2.0':
@@ -2748,6 +2755,8 @@ packages:
 snapshots:
 
   '@0xsarwagya/agnostic-web-ble@https://codeload.github.com/0xsarwagya/agnostic-web-ble/tar.gz/91141d133c5877664639a8ae813010ac9d0ba380': {}
+
+  '@0xsarwagya/ghost@https://codeload.github.com/0xsarwagya/ghost/tar.gz/a0758ae7455d3203dec8387e6b2bbc6160989cb6': {}
 
   '@alloc/quick-lru@5.2.0': {}
 
