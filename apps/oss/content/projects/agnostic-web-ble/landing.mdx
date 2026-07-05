@@ -40,7 +40,28 @@ const value = await characteristic.readValue();
 
 ## The model
 
-![The application talks to one API; the adapter deals with the runtime.](./assets/runtime-map.svg)
+<Graph3D
+  caption="One interface. First-available adapter wins."
+  layout="layers"
+  nodes={[
+    { id: "app", label: "Your app", kind: "primary", layer: 0 },
+    { id: "client", label: "createBluetooth", sub: "unified API", kind: "secondary", layer: 1 },
+    { id: "native", label: "native-web-bluetooth", sub: "adapter", kind: "secondary", layer: 2, angle: 0.15 },
+    { id: "mock", label: "mock", sub: "adapter", kind: "secondary", layer: 2, angle: 0.6 },
+    { id: "navb", label: "navigator.bluetooth", sub: "runtime", kind: "faint", layer: 3, angle: 0.15 },
+    { id: "memory", label: "in-memory devices", sub: "runtime", kind: "faint", layer: 3, angle: 0.6 },
+    { id: "errors", label: "BluetoothError", sub: "one taxonomy", kind: "accent", layer: 4 }
+  ]}
+  edges={[
+    { from: "app", to: "client" },
+    { from: "client", to: "native" },
+    { from: "client", to: "mock" },
+    { from: "native", to: "navb" },
+    { from: "mock", to: "memory" },
+    { from: "native", to: "errors", dashed: true },
+    { from: "mock", to: "errors", dashed: true }
+  ]}
+/>
 
 Adapters own runtime weirdness. The application receives one API, one binary
 type, one error taxonomy, and honest capability information — never browser

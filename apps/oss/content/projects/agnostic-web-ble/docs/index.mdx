@@ -12,15 +12,27 @@ connect, discover, read, write, subscribe. An adapter translates that into
 whatever the current runtime actually provides. Application code never
 branches on browser names.
 
-```
-your application
-      ↓
-agnostic API
-      ↓
-adapter
-      ↓
-runtime
-```
+<Graph3D
+  caption="The GATT chain. Each node is an object you'll hold."
+  layout="layers"
+  nodes={[
+    { id: "bt", label: "Bluetooth", sub: "client", kind: "primary", layer: 0 },
+    { id: "device", label: "BluetoothDevice", sub: "requestDevice()", kind: "secondary", layer: 1 },
+    { id: "conn", label: "Connection", sub: "connect()", kind: "secondary", layer: 2 },
+    { id: "svc", label: "Service", sub: "getPrimaryService()", kind: "secondary", layer: 3 },
+    { id: "char", label: "Characteristic", sub: "read · write · subscribe", kind: "accent", layer: 4 },
+    { id: "unsub", label: "Unsubscribe", sub: "cleanup", kind: "faint", layer: 5, angle: 0.25 },
+    { id: "disc", label: "disconnect event", sub: "device emits", kind: "faint", layer: 5, angle: 0.75 }
+  ]}
+  edges={[
+    { from: "bt", to: "device" },
+    { from: "device", to: "conn" },
+    { from: "conn", to: "svc" },
+    { from: "svc", to: "char" },
+    { from: "char", to: "unsub", dashed: true },
+    { from: "device", to: "disc", dashed: true }
+  ]}
+/>
 
 It is not a BLE protocol implementation, a polyfill, or a device SDK. It is
 the line between device logic and runtime logic.

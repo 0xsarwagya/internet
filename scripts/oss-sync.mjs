@@ -32,6 +32,7 @@ const SEMANTIC_VOCABULARY = new Set([
   "ProjectLinks",
   "Steps",
   "Tabs",
+  "Graph3D",
 ]);
 /** Vocabulary names that are allowed but not yet implemented by the renderer. */
 const IMPLEMENTED_VOCABULARY = new Set([
@@ -40,6 +41,7 @@ const IMPLEMENTED_VOCABULARY = new Set([
   "Callout",
   "CompatibilityMatrix",
   "ProjectLinks",
+  "Graph3D",
 ]);
 
 function fail(message) {

@@ -16,6 +16,8 @@
     "@mdx-js/loader": "^3",
     "@mdx-js/react": "^3",
     "@next/mdx": "^16",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@repo/seo": "workspace:*",
     "@tailwindcss/postcss": "^4",
     "@types/mdx": "^2.0.14",
@@ -26,7 +28,8 @@
     "react-dom": "^19.2.7",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.0",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

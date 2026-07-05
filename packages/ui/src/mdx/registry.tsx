@@ -1,5 +1,6 @@
 import type { MDXComponents } from "mdx/types";
 
+import { Graph3D } from "../graph3d/graph3d";
 import { proseComponents } from "../prose";
 import { Callout } from "./callout";
 import { CompatibilityMatrix } from "./compatibility-matrix";
@@ -7,7 +8,7 @@ import { Install } from "./install";
 import { ProjectHero } from "./project-hero";
 import { ProjectLinks } from "./project-links";
 
-export { Callout, CompatibilityMatrix, Install, ProjectHero, ProjectLinks };
+export { Callout, CompatibilityMatrix, Graph3D, Install, ProjectHero, ProjectLinks };
 export type { CompatibilityRow } from "./compatibility-matrix";
 
 /** Styled native Markdown elements shared by every MDX surface. */
@@ -32,4 +33,5 @@ export const projectMdxComponents: MDXComponents = {
   Callout,
   CompatibilityMatrix,
   ProjectLinks,
+  Graph3D,
 };

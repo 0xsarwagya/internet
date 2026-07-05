@@ -7,6 +7,13 @@
       "runtimeArgs": ["--filter", "web", "exec", "next", "dev"],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "oss",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "oss", "exec", "next", "dev"],
+      "port": 3003,
+      "autoPort": true
     }
   ]
 }

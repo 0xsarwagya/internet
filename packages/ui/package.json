@@ -7,6 +7,7 @@
     "./reading-progress": "./src/reading-progress.tsx",
     "./prose": "./src/prose.tsx",
     "./mdx": "./src/mdx/registry.tsx",
+    "./graph3d": "./src/graph3d/graph3d.tsx",
     "./content": "./src/content.ts",
     "./og": "./src/og.tsx",
     "./styles/tokens.css": "./styles/tokens.css",
@@ -20,21 +21,33 @@
     "gray-matter": "^4"
   },
   "peerDependencies": {
+    "@react-three/drei": "^10",
+    "@react-three/fiber": "^9",
     "next": ">=16",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "three": "^0.185.0"
+  },
+  "peerDependenciesMeta": {
+    "@react-three/drei": { "optional": true },
+    "@react-three/fiber": { "optional": true },
+    "three": { "optional": true }
   },
   "devDependencies": {
+    "@react-three/drei": "^10",
+    "@react-three/fiber": "^9",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/mdx": "^2.0.14",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
+    "@types/three": "^0.185.0",
     "eslint": "^9.39.1",
     "next": "16.2.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "three": "^0.185.0",
     "typescript": "5.9.2"
   }
 }

@@ -169,6 +169,12 @@ importers:
       '@next/mdx':
         specifier: ^16
         version: 16.2.10(@mdx-js/loader@3.1.1)(@mdx-js/react@3.1.1(@types/react@19.2.2)(react@19.2.7))
+      '@react-three/drei':
+        specifier: ^10.7.7
+        version: 10.7.7(@react-three/fiber@9.6.1(@types/react@19.2.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(@types/react@19.2.2)(@types/three@0.185.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1)
+      '@react-three/fiber':
+        specifier: ^9.6.1
+        version: 9.6.1(@types/react@19.2.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1)
       '@repo/seo':
         specifier: workspace:*
         version: link:../../packages/seo
@@ -202,6 +208,9 @@ importers:
       tailwindcss:
         specifier: ^4
         version: 4.3.2
+      three:
+        specifier: ^0.185.1
+        version: 0.185.1
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
@@ -378,6 +387,12 @@ importers:
         specifier: ^4
         version: 4.0.3
     devDependencies:
+      '@react-three/drei':
+        specifier: ^10
+        version: 10.7.7(@react-three/fiber@9.6.1(@types/react@19.2.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(@types/react@19.2.2)(@types/three@0.185.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1)
+      '@react-three/fiber':
+        specifier: ^9
+        version: 9.6.1(@types/react@19.2.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1)
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -396,6 +411,9 @@ importers:
       '@types/react-dom':
         specifier: 19.2.2
         version: 19.2.2(@types/react@19.2.2)
+      '@types/three':
+        specifier: ^0.185.0
+        version: 0.185.0
       eslint:
         specifier: ^9.39.1
         version: 9.39.1(jiti@2.7.0)
@@ -408,6 +426,9 @@ importers:
       react-dom:
         specifier: ^19.2.7
         version: 19.2.7(react@19.2.7)
+      three:
+        specifier: ^0.185.0
+        version: 0.185.1
       typescript:
         specifier: 5.9.2
         version: 5.9.2
