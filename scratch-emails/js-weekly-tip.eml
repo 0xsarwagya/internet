@@ -1,0 +1,40 @@
+To: hello@cooperpress.com
+From: Sarwagya Singh <hello@sarwagya.wtf>
+Subject: Three small MIT primitives — non-extractable browser identity, JSON handoff, durable IDB value
+Content-Type: text/plain; charset=utf-8
+
+Hi Peter,
+
+Long-time JS Weekly reader. Sharing something you might find fits the
+"unusual and small" corner of the newsletter.
+
+I recently released three MIT-licensed browser libraries that compose
+but each solves its own problem:
+
+- @0xsarwagya/ghost — persistent identity via non-extractable Ed25519
+  CryptoKey in IndexedDB. No accounts, no OIDC. Ed25519 finally
+  cross-browser as of Safari 17.4.
+  https://oss.sarwagya.wtf/ghost/docs
+
+- @0xsarwagya/handoff — JSON state transfer up to ~8 KiB via URL
+  fragment or QR (deflate-raw + base64url + a qrFriendly boolean).
+  https://oss.sarwagya.wtf/handoff/docs
+
+- @0xsarwagya/durable-local — one named JSON value in IndexedDB with
+  atomic RMW, migrations, and honest durability categorization
+  (session/ephemeral/best-effort/persistent/ios-capped — because
+  navigator.storage.persisted() lies on Safari desktop tabs).
+  https://oss.sarwagya.wtf/durable-local/docs
+
+Also a WebRTC chat composing all three:
+https://local.sarwagya.wtf
+
+Show HN if it helps context:
+https://news.ycombinator.com/item?id=48799119
+
+Not asking for coverage — just sharing in case any of these fit an
+upcoming issue.
+
+Thanks,
+Sarwagya Singh
+https://me.sarwagya.wtf
