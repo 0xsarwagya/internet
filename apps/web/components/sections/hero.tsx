@@ -4,7 +4,23 @@ import { motion } from "framer-motion";
 
 import { MarginsLink } from "../margins/margins-link";
 
-const TAGS = ["Software", "Writing", "Systems", "Ideas"];
+const FAMILY = [
+  {
+    label: "Engineering",
+    href: "https://eng.sarwagya.wtf",
+    tooltip: "Engineering, written down · eng.sarwagya.wtf",
+  },
+  {
+    label: "Bakaiti",
+    href: "https://bakaiti.sarwagya.wtf",
+    tooltip: "Strongly held, loosely researched · bakaiti.sarwagya.wtf",
+  },
+  {
+    label: "The workshop",
+    href: "https://oss.sarwagya.wtf",
+    tooltip: "Open source, built slowly · oss.sarwagya.wtf",
+  },
+];
 
 export function Hero() {
   return (
@@ -64,9 +80,11 @@ export function Hero() {
               Thoughts
             </MarginsLink>
           </li>
-          {TAGS.map((tag) => (
-            <li key={tag} className="label text-ink/70">
-              {tag}
+          {FAMILY.map((site) => (
+            <li key={site.label} className="label text-ink/70">
+              <MarginsLink href={site.href} tooltip={site.tooltip}>
+                {site.label}
+              </MarginsLink>
             </li>
           ))}
         </ul>
