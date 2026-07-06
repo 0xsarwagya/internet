@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { JsonLd, breadcrumbJsonLd } from "@repo/seo/json-ld";
 import { createPageMetadata } from "@repo/seo/metadata";
 
+import { formatDownloads, getWeeklyDownloads } from "../../lib/npm-downloads";
 import { getLandingFrontmatter, getProject, getProjects } from "../../lib/projects";
 import { SITE, absoluteUrl } from "../../lib/site";
 
@@ -43,6 +44,13 @@ export default async function ProjectPage({
     default: React.ComponentType;
   };
   const Landing = mod.default;
+
+  const weekly = project.packageName
+    ? await getWeeklyDownloads([project.packageName])
+    : null;
+  const weeklyCount = weekly && project.packageName
+    ? weekly.byPackage[project.packageName]
+    : undefined;
 
   const softwareLd = {
     "@context": "https://schema.org",
@@ -103,6 +111,12 @@ export default async function ProjectPage({
           ) : null}
         </span>
       </nav>
+
+      {weeklyCount && weeklyCount > 0 ? (
+        <p className="mt-6 font-mono text-[11px] text-stone">
+          {formatDownloads(weeklyCount)} downloads / week
+        </p>
+      ) : null}
 
       <article className="mt-8 flex flex-col gap-6 pb-8">
         <Landing />
