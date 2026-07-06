@@ -43,43 +43,49 @@ export async function renderOgCard({
   footer,
   titleSize,
   colors = DEFAULT_COLORS,
+  graphic,
 }: {
   eyebrow: string;
   title: string;
   footer: string;
   titleSize: number;
   colors?: OgCardColors;
+  graphic?: React.ReactNode;
 }) {
   const font = await loadGoogleFont(
     "Instrument Serif",
     `${title}${eyebrow}${footer}`,
   );
 
-  return new ImageResponse(
-    (
+  const card = graphic ? (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        background: colors.ink,
+        color: colors.paper,
+        fontFamily: font ? "Instrument Serif" : "serif",
+      }}
+    >
       <div
         style={{
-          width: "100%",
-          height: "100%",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: colors.paper,
-          color: colors.ink,
           padding: "72px 80px",
-          fontFamily: font ? "Instrument Serif" : "serif",
+          width: 680,
+          height: "100%",
         }}
       >
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
             fontSize: 28,
             color: colors.stone,
           }}
         >
-          <div style={{ display: "flex" }}>{eyebrow}</div>
-          <div style={{ display: "flex" }}>{footer}</div>
+          {eyebrow}
         </div>
         <div
           style={{
@@ -87,7 +93,7 @@ export async function renderOgCard({
             fontSize: titleSize,
             letterSpacing: "-0.02em",
             lineHeight: 1.02,
-            maxWidth: 1000,
+            color: colors.paper,
           }}
         >
           {title}
@@ -95,18 +101,87 @@ export async function renderOgCard({
         <div
           style={{
             display: "flex",
-            width: 96,
-            height: 4,
-            background: colors.accent,
+            justifyContent: "space-between",
+            alignItems: "center",
+            fontSize: 28,
+            color: colors.stone,
           }}
-        />
+        >
+          <div
+            style={{
+              display: "flex",
+              width: 96,
+              height: 4,
+              background: colors.accent,
+            }}
+          />
+          <div style={{ display: "flex" }}>{footer}</div>
+        </div>
       </div>
-    ),
-    {
-      ...OG_SIZE,
-      fonts: font
-        ? [{ name: "Instrument Serif", data: font, style: "normal" as const }]
-        : undefined,
-    },
+      <div
+        style={{
+          display: "flex",
+          width: 520,
+          height: "100%",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+        }}
+      >
+        {graphic}
+      </div>
+    </div>
+  ) : (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        background: colors.paper,
+        color: colors.ink,
+        padding: "72px 80px",
+        fontFamily: font ? "Instrument Serif" : "serif",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          fontSize: 28,
+          color: colors.stone,
+        }}
+      >
+        <div style={{ display: "flex" }}>{eyebrow}</div>
+        <div style={{ display: "flex" }}>{footer}</div>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          fontSize: titleSize,
+          letterSpacing: "-0.02em",
+          lineHeight: 1.02,
+          maxWidth: 1000,
+        }}
+      >
+        {title}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          width: 96,
+          height: 4,
+          background: colors.accent,
+        }}
+      />
+    </div>
   );
+
+  return new ImageResponse(card, {
+    ...OG_SIZE,
+    fonts: font
+      ? [{ name: "Instrument Serif", data: font, style: "normal" as const }]
+      : undefined,
+  });
 }
