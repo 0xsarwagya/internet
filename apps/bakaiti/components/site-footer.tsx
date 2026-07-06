@@ -17,11 +17,26 @@ export function SiteFooter() {
           <FooterLink label="Complain" href={`mailto:${SITE.email}`} value={SITE.email} />
           <FooterLink label="Argue" href={SITE.twitterUrl} value="@0xsarwagya" />
           <FooterLink label="Audit" href={SITE.githubUrl} value="github/0xsarwagya" />
+          <FooterLink
+            label="Meet"
+            href="https://me.sarwagya.wtf"
+            value="me.sarwagya.wtf"
+            rel="me"
+          />
         </div>
       </div>
       <div className="mt-14 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-baseline sm:gap-6 md:mt-20">
         <span className="label">Views are my own. Nobody else applied.</span>
-        <span className="label">© {new Date().getFullYear()} · Sarwagya Singh</span>
+        <span className="label">
+          © {new Date().getFullYear()} ·{" "}
+          <a
+            href="https://me.sarwagya.wtf"
+            rel="me"
+            className="transition-colors hover:text-rust focus-visible:text-rust"
+          >
+            Sarwagya Singh
+          </a>
+        </span>
       </div>
     </footer>
   );

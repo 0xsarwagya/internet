@@ -84,8 +84,19 @@ export default async function LearningPage({
           >
             ← Learnings
           </Link>
+          <p className="mt-8 font-mono text-[11px] text-stone">
+            By{" "}
+            <a
+              href="https://me.sarwagya.wtf"
+              target="_blank"
+              rel="author me noreferrer"
+              className="text-ink transition-colors hover:text-rust"
+            >
+              Sarwagya Singh
+            </a>
+          </p>
           <h1
-            className="mt-8 font-serif leading-[1.05] tracking-[-0.01em]"
+            className="mt-3 font-serif leading-[1.05] tracking-[-0.01em]"
             style={{ fontSize: "clamp(36px, 4.6vw, 60px)" }}
           >
             {meta.title}

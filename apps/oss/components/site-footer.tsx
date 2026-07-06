@@ -27,6 +27,12 @@ export function SiteFooter() {
             href="https://sarwagya.wtf"
             value="sarwagya.wtf"
           />
+          <FooterLink
+            label="About"
+            href="https://me.sarwagya.wtf"
+            value="me.sarwagya.wtf"
+            rel="me"
+          />
         </div>
       </div>
       <div className="mt-14 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-baseline sm:gap-6 md:mt-20">

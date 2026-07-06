@@ -40,6 +40,7 @@ export function Epilogue() {
           <FooterLink label="Write" href="mailto:hello@sarwagya.wtf" value="hello@sarwagya.wtf" />
           <FooterLink label="Read" href="https://twitter.com/0xsarwagya" value="@0xsarwagya" />
           <FooterLink label="Ship" href="https://github.com/0xsarwagya" value="github/0xsarwagya" />
+          <FooterLink label="Identify" href="https://me.sarwagya.wtf" value="me.sarwagya.wtf" rel="me" />
         </div>
       </div>
 

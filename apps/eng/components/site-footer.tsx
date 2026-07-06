@@ -17,6 +17,17 @@ export function SiteFooter() {
           <FooterLink label="Write" href={`mailto:${SITE.email}`} value={SITE.email} />
           <FooterLink label="Read" href={SITE.twitterUrl} value="@0xsarwagya" />
           <FooterLink label="Ship" href={SITE.githubUrl} value="github/0xsarwagya" />
+          <a
+            href="https://me.sarwagya.wtf"
+            target="_blank"
+            rel="me noreferrer"
+            className="group flex flex-col gap-1 border-t border-ink/10 pt-3 transition-colors hover:text-rust focus-visible:text-rust"
+          >
+            <span className="label">Me</span>
+            <span className="font-mono text-xs text-ink/70 transition-colors group-hover:text-rust">
+              me.sarwagya.wtf
+            </span>
+          </a>
         </div>
       </div>
       <div className="mt-14 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-baseline sm:gap-6 md:mt-20">

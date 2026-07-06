@@ -152,6 +152,55 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
+  apps/me:
+    dependencies:
+      '@0xsarwagya/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@repo/seo':
+        specifier: workspace:*
+        version: link:../../packages/seo
+      '@tailwindcss/postcss':
+        specifier: ^4
+        version: 4.3.2
+      next:
+        specifier: 16.2.0
+        version: 16.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      postcss:
+        specifier: ^8.5.16
+        version: 8.5.16
+      react:
+        specifier: ^19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ^19.2.7
+        version: 19.2.7(react@19.2.7)
+      tailwindcss:
+        specifier: ^4
+        version: 4.3.2
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
+      '@types/node':
+        specifier: ^22.15.3
+        version: 22.15.3
+      '@types/react':
+        specifier: 19.2.2
+        version: 19.2.2
+      '@types/react-dom':
+        specifier: 19.2.2
+        version: 19.2.2(@types/react@19.2.2)
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.1(jiti@2.7.0)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+
   apps/oss:
     dependencies:
       '@0xsarwagya/agnostic-web-ble':

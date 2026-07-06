@@ -1,0 +1,5 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && pnpm install --filter=me --filter=@0xsarwagya/ui --filter=@repo/seo --filter=@repo/eslint-config --filter=@repo/typescript-config --no-frozen-lockfile --ignore-scripts && pnpm rebuild"
+}
