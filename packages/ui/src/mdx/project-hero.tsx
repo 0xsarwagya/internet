@@ -1,10 +1,12 @@
 export function ProjectHero({
   package: packageName,
   status,
+  downloads,
   children,
 }: {
   package?: string;
   status?: string;
+  downloads?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -12,6 +14,7 @@ export function ProjectHero({
       <p className="label flex flex-wrap gap-x-5 gap-y-1">
         {status ? <span className="text-rust">{status}</span> : null}
         {packageName ? <span>{packageName}</span> : null}
+        {downloads ? <span>{downloads}</span> : null}
       </p>
       <div
         className="mt-6 max-w-3xl font-serif leading-[1.02] tracking-[-0.02em] [&_p]:!m-0"
