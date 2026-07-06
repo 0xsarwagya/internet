@@ -39,15 +39,14 @@ export function ChromeIndex({ notesCount }: Props) {
       aria-hidden={false}
       className="pointer-events-none fixed inset-x-0 top-4 z-40 flex items-start justify-between px-5 sm:top-6 sm:px-6 md:px-10"
     >
-      <a
-        href="https://me.sarwagya.wtf"
-        rel="me"
+      <Link
+        href="/"
         onMouseEnter={onLogoEnter}
         onFocus={onLogoEnter}
         className="pointer-events-auto label tracking-[var(--tracking-mono)] text-ink/80 outline-none hover:text-rust focus:text-rust"
       >
         Sarwagya
-      </a>
+      </Link>
 
       <div className="pointer-events-auto flex flex-col items-end gap-1.5">
         <Link
