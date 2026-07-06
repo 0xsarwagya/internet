@@ -18,8 +18,16 @@ export function JsonLd({ data }: { data: JsonLdData }) {
   );
 }
 
+/**
+ * The Person's canonical @id. Wikidata Q-items are the strongest identifier
+ * search engines and knowledge graphs consolidate on, so if sameAs contains a
+ * wikidata.org URL we use it; otherwise fall back to the person's own site.
+ */
 function personId(person: PersonEntity): string {
-  return `${person.url}/#person`;
+  const wikidata = person.sameAs.find((url) =>
+    url.startsWith("https://www.wikidata.org/wiki/Q"),
+  );
+  return wikidata ?? `${person.url}/#person`;
 }
 
 function personRef(person: PersonEntity): JsonLdData {

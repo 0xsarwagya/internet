@@ -13,6 +13,7 @@ export const SARWAGYA: PersonEntity = {
   email: "hello@sarwagya.wtf",
   jobTitle: "Software Engineer",
   sameAs: [
+    "https://www.wikidata.org/wiki/Q140451622",
     "https://me.sarwagya.wtf",
     "https://eng.sarwagya.wtf",
     "https://bakaiti.sarwagya.wtf",
