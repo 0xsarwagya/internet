@@ -105,6 +105,12 @@ const SECTIONS: Section[] = [
         hint: "hn",
       },
       {
+        label: "imdb.com/name/nm16137305",
+        subtitle: "research, stories, and occasionally making Bihar sound like Bihar",
+        href: "https://www.imdb.com/name/nm16137305",
+        hint: "film",
+      },
+      {
         label: "instagram.com/0xsarwagya",
         subtitle: "frames, occasional",
         href: "https://instagram.com/0xsarwagya",
@@ -212,7 +218,7 @@ export default function Home() {
         <footer className="flex flex-col gap-2 pt-12">
           <div className="hairline" aria-hidden />
           <div className="flex items-baseline justify-between pt-4">
-            <span className="label">{new Date().getFullYear()} · Muzaffarpur → Ludwigsburg</span>
+            <span className="label">{new Date().getFullYear()} · Bihar → Berlin</span>
             <a
               href="https://sarwagya.wtf"
               className="font-mono text-[11px] tracking-[0.14em] uppercase text-[color:var(--color-graphite)] hover:text-[color:var(--color-rust)]"
