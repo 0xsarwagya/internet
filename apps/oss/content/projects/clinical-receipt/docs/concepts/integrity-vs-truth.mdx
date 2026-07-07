@@ -1,0 +1,41 @@
+---
+title: "Integrity is not truth"
+description: "The one sentence the entire product stands on."
+order: 1
+---
+
+The package proves the committed record has not changed.
+
+It does not prove the original record was true.
+
+Everything else — algorithms, canonicalization, disclosures, exit
+codes — supports the first sentence and refuses to overstate the
+second. This is not modesty; it is the correct security posture.
+
+## What integrity gets you
+
+- Payload byte flips fail verification.
+- Event reorders, insertions, and removals fail verification.
+- Signature tampering fails verification.
+- Disclosure packages cannot substitute events from another receipt.
+
+That is a lot. It is also all.
+
+## What integrity does not get you
+
+- Whether the input clinical data was correctly captured from the
+  source system.
+- Whether the model actually thought what its response said.
+- Whether the human reviewer read the output.
+- Whether the timestamps are honest.
+
+Timestamps are recorder-asserted claims. The verification report
+carries a permanent `NO_EXTERNAL_TIMESTAMP` warning until a future
+release adds RFC 3161 timestamps.
+
+## Why this matters
+
+A hospital audit trail that says "this record has never changed since
+it was captured" is a real answer to a real question — one that no
+observability tool can currently give you. It is not the same as
+"the AI was right." Confusing the two is what regulators worry about.

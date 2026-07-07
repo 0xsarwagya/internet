@@ -1,0 +1,49 @@
+---
+title: "Events and the DAG"
+description: "How a workflow becomes a hash-linked, replay-resistant graph."
+order: 2
+---
+
+A receipt is an ordered list of events with parent hashlinks. Every
+event's id is derived from its committed form — the very structure
+that binds it in the tree. There is no id that isn't recomputable.
+
+Core event types (18 in v1):
+
+```
+run.started              tool.requested
+input.observed           tool.responded
+input.transformed        guardrail.evaluated
+evidence.queried         human.review.requested
+evidence.retrieved       human.review.completed
+prompt.template.selected output.proposed
+prompt.rendered          output.modified
+model.requested          output.committed
+model.responded          run.finalized
+```
+
+Extension types are absolute URIs — a vendor never invalidates core
+integrity by adding events:
+
+```ts
+await run.event(
+  "https://hospital.example/mdt-review/v1",
+  { value: { board: "cardiology-mdt" } },
+  { parents: [reviewId] },
+);
+```
+
+## Recording modes
+
+Every payload commits its value cryptographically. The wire mode
+controls how much of the value travels alongside:
+
+- `commitment` — only the digest survives. Value stays private.
+- `reference` — a URI + version identifies external content. The URI
+  itself is committed.
+- `embedded` — value travels with the receipt. Requires `embed: true`
+  as an explicit opt-in. Never happens silently.
+
+Mode is not part of the committed form. Downgrading from `embedded` to
+`commitment` after finalization does not change the root — that is
+what makes selective disclosure work.

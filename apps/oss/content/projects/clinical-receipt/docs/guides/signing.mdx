@@ -1,0 +1,50 @@
+---
+title: "Signing receipts"
+description: "Ed25519 and ECDSA P-256 via Web Crypto — plus what a signature does not mean."
+order: 2
+---
+
+```ts
+import {
+  createEd25519Signer,
+  createEcdsaP256Signer,
+} from "@0xsarwagya/clinical-receipt";
+
+// Generate a fresh keypair inside the runtime; the private half is
+// non-extractable.
+const ed = await createEd25519Signer({ generate: true });
+const ec = await createEcdsaP256Signer({ generate: true });
+
+// Or bring your own key material (PKCS#8, JWK, or a preloaded CryptoKey).
+```
+
+Sign at finalize time:
+
+```ts
+const receipt = await run.finalize({ signer: ed });
+// or several — signatures are additive.
+const cosigned = await run.finalize({ signers: [ed, ec] });
+```
+
+The signature covers a length-prefixed, JCS-serialized payload
+containing the specification identifier, receipt id, algorithm,
+key id, and signed-at timestamp. Nothing else. See `spec/1.0/signatures.md`.
+
+## Key ids
+
+The `keyId` is content-derived from the public key
+(`key_1_<hex32(H(tag||publicKey))>`). Two systems that hold the same
+public key derive the same id — but sameness of id does not prove
+sameness of who holds the private half.
+
+## What a signature does not prove
+
+A signature proves possession of the private key at signing time. It
+does not prove:
+
+- The signer is the organization whose name is on the key.
+- The private key is only in the signer's possession.
+- The record being signed is true.
+
+Applications that need identity should attach their own attestations
+around the signature — the receipt is not the whole trust story.

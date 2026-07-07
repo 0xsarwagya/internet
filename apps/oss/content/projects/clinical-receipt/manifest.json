@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "mdxVersion": 1,
+  "slug": "clinical-receipt",
+  "name": "clinical-receipt",
+  "packageName": "@0xsarwagya/clinical-receipt",
+  "description": "Portable, independently verifiable receipts of how a clinical AI output came to exist.",
+  "status": "experimental",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/0xsarwagya/clinical-receipt",
+  "npm": "https://www.npmjs.com/package/@0xsarwagya/clinical-receipt",
+  "landing": "site/landing.mdx",
+  "docs": "docs",
+  "assets": "site/assets",
+  "links": {
+    "repository": "https://github.com/0xsarwagya/clinical-receipt"
+  }
+}

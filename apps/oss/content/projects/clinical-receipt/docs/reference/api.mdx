@@ -1,0 +1,39 @@
+---
+title: "API reference"
+description: "The public surface of both entry points."
+order: 2
+---
+
+## `@0xsarwagya/clinical-receipt`
+
+Recorder + everything the recorder needs. Import this in the
+application that produces receipts.
+
+- `createReceipt(options): Promise<ReceiptRun>` — start a new receipt.
+- `ReceiptRun` — namespaced builders (`.input.observed`,
+  `.evidence.retrieved`, `.model.responded`, `.output.committed`, etc.)
+  plus `.event(type, payload, opts)` for extension URIs and
+  `.finalize({ signer? | signers? })`.
+- `createEd25519Signer` / `createEcdsaP256Signer` — Web Crypto signers.
+- `exportVerificationKey` / `importVerificationKey` — JWK ↔
+  `VerificationKey`.
+- `disclose(receipt, options)` — build a disclosure package.
+- `MemoryReceiptStore` and the `ReceiptStore` interface.
+- `canonicalize`, `commitPayload`, `sha256`, `CORE_EVENT_TYPES`.
+- `ReceiptError`, `isReceiptError`.
+
+## `@0xsarwagya/clinical-receipt/verify`
+
+Standalone verification. Import this in audit tools, gateways, or any
+consumer that must not carry the recorder's code path.
+
+- `parseReceipt(input)` — structural validation. Throws
+  `MALFORMED_RECEIPT` on bad input.
+- `parseDisclosure(input)` — same, for disclosure packages.
+- `verifyReceipt(input, { keys? }): Promise<VerificationReport>`.
+- `verifyDisclosure(input, { keys? }): Promise<DisclosureVerificationReport>`.
+- `verifyInclusionProof(content, proof, root, receiptId)` — for direct
+  proof verification.
+- `importVerificationKey`, `exportVerificationKey`, `deriveKeyId`.
+- `canonicalize`, `commitPayload`, `sha256`, encoding helpers.
+- `ReceiptError`, `isReceiptError`.

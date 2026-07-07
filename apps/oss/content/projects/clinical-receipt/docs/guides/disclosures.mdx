@@ -1,0 +1,47 @@
+---
+title: "Selective disclosure"
+description: "Reveal only what is needed; prove it belongs to the whole."
+order: 1
+---
+
+A regulator asks: "show me the human-review step for this decision."
+The right answer is that step plus a proof it belongs to the finalized
+receipt — not the whole receipt.
+
+```ts
+import { disclose } from "@0xsarwagya/clinical-receipt";
+
+const pkg = await disclose(receipt, {
+  events: ["human-review.*", "output.committed"],
+  // Downgrade sensitive payloads from embedded to commitment.
+  redact: ["model.*", "prompt.*"],
+});
+```
+
+`pkg` is a self-contained package: the header (with its own inclusion
+proof), the disclosed events (each with their own inclusion proof), the
+signatures verbatim, and — by default — the full leaf list so a
+verifier can confirm completeness.
+
+Verify it anywhere:
+
+```ts
+import { verifyDisclosure } from "@0xsarwagya/clinical-receipt/verify";
+
+const report = await verifyDisclosure(pkg, { keys: [key] });
+```
+
+The report says which events were disclosed, whether they thread the
+claimed root, whether the leaf list rebuilds it byte-for-byte
+(`complete: true`), and whether the signatures endorse it.
+
+## The mode-downgrade rule
+
+The wire envelope's `mode` field is *not* part of the committed form.
+An event recorded with `mode: "embedded"` (value visible) can be
+disclosed with `mode: "commitment"` (value hidden) without changing
+the root. The disclosure library does this automatically for events
+matched by `redact:` patterns.
+
+That is what makes selective disclosure lossless in the cryptographic
+sense: the same receipt survives.

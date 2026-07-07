@@ -1,0 +1,59 @@
+---
+title: "Command-line usage"
+description: "Verify, inspect, diff, and disclose receipts offline."
+order: 4
+---
+
+The CLI ships as the `clinical-receipt` binary once the package is
+installed. It is a thin wrapper around the same verify surface a
+library caller uses.
+
+## verify
+
+```
+clinical-receipt verify receipt.json [--key public.jwk]... [--json]
+```
+
+Exits `0` when the report is `ok`, `1` when integrity or a signature
+fails, `2` on bad arguments or unreadable input. Pass `--json` for the
+structured report.
+
+## verify --disclosure
+
+```
+clinical-receipt verify --disclosure package.json [--key public.jwk]...
+```
+
+Same exit-code convention; the report is a `DisclosureVerificationReport`
+so it carries `disclosedEvents` and `disclosures.complete` in addition
+to the standard fields.
+
+## inspect
+
+```
+clinical-receipt inspect receipt.json [--json]
+```
+
+Prints stats — id, workflow, event count, event-type histogram, root
+digest, signature key ids. No payload values are ever printed.
+
+## diff
+
+```
+clinical-receipt diff a.json b.json [--json]
+```
+
+Reports whether roots match, and lists event ids that appear only in
+one side. Deliberately says nothing about payload contents — a diff
+tool that leaks values is a diff tool that leaks PHI.
+
+## disclose
+
+```
+clinical-receipt disclose receipt.json --event <pattern>... [--redact <pattern>...] [--out share.json]
+```
+
+Patterns match event ids, exact types, or wildcards ending in `*`
+(`human-review.*`). Writes to stdout by default; pass `--out` to save
+to a file. The resulting package verifies cleanly with
+`verify --disclosure`.

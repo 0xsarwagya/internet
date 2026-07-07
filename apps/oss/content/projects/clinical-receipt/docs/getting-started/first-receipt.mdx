@@ -1,0 +1,48 @@
+---
+title: "Your first receipt"
+description: "Record a run, finalize a receipt, verify it independently."
+order: 2
+---
+
+Three moves: build the run through typed event builders, finalize with
+a signer, verify with a public key.
+
+```ts
+import {
+  createReceipt,
+  createEd25519Signer,
+} from "@0xsarwagya/clinical-receipt";
+
+const run = await createReceipt({
+  workflow: { id: "discharge-review", version: "2.1.0" },
+});
+
+await run.input.observed({ value: { resourceType: "Observation", id: "obs-1" } });
+await run.model.responded({ value: { text: "Consider urgent cardiology review." } });
+await run.output.committed({ value: { text: "Urgent cardiology review today." } });
+
+const signer = await createEd25519Signer({ generate: true });
+const receipt = await run.finalize({ signer });
+```
+
+Every builder call returns `{ id, sequence, commitment }` — the id is
+derived from the committed form so a receiver never has to trust the
+recorder's claim about it.
+
+## Verify
+
+```ts
+import {
+  verifyReceipt,
+  importVerificationKey,
+} from "@0xsarwagya/clinical-receipt/verify";
+
+const key = await importVerificationKey(publicJwk);
+const report = await verifyReceipt(receipt, { keys: [key] });
+console.log(report.ok);
+```
+
+`report.ok` is `true` only when the root recomputes, every event
+recomputes to its declared id, and every signature verifies. Warnings
+(no external timestamp, self-attested key, timeline inconsistencies)
+show up separately — they are visible without being fatal.

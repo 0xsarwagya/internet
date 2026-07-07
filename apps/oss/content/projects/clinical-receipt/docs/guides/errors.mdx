@@ -1,0 +1,40 @@
+---
+title: "Errors"
+description: "Every failure is a typed ReceiptError with a stable code."
+order: 3
+---
+
+Everything the library throws is a `ReceiptError` with a stable
+`code`, the `operation` that failed, a human message, and the native
+`cause` when there is one. Verifiers are the exception by design:
+`verifyReceipt` and `verifyDisclosure` return structured reports
+rather than throwing, because bad proofs are expected traffic — a
+tamper attempt should not crash your app.
+
+## Codes (v0.1)
+
+| Code | Where it comes from |
+| --- | --- |
+| `UNSUPPORTED` | Runtime lacks a required primitive (Web Crypto). |
+| `INVALID_ARGUMENT` | An API was called with structurally invalid input. |
+| `CANONICALIZATION_FAILED` | Value cannot be canonicalized by the requested profile. |
+| `UNSUPPORTED_CANONICALIZATION` | Unknown profile name. |
+| `UNSUPPORTED_ALGORITHM` | Hash/signature algorithm not implemented. |
+| `UNSUPPORTED_VERSION` | Receipt or disclosure declares a spec version this verifier does not speak. |
+| `EMBED_NOT_ALLOWED` | Payload asked for `mode: "embedded"` without `embed: true`. |
+| `PAYLOAD_NOT_COMMITTABLE` | Reference-mode payload without content or precomputed digest. |
+| `UNKNOWN_PARENT` | Recorder was given a parent id it never emitted. |
+| `RECEIPT_FINALIZED` | Attempted to mutate a finalized receipt. |
+| `MALFORMED_RECEIPT` | Structural or hashlink invariant broken. |
+| `MALFORMED_DISCLOSURE` | Same, at the disclosure package layer. |
+| `MALFORMED_PROOF` | Inclusion proof shape is invalid. |
+| `SIGNING_FAILED` | Signer threw or produced no signature. |
+| `KEY_IMPORT_FAILED` | JWK could not be imported for signing or verification. |
+
+Use `isReceiptError(err)` to narrow safely.
+
+## PHI safety
+
+Error messages never contain payload values. The library's own test
+suite has a permanent assertion for this — a code change that would
+leak a value into a message fails the build.
