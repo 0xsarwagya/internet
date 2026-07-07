@@ -1,0 +1,430 @@
+---
+title: The verifier must outlive the product
+date: 2026-07-07
+summary: I shipped four packages in three days. The strangest one was supposed to be a TypeScript library — until I noticed that by the time I stopped, I was no longer designing a package. I was designing for the day it no longer existed.
+topics:
+  - cryptography
+  - provenance
+  - protocols
+  - engineering
+---
+
+I shipped four packages in three days.
+
+The strangest one was supposed to be a TypeScript library.
+
+By the time I stopped, it had a versioned receipt format, deterministic canonicalization, two signature algorithms, selective disclosure, an offline verifier, byte-pinned test vectors, and a specification intended for implementations that do not use my code.
+
+Somewhere in those three days, I had stopped building a package.
+
+I had started designing for the day the package no longer existed.
+
+## The package
+
+The original problem was clinical AI provenance.
+
+A clinical AI system produces an answer today. Six months later, someone wants to know how it happened.
+
+The organization usually has the answer.
+
+Just not in one place.
+
+The patient input is in the EHR. Retrieved evidence is in a vector store. The prompt is in an LLM gateway. A model call is in another provider's logs. Guardrail decisions live in a policy engine. Human review happened somewhere else. The final output made it into the clinical record.
+
+Each system has a fragment.
+
+None of them has the run.
+
+I wanted one artifact that could describe one execution from beginning to end:
+
+- what entered the workflow,
+- what evidence was used,
+- which model and tools ran,
+- which guardrails fired,
+- where a human intervened,
+- and what output was finally committed.
+
+The first idea was simple enough.
+
+Record the events. Hash them. Commit them into a Merkle tree. Sign the root.
+
+Then verify the receipt later.
+
+That sounded like a package.
+
+It was not.
+
+## An audit log is not a proof
+
+The first mistake would have been to call the result an audit log.
+
+Audit logs are useful. They are also usually trusted because the system that produced them says they are correct.
+
+That is a different guarantee.
+
+If I hand you a JSON file containing twenty events and tell you it is the history of a clinical AI run, you can inspect it. You can archive it. You can search it.
+
+You still cannot tell whether I changed event seven yesterday.
+
+You cannot tell whether I removed event twelve.
+
+You cannot tell whether the output you are looking at belongs to the same execution as the evidence I showed you.
+
+You have a story.
+
+You do not have a commitment to that story.
+
+So `clinical-receipt` treats a run as a cryptographically committed event graph.
+
+Events can represent inputs, evidence, prompts, models, tools, guardrails, human decisions, and outputs. Each event is committed. Commits are threaded into a Merkle root. The final root can be signed.
+
+The important word is not signed.
+
+It is committed.
+
+A signature on arbitrary JSON proves very little if nobody can agree on the exact bytes that were signed.
+
+That problem consumed more of the design than the cryptography did.
+
+## Objects are not bytes
+
+JavaScript developers spend most of their time pretending objects have a stable representation.
+
+They do not.
+
+These two objects mean the same thing to an application:
+
+```ts
+{ model: "x", temperature: 0 }
+```
+
+```ts
+{ temperature: 0, model: "x" }
+```
+
+But naïvely serialized data can produce different bytes.
+
+Cryptography does not sign meaning.
+
+It signs bytes.
+
+That distinction is easy to ignore when one implementation both creates and verifies an artifact. The recorder serializes an object one way. The verifier uses the same helper. The tests pass.
+
+Then someone writes a verifier in Rust.
+
+Or Python.
+
+Or Java.
+
+Or the original JavaScript helper changes.
+
+Suddenly the protocol was never the object model.
+
+The protocol was an undocumented accident of one implementation.
+
+That was the point where canonicalization stopped being an internal utility.
+
+It became part of the format.
+
+A receipt needs deterministic bytes before it can have deterministic hashes. Deterministic hashes before it can have stable Merkle commitments. Stable commitments before signatures mean anything across implementations.
+
+The package uses JSON Canonicalization Scheme semantics for that reason.
+
+Not because canonical JSON is interesting.
+
+Because a verifier written five years later, in a language I never touched, needs to reconstruct the same bytes.
+
+## Separate the verifier
+
+The recorder knows too much.
+
+It knows how events are created. It knows the friendly APIs. It knows the internal types. It knows the defaults. It knows the implementation decisions that produced the receipt.
+
+That makes it dangerous.
+
+If the same machinery records and verifies an artifact, both sides can share the same mistake.
+
+The tests still pass.
+
+The mistake becomes consensus.
+
+So the verifier needed to become a separate surface.
+
+A receipt should be verifiable offline, without the original application and without a service operated by me.
+
+That changes the design.
+
+The verifier cannot ask a database what happened.
+
+It cannot call home for missing state.
+
+It cannot trust the recorder because the recorder says the receipt is valid.
+
+It gets an artifact, verification keys, and bytes.
+
+Then it decides.
+
+This is a much harsher boundary than an ordinary library API.
+
+It is also the useful one.
+
+A clinical AI vendor may disappear.
+
+A package may be abandoned.
+
+An npm account may vanish.
+
+A company may replace its entire stack.
+
+An auditor examining an old artifact should not need the original product to still be alive.
+
+The verifier must outlive the product.
+
+## The implementation should be replaceable
+
+This led to an uncomfortable test.
+
+Could someone verify a receipt without installing my package?
+
+If the answer was no, I had not designed a format.
+
+I had designed vendor lock-in with hashes.
+
+That is why the project grew a written specification.
+
+The TypeScript package is an implementation.
+
+It should not be the definition.
+
+The definition has to be precise enough that another implementation can disagree with mine.
+
+That means specifying the boring things:
+
+- field meanings,
+- canonicalization,
+- hash inputs,
+- event relationships,
+- commitment construction,
+- signature envelopes,
+- disclosure proofs,
+- failure conditions.
+
+The boring things are the protocol.
+
+The nice TypeScript API is just one way to produce them.
+
+I think infrastructure becomes more trustworthy when its implementation is allowed to become unnecessary.
+
+If the only correct verifier is my verifier, then every promise about portability is temporary.
+
+A specification is a bet that the artifact matters more than the code that created it.
+
+## Test vectors are the real API
+
+A specification can still be wrong.
+
+Worse, it can be ambiguous.
+
+Two people can read the same paragraph and produce two reasonable implementations that disagree on one byte.
+
+Cryptographic formats do not tolerate reasonable disagreement.
+
+So the project needed test vectors.
+
+Known inputs.
+
+Known canonical bytes.
+
+Known hashes.
+
+Known roots.
+
+Known signatures.
+
+Known verification outcomes.
+
+Pinned.
+
+The API documentation tells a developer how I expect the package to be used.
+
+The test vectors tell another implementation what the protocol actually means.
+
+That makes them a more serious compatibility promise than the TypeScript types.
+
+Types can change.
+
+Convenience methods can change.
+
+The package can be rewritten.
+
+A byte-pinned vector either matches or it does not.
+
+There is something reassuring about reducing a complicated interoperability argument to that.
+
+Here are the bytes.
+
+Show me yours.
+
+## Disclosure is not deletion
+
+Clinical data creates another problem.
+
+A complete receipt may contain more information than every verifier should see.
+
+An auditor may need proof that a guardrail event belonged to the original run without receiving the patient input.
+
+A reviewer may need the model output and human decision but not every retrieved document.
+
+The obvious solution is to make a smaller receipt.
+
+That destroys the point.
+
+If I can remove arbitrary events and hand you a new signed story, you are no longer verifying a subset of the original run.
+
+You are verifying a different run.
+
+Selective disclosure has to preserve the commitment.
+
+The verifier receives revealed events and enough cryptographic proof to establish that they belong to the original committed receipt.
+
+The hidden events remain hidden.
+
+The root remains the root.
+
+That distinction matters far beyond clinical software.
+
+Disclosure is not the same operation as deletion.
+
+Redaction is not the same thing as proof.
+
+A smaller JSON file is not automatically a trustworthy subset.
+
+## Signatures do not create truth
+
+This was the most important boundary in the project.
+
+A receipt can prove that the committed record has not changed since finalization.
+
+It can prove that disclosed events belong to the committed receipt.
+
+It can prove that someone possessing a particular private key endorsed the root.
+
+That is all.
+
+It cannot prove that the patient record was correct.
+
+It cannot prove that retrieved evidence was medically sound.
+
+It cannot prove that a model answer was safe.
+
+It cannot prove that the person holding a key was who the organization claimed they were.
+
+It cannot turn a recorder-asserted timestamp into objective time.
+
+Cryptography is very good at making narrow claims extremely strong.
+
+Software marketing is very good at taking those narrow claims and quietly expanding them.
+
+I did not want the package to do that.
+
+So the limitations belong in the verification model, not in a paragraph nobody reads.
+
+Integrity is not truth.
+
+A signature is not identity.
+
+A timestamp field is not trusted time.
+
+A Merkle tree is not a medical device.
+
+This sounds obvious when written down.
+
+A surprising amount of software is built on not writing it down.
+
+## Four packages in three days
+
+I did not plan to write a protocol that week.
+
+I was shipping small infrastructure packages.
+
+One problem led to another.
+
+A runtime abstraction needed to admit that runtimes differ.
+
+Browser coordination needed to admit that communication is not durable state.
+
+Clinical provenance needed to admit that an audit log is not a proof.
+
+The code was different every time.
+
+The obsession was the same.
+
+Take something the system leaves implicit and force it into a boundary the application can inspect.
+
+Runtime capability.
+
+Durable state.
+
+Execution provenance.
+
+Committed bytes.
+
+The useful abstractions were never the ones that made the underlying system look simpler than it was.
+
+They were the ones that made its guarantees explicit.
+
+By the fourth package, I realised I had spent three days building the same thing repeatedly.
+
+Not libraries.
+
+Boundaries.
+
+## Build for the hostile future
+
+Most software is designed around the moment it runs.
+
+A request arrives. Code executes. A response leaves.
+
+Provenance software has a different customer.
+
+The future.
+
+The future auditor does not have your context.
+
+The future verifier does not trust your application.
+
+The future implementation may not use your language.
+
+The future company may not exist.
+
+The future developer may think your code was terrible.
+
+They may be right.
+
+The artifact still has to work.
+
+That changed how I thought about the project.
+
+The goal was no longer to make `clinical-receipt` indispensable.
+
+The goal was to make the receipts independent of it.
+
+The recorder can disappear.
+
+The implementation can be replaced.
+
+The package can become obsolete.
+
+The verifier should still be able to answer the only questions it was ever qualified to answer:
+
+Did these events produce this commitment?
+
+Does this disclosure belong to that commitment?
+
+Did this key sign this root?
+
+Everything else is honest silence.
+
+That is not a limitation of the protocol.
+
+It is the reason I trust it.
