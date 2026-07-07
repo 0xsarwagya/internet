@@ -1,0 +1,310 @@
+---
+title: "Integration guide: Medplum, Aidbox, Oystehr"
+description: "Where to draw the instrumentation boundary in three FHIR platforms — verified against the current SDK surface, gotchas called out."
+order: 6
+---
+
+Three FHIR platforms all sit close enough to the same abstraction that
+one recipe covers them: draw the instrumentation boundary at the SDK's
+fetch layer. None of these clients fits `clinical-receipt`'s Level 1
+`instrumentFHIR` — that wrapper wants a client with `.baseUrl` and a
+swappable `.fetch` property, and it refuses to attach otherwise with
+`PARTIAL_INSTRUMENTATION_UNSAFE`. Two of the three accept a custom
+fetch in their constructor, so **Level 2** (`instrumentFHIRFetch` around
+`globalThis.fetch`) is the working path. The third — Aidbox — needs
+**Level 3** (the explicit `fhirExtension(...).operation(...).commitResponse(...)`
+API) because its generated client does not expose a fetch seam.
+
+Every claim on this page was checked against the platform's current
+docs and source. Where the docs and the on-disk code disagreed (Aidbox,
+for one), the version that matches the shipped code is what's here.
+
+## The shared pattern
+
+Wrap standard `fetch` once and hand the wrapped function to whichever
+constructors accept it. Everything else the SDK does — reads,
+searches, single-resource writes — flows through the recorder and
+lands in the same Merkle-committed receipt as your model calls,
+guardrails, and human review.
+
+```ts
+import { createReceipt } from "@0xsarwagya/clinical-receipt";
+import { instrumentFHIRFetch } from "@0xsarwagya/clinical-receipt/fhir";
+
+const run = await createReceipt({
+  workflow: { id: "discharge-review", version: "2.4.1" },
+});
+
+const instrumentedFetch = instrumentFHIRFetch(globalThis.fetch, {
+  run,
+  baseUrl: BASE,
+  server: { id: "your-org-owned-id" }, // NOT the API hostname
+});
+```
+
+`server.id` should be a stable identifier your organization owns —
+records the *which store* claim durably even if the URL changes.
+
+### When to drop to Level 3
+
+Batch and transaction bundles, GraphQL queries, and any transport
+that doesn't decompose into individual HTTP calls don't map to one
+instrumented fetch. Wrap those with the explicit operation API:
+
+```ts
+import { fhirExtension } from "@0xsarwagya/clinical-receipt/fhir";
+
+const fhir = fhirExtension(run, { server: { id: "..." } });
+
+const op = fhir.operation({
+  method: "POST",
+  baseUrl: BASE,
+  path: "/",
+  body: transactionBundle,
+});
+const response = await customTransport(transactionBundle);
+await op.commitResponse({ status: response.status, body: response.body });
+```
+
+All three platforms lean on transaction bundles — plan for a Level 3
+path alongside the Level 2 fetch from the start. Everything still
+lands in one receipt.
+
+## Medplum
+
+**SDK:** `@medplum/core` · **FHIR:** R4 (typed; URL path defaults to
+`fhir/R4/`) · **Fetch seam:** constructor `fetch` option · **Primary
+path:** Level 2 · **Level 3:** batch/transaction bundles, GraphQL
+
+`MedplumClient` accepts `fetch` in its constructor options. The seam
+is real, but the shape is looser than standard `fetch` — Medplum
+defines its own `FetchLike` type:
+
+```ts
+type FetchLike = (url: string, options?: any) => Promise<any>;
+```
+
+Standard `fetch` satisfies it; wrapping `globalThis.fetch` with
+`instrumentFHIRFetch` and passing the wrapper is fine. Do **not** try
+to hand back a plain object with a different response shape — the
+client calls `.json()` and reads `.headers` internally.
+
+```ts
+import { MedplumClient } from "@medplum/core";
+
+const medplum = new MedplumClient({
+  baseUrl: BASE,
+  fetch: instrumentedFetch, // from the shared pattern above
+});
+
+const patient  = await medplum.readResource("Patient", "123");
+const bundle   = await medplum.search("Observation", "patient=123");
+await medplum.createResource(clinicalImpression);
+```
+
+### Method names to know
+
+- `readResource(resourceType, id)` — single-resource read.
+- `search(resourceType, query?)` returns a `Bundle<T>`;
+  `searchResources(...)` returns a flat array. Pick intentionally —
+  the receipt commits whatever body flows through.
+- `createResource(resource)`, `updateResource(resource)`,
+  `patchResource(resourceType, id, ops)`, `deleteResource(...)`.
+- `getBaseUrl(): string` — a method, not a property.
+
+### Level 3 paths
+
+- `executeBatch(bundle)` — transaction/batch bundles.
+- `graphql(query, operationName?, variables?, options?)` — note the
+  second argument is `operationName`, not `variables`. Skipping this
+  detail silently swaps the two.
+
+### Runtime and gotchas
+
+- Same class works in the browser, Node, and Medplum Bots. Bots
+  receive a pre-configured `MedplumClient` from the runtime —
+  instrumenting the injected client is not straightforward; use
+  Level 3 or a wrapper Bot that owns its own client.
+- Construction does **not** authenticate. Provide `accessToken`, or
+  run OAuth via `startLogin` / `startClientLogin`. If you pass a
+  custom async `ClientStorage`, `await medplum.getInitPromise()`
+  before the first call.
+- Cache defaults differ: 60s in browsers, 0s in Node.
+
+## Aidbox
+
+**SDK:** generated client (see below) · **FHIR:** R4/R4B/R5/R6-ballot,
+per profile · **Fetch seam:** **none documented in the generated
+client** · **Primary path:** **Level 3** · **Level 2:** possible only
+if you write the transport yourself
+
+Aidbox's TypeScript story is unsettled. The official getting-started
+page still shows:
+
+```
+npm i -g @fhirschema/codegen
+npx fscg generate -g typescript -p hl7.fhir.r4.core@4.0.1 -o aidbox
+```
+
+...but `@fhirschema/codegen` was **archived on 2026-03-18** with a
+notice pointing at `@atomic-ehr/codegen` (npm: `@atomic-ehr/codegen`)
+as the maintained successor. Aidbox's docs have not migrated the
+snippet as of this writing. Match your project to whichever codegen
+your build actually uses; both produce a `Client` with the same call
+shape.
+
+```ts
+// Whichever codegen produced this file:
+import { Client } from "../aidbox";
+
+const client = new Client(BASE, {
+  auth: {
+    method: "basic",
+    credentials: { username, password },
+  },
+});
+const patient = await client.resource.create("Patient", body);
+```
+
+### The transport gap
+
+Neither the current Aidbox docs nor the generated client's README
+documents a `fetch` constructor option, module-level global override,
+or transport interceptor. There is no seam Level 2 can attach to
+through the SDK. The two honest options:
+
+1. **Use Level 3 for every operation.** Model each
+   `client.resource.*` call as an explicit `fhirExtension().operation()`
+   with `.commitResponse(...)` fed the client's return value. Verbose
+   but the abstraction the API was designed for.
+2. **Bypass the generated client** and issue raw `fetch` against
+   Aidbox's REST endpoints. Then wrap that fetch with
+   `instrumentFHIRFetch` and it works exactly like Medplum. You give
+   up the codegen typing.
+
+Pick (1) if the typing pays for the verbosity. Pick (2) if you can
+tolerate less typing and want one consistent instrumentation path.
+
+### Auth in production
+
+The docs show `auth: { method: "basic", credentials: {...} }` — that
+is the dev path. Production uses OAuth2 **Client Credentials Grant**
+returning `token_type: Bearer`. Store the token, refresh it, pass it
+via `Authorization: Bearer <token>` on whichever transport you end
+up using.
+
+### Batch, transaction, and GraphQL
+
+Aidbox supports FHIR transaction bundles (`POST /` with a Bundle)
+and its own GraphQL endpoint (`POST /$graphql`). Neither has a
+dedicated helper on the generated client — both are raw REST calls.
+Whichever integration path you take, wrap them in Level 3.
+
+## Ottehr (via Oystehr)
+
+**SDK:** `@oystehr/sdk` · **FHIR:** R4B recommended, R5 supported ·
+**Fetch seam:** constructor `fetch` option · **Primary path:** Level 2 ·
+**Level 3:** transaction bundles
+
+Ottehr is the open-source, FHIR-native EHR; Oystehr is the backend it
+runs against ("headless EHR" — FHIR API, auth, Zambda functions).
+The Ottehr site declares "Powered by Oystehr." Integrating with
+Ottehr means instrumenting the Oystehr SDK.
+
+```ts
+import Oystehr from "@oystehr/sdk";
+
+const oystehr = new Oystehr({
+  accessToken,
+  fetch: instrumentedFetch, // must conform to Undici fetch
+});
+
+const patient = await oystehr.fhir.create({
+  resourceType: "Patient",
+  name: [{ family: "Doe" }],
+});
+const bundle = await oystehr.fhir.search({
+  resourceType: "Observation",
+  params: [{ name: "patient", value: `Patient/${patient.id}` }],
+});
+```
+
+Note the `create` signature: a flat resource, `{ resourceType, ...fields }`
+— **not** `{ resourceType, resource: {...} }`. Search takes
+`{ resourceType, params }`.
+
+### The `fetch` constraint is real
+
+Oystehr's docs are explicit:
+
+> *"Optionally provide a custom fetch implementation. This must
+> conform to the built-in node.js fetch implementation (Undici
+> fetch)."*
+
+So the passed function must match Node's Undici-style signature.
+Standard browser `fetch` and standard Node global `fetch` both
+satisfy it in practice — wrapping either with `instrumentFHIRFetch`
+works — but do not hand it a completely custom object that differs
+in `Response` shape.
+
+### FHIR version mismatch
+
+`clinical-receipt` v0.2 targets FHIR **R4**. Oystehr supports **R4B
+and R5**, with **R4B as the recommended default**. The canonicalization
+profile `fhir-json-r4@1` is byte-oriented; it does not care whether
+the JSON on the wire is R4, R4B, or R5. Commitments still compute
+deterministically and receipts still verify integrity. What you lose
+against R4B/R5 payloads is the *semantic* guarantee — `verifyFHIR`
+will still return `ok`, but any code that reasons over resource shape
+downstream of the receipt needs to know it is not looking at R4.
+
+If you use Oystehr, validate `verifyFHIR` against your R4B/R5
+resource shapes before relying on it end-to-end.
+
+### Auth gotcha
+
+`accessToken` in the constructor is the pattern. `clientId` is not a
+constructor field. **`projectId` is required specifically for
+developer access tokens** — production M2M or user tokens don't
+need it. Read the [Oystehr TypeScript SDK docs](https://docs.oystehr.com/oystehr/core-documentation/typescript-sdk/)
+for the exact matrix.
+
+### Level 3 paths
+
+- `oystehr.fhir.transaction(bundle)` — transaction bundles.
+- `oystehr.fhir.batch(bundle)` — batch bundles.
+
+Both bypass the per-resource fetch and want the explicit operation
+API.
+
+## At a glance
+
+<CompatibilityMatrix
+  columns={[
+    { key: "platform", label: "Platform" },
+    { key: "sdk", label: "SDK" },
+    { key: "fhir", label: "FHIR" },
+    { key: "seam", label: "Fetch seam" },
+    { key: "primary", label: "Primary path" }
+  ]}
+  rows={[
+    { platform: "Medplum", sdk: "@medplum/core", fhir: "R4", seam: "constructor `fetch` (FetchLike)", primary: "Level 2" },
+    { platform: "Aidbox", sdk: "@fhirschema/codegen (archived) → @atomic-ehr/codegen", fhir: "R4/R4B/R5", seam: "none documented", primary: "Level 3", note: "Generated client has no fetch injection point. Level 3 is the honest primary. Level 2 works only if you bypass the codegen client and issue raw fetch." },
+    { platform: "Oystehr (Ottehr)", sdk: "@oystehr/sdk", fhir: "R4B / R5", seam: "constructor `fetch` (Undici-style)", primary: "Level 2", note: "verifyFHIR is R4-shaped in v0.2 — validate against R4B/R5 payloads before relying on it." }
+  ]}
+/>
+
+## What none of this changes
+
+- Neither the receipt nor `verifyFHIR` claim any of these servers is
+  truthful. Integrity is not truth; a matching commitment proves the
+  bytes the workflow observed haven't changed, not that those bytes
+  were clinically correct.
+- Record `server.id` as a stable identifier your org owns, not the
+  API hostname. Hostnames move.
+- v0.2 commits first-page-only searches (`pagination:
+  "complete-first-page-only"` when the server returns a `next` link);
+  multi-page consumption is a later release. Every platform on this
+  page paginates by default.
+- Use ephemeral or org-held signing keys per your trust model. The
+  receipt is one piece of the identity story, not the whole thing.
