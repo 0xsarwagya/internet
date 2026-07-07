@@ -57,3 +57,44 @@ Patterns match event ids, exact types, or wildcards ending in `*`
 (`human-review.*`). Writes to stdout by default; pass `--out` to save
 to a file. The resulting package verifies cleanly with
 `verify --disclosure`.
+
+## fhir inspect
+
+```
+clinical-receipt fhir inspect receipt.json [--json]
+```
+
+Projects the FHIR events in the receipt into a trace: servers, reads,
+searches, writes, transactions, errors, lineage. Identifiers and
+version ids are printed; resource bodies are not.
+
+## fhir verify
+
+```
+clinical-receipt fhir verify receipt.json \
+  [--key public.jwk]... \
+  [--resource <ref>=<path>]... \
+  [--json]
+```
+
+Runs base receipt verification, then walks the FHIR events. For every
+`--resource <ref>=<path>` pair, canonicalizes the JSON at `<path>`
+under `fhir-json-r4@1` and reports `match`, `mismatch`, or
+`no-content-supplied` against the receipt's commitment. Exit `0`
+when the report is `ok`, `1` when integrity, signature, or FHIR
+commitment verification fails.
+
+The verifier is offline — it never contacts a FHIR server. Live
+store comparison (Layer 3 in the FHIR verification model) is a
+follow-up release.
+
+## fhir diff
+
+```
+clinical-receipt fhir diff a.json b.json [--json]
+```
+
+Reports which FHIR reads and writes appear only in receipt A vs
+receipt B, and each side's search count. Diffs by resource reference,
+not by receipt event id — a workflow rerun against the same server
+often yields new event ids for the same clinical read.
