@@ -1,0 +1,53 @@
+---
+title: "Verifying receipts"
+description: "The verifier is standalone; the CLI is a thin wrapper."
+order: 3
+---
+
+Verification never trusts the recorder. It takes bytes and a public key
+and recomputes every hash from those inputs.
+
+## In code
+
+```ts
+import { verifyReceipt } from "@0xsarwagya/clinical-receipt/verify";
+
+const report = await verifyReceipt(receipt, { keys: [key] });
+if (report.ok) {
+  // integrity + every signature verified
+} else {
+  for (const failure of report.integrity.events.failed) {
+    console.log(failure.index, failure.reason);
+  }
+}
+```
+
+The report is structured — never a bare boolean. `integrity`,
+`signatures`, `disclosures`, `timeline`, `reproducibility`, and
+`warnings` are all separate fields so applications can act on the parts
+that matter to them.
+
+## At the shell
+
+```
+clinical-receipt verify receipt.json
+```
+
+Exit codes:
+
+- `0` — everything verified.
+- `1` — a claim failed (bad root, bad signature, wrong proof).
+- `2` — could not run the command (bad args, malformed input).
+
+`--json` swaps human-readable output for the structured report.
+
+## Without the recorder
+
+An auditor can install a lightweight tool that imports only the verify
+surface:
+
+```ts
+import * as verify from "@0xsarwagya/clinical-receipt/verify";
+```
+
+The recorder and its dependencies never load. This is deliberate.

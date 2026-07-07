@@ -1,0 +1,37 @@
+---
+title: "Introduction"
+description: "What clinical-receipt is, what it refuses to be, and where to start."
+order: 1
+---
+
+Your clinical AI produced an answer. Can you prove how?
+
+`clinical-receipt` captures the inputs, evidence, models, tools,
+guardrails, and human decisions behind every clinical AI output — then
+lets anyone with the disclosed evidence verify the record offline.
+
+The package proves the committed record has not changed. It does not
+prove the original record was true. That distinction is core, not
+marketing: every verification report reflects it, every doc page
+respects it.
+
+## What it is not
+
+Not a blockchain. Not a hosted service. Not a compliance product. Not
+an LLM observability dashboard. Not a replacement for clinical
+validation.
+
+## What sits in the box
+
+- A recorder that turns a workflow into a signed, hash-linked event
+  graph.
+- A verifier (`@0xsarwagya/clinical-receipt/verify`) with no
+  recorder dependencies — the audit tool never sees the recorder's code
+  path.
+- A selective-disclosure primitive: reveal only what you need to,
+  prove cryptographically that the shown pieces belong to the original
+  receipt.
+- An offline CLI that verifies, inspects, diffs, and discloses receipts
+  with typed exit codes.
+- A written specification (`spec/1.0/`) that any implementation, in any
+  language, can conform to. Test vectors are byte-pinned.

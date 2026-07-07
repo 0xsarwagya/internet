@@ -1,0 +1,23 @@
+---
+title: "Installation"
+description: "Add the package and confirm the runtime supports Ed25519."
+order: 1
+---
+
+<Install package="@0xsarwagya/clinical-receipt" />
+
+Node ≥ 20 is required — the package uses Web Crypto's Ed25519 primitives
+and the newer `Uint8Array<ArrayBuffer>` typing.
+
+Two entry points:
+
+```ts
+import { createReceipt } from "@0xsarwagya/clinical-receipt";
+import { verifyReceipt } from "@0xsarwagya/clinical-receipt/verify";
+```
+
+Recorder code is not imported by the verifier — an auditor can ship a
+tool that carries only the verify surface, giving them a much smaller
+attack surface to review.
+
+Zero runtime dependencies. Apache-2.0 licensed.

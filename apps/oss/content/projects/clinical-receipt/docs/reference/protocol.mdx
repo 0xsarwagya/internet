@@ -1,0 +1,43 @@
+---
+title: "Protocol reference"
+description: "The v1 spec, at a glance. The full spec lives in spec/1.0/."
+order: 1
+---
+
+Protocol v1 = SHA-256, RFC 8785 JCS, receipt-scoped RFC 6962 Merkle tree,
+Ed25519 or ECDSA P-256 signatures. Any deviation is a new version.
+
+## Domain tags
+
+| Tag | Used for |
+| --- | --- |
+| `clinical-receipt:payload:v1` | Payload commitments |
+| `clinical-receipt:event:v1` | Event envelope digests + ids |
+| `clinical-receipt:tree:v1:<receiptId>` | Merkle leaf and node hashes |
+| `clinical-receipt:signature:v1` | Signature payload bytes |
+| `clinical-receipt:keyid:v1` | Key id derivation |
+
+Every hashed message = concatenation of length-prefixed fields
+(`uint32BE(len) || bytes`). Tags are always field 0.
+
+## Identifier grammars
+
+- Receipt id: `rcpt_1_<hex32>` (128-bit random).
+- Event id: `evt_1_<hex64>` (SHA-256 of the committed form).
+- Key id: `key_1_<hex32>` (SHA-256 of `tag||publicKey`, truncated).
+
+## Vectors
+
+`spec/1.0/vectors/` contains byte-pinned tests any implementation must
+pass:
+
+- `jcs.json` — canonicalization
+- `commitment.json` — payload commitment
+- `tree.json` — root + inclusion proofs at every leaf
+- `header.json` — header leaf bytes
+- `receipt-minimal.json` — end-to-end verify direction
+- `signature-ed25519.json` — signature verify direction only
+- `disclosure-basic.json` — disclosure verify direction
+
+The full byte-level rules live in `spec/1.0/` — this reference is a
+map to that specification, not a substitute for it.

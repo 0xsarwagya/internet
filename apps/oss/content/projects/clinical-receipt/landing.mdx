@@ -1,0 +1,91 @@
+---
+title: "clinical-receipt"
+description: "Portable, independently verifiable receipts of how a clinical AI output came to exist."
+---
+
+<ProjectHero package="@0xsarwagya/clinical-receipt" status="experimental">
+Your clinical AI produced an answer. Can you prove how?
+</ProjectHero>
+
+I refuse to put a blockchain behind a clinical decision because an
+auditor needs to know how it happened.
+
+Modern clinical AI systems produce answers. Six months later, the
+organization has fragments of that story in seven systems — the FHIR
+input in the EHR, the retrieval logs in the vector store, the prompt in
+the LLM gateway, the guardrail decision in the policy engine, the
+review in the audit trail, the final output in the record.
+
+`clinical-receipt` writes one story for one run.
+
+## Capture, commit, sign, disclose, verify
+
+The recorder turns a workflow into a signed, hash-linked event graph —
+inputs, evidence, prompts, models, tools, guardrails, human decisions,
+outputs. Every event carries a cryptographic commitment; every commit
+threads a Merkle root; the root is signed by whoever ran the workflow.
+
+<Install package="@0xsarwagya/clinical-receipt" />
+
+```ts
+import { createReceipt, createEd25519Signer } from "@0xsarwagya/clinical-receipt";
+
+const run = await createReceipt({
+  workflow: { id: "discharge-review", version: "2.1.0" },
+});
+
+await run.input.observed({ value: patientBundle });
+await run.model.responded({ value: modelOutput });
+await run.output.committed({ value: finalOutput });
+
+const receipt = await run.finalize({
+  signer: await createEd25519Signer({ generate: true }),
+});
+```
+
+Verify anywhere — offline, no service, no trust in the original app:
+
+```ts
+import { verifyReceipt, importVerificationKey } from "@0xsarwagya/clinical-receipt/verify";
+
+const report = await verifyReceipt(receipt, {
+  keys: [await importVerificationKey(publicJwk)],
+});
+```
+
+<Callout>
+The package proves the committed record has not changed. It does not
+prove the original record was true. Timestamps are recorder-asserted
+claims — future releases will add RFC 3161 timestamps. This limit is
+in the reports, not just the docs.
+</Callout>
+
+## What CI proves, on every commit
+
+<CompatibilityMatrix
+  columns={[
+    { key: "runtime", label: "Runtime" },
+    { key: "sha256", label: "SHA-256" },
+    { key: "ed25519", label: "Ed25519" },
+    { key: "p256", label: "ECDSA P-256" },
+    { key: "jcs", label: "JCS" }
+  ]}
+  rows={[
+    { runtime: "Node ≥ 20", sha256: "✓", ed25519: "✓", p256: "✓", jcs: "✓ RFC 8785" },
+    { runtime: "Modern browsers", sha256: "✓", ed25519: "✓ Chromium 137+ · Firefox 129+ · Safari 17+", p256: "✓", jcs: "✓ RFC 8785", note: "Ed25519 signatures may be hedged by the engine; vectors pin the verify direction only." },
+    { runtime: "Edge runtimes", sha256: "✓", ed25519: "✓ where WebCrypto Ed25519 is enabled", p256: "✓", jcs: "✓ RFC 8785", note: "No Node built-ins — recorder and verifier run anywhere WebCrypto does." }
+  ]}
+/>
+
+## The three things a receipt can prove
+
+- **Integrity.** The record has not changed since finalize.
+- **Selective disclosure.** Any subset of events can be revealed with
+  cryptographic proof they belong to the original receipt.
+- **Signature.** Someone possessing a specific private key endorsed the
+  root — nothing about identity, nothing about truth.
+
+Everything else is honest silence. That is the correct posture for
+clinical software.
+
+<ProjectLinks />

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 240" role="img" aria-label="Clinical receipt flow: inputs, evidence, prompts, model calls, guardrails, and human review are recorded as an ordered DAG. Every event carries a cryptographic commitment; the root is signed. Anyone with the disclosed evidence can verify the receipt offline.">
+  <style>
+    text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fill: currentColor; }
+    .box { fill: none; stroke: currentColor; stroke-opacity: 0.35; }
+    .arrow { stroke: currentColor; stroke-opacity: 0.55; fill: none; }
+    .accent { stroke: #c9705a; stroke-opacity: 0.8; fill: none; }
+    .accentfill { fill: #c9705a; fill-opacity: 0.85; }
+    .sub { font-size: 10px; opacity: 0.6; }
+    .main { font-size: 13px; }
+  </style>
+  <rect class="box" x="20" y="80" width="150" height="80" rx="4"/>
+  <text class="main" x="35" y="110">Workflow run</text>
+  <text class="sub" x="35" y="128">inputs · evidence</text>
+  <text class="sub" x="35" y="142">prompts · model</text>
+  <text class="sub" x="35" y="156">guardrails · review</text>
+
+  <line class="arrow" x1="170" y1="120" x2="220" y2="120" marker-end="url(#a)"/>
+
+  <rect class="box" x="230" y="80" width="160" height="80" rx="4"/>
+  <text class="main" x="245" y="110">Event DAG</text>
+  <text class="sub" x="245" y="128">hash-linked parents</text>
+  <text class="sub" x="245" y="142">content-derived ids</text>
+  <text class="sub" x="245" y="156">18 core types + URIs</text>
+
+  <line class="arrow" x1="390" y1="120" x2="440" y2="120" marker-end="url(#a)"/>
+
+  <rect class="box" x="450" y="80" width="140" height="80" rx="4"/>
+  <text class="main" x="465" y="110">Merkle root</text>
+  <text class="sub" x="465" y="128">RFC 6962</text>
+  <text class="sub" x="465" y="142">receipt-scoped</text>
+  <text class="sub" x="465" y="156">signed</text>
+
+  <line class="arrow" x1="590" y1="120" x2="640" y2="120" marker-end="url(#a)"/>
+
+  <rect class="box accent" x="650" y="80" width="90" height="80" rx="4"/>
+  <text class="main accentfill" x="665" y="110">Verify</text>
+  <text class="sub" x="665" y="128">offline</text>
+  <text class="sub" x="665" y="142">any key</text>
+  <text class="sub" x="665" y="156">any runtime</text>
+
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" fill-opacity="0.6"/>
+    </marker>
+  </defs>
+</svg>

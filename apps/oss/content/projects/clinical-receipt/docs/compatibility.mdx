@@ -1,0 +1,34 @@
+---
+title: "Compatibility"
+description: "What CI proves — per runtime, per algorithm."
+order: 6
+---
+
+Every claim below is exercised by CI on every commit.
+
+<CompatibilityMatrix
+  columns={[
+    { key: "runtime", label: "Runtime" },
+    { key: "sha256", label: "SHA-256" },
+    { key: "ed25519", label: "Ed25519" },
+    { key: "p256", label: "ECDSA P-256" },
+    { key: "jcs", label: "JCS" }
+  ]}
+  rows={[
+    { runtime: "Node ≥ 20", sha256: "✓ Web Crypto", ed25519: "✓ Web Crypto", p256: "✓ Web Crypto", jcs: "✓ RFC 8785" },
+    { runtime: "Modern browsers", sha256: "✓ Web Crypto", ed25519: "✓ Chromium 137+, Firefox 129+, Safari 17+", p256: "✓ Web Crypto", jcs: "✓ RFC 8785", note: "Ed25519 signatures may be hedged (Safari) — vectors pin verify direction only." },
+    { runtime: "Edge runtimes (Deno, Bun, Workers)", sha256: "✓ Web Crypto", ed25519: "✓ where Web Crypto Ed25519 is enabled", p256: "✓ Web Crypto", jcs: "✓ RFC 8785", note: "The recorder and verifier are runtime-agnostic; no Node built-ins." }
+  ]}
+/>
+
+## Pinned vectors
+
+The v1 test vectors are byte-pinned for every deterministic surface:
+canonicalization, commitments, tree structure, header leaves, receipt
+serialization. Signatures are pinned in the verify direction only —
+Ed25519 signatures may not be byte-identical across engines (WebKit
+hedges as side-channel hardening), but the pinned signature must verify
+everywhere.
+
+Any implementation, in any language, that claims specification 1.0
+conformance must recompute these vectors.

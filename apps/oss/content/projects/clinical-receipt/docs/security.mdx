@@ -1,0 +1,51 @@
+---
+title: "Security model"
+description: "Threats caught, threats not caught, and where the boundary lives."
+order: 5
+---
+
+## The one sentence
+
+The package proves the committed record has not changed. It does not
+prove the original record was true.
+
+## Threats caught
+
+- **Payload byte flips** — commitment verification fails at the tampered
+  event.
+- **Event removal, insertion, reorder** — parse-layer structural
+  invariants + root recomputation catch these before the verify layer
+  runs any crypto.
+- **Event id or parent-id substitution** — the DAG's hashlinks break
+  and parse rejects the receipt.
+- **Signature tampering** — signature verification fails; events still
+  verify.
+- **Cross-receipt proof replay** — the tree tag includes the receipt id,
+  so an inclusion proof from receipt A cannot thread receipt B's root.
+- **Hidden-leaf manipulation in disclosures** — completeness collapses
+  to `false` and `cryptographicallyConsistent` to `false`.
+
+## Threats NOT caught
+
+- **Whether the original data was true.** No cryptographic construction
+  can answer that.
+- **Whether the timestamps are honest.** Recorder-asserted; permanent
+  `NO_EXTERNAL_TIMESTAMP` warning until 0.3.
+- **Whether the signer is who they claim to be.** A signature proves
+  possession of a private key. Identity is another product.
+- **Whether the AI actually thought what its output says.** The receipt
+  records what was sent and received. Not what was believed.
+
+## PHI safety
+
+Error messages never contain payload values. A permanent test
+(`tests/tamper.test.ts` — PHI-safety section) asserts this against a
+sensitive-looking string embedded deep in a payload. A future change
+that would leak a value into an error message fails the build.
+
+## Verify boundary
+
+The `./verify` entry point never imports from `./recorder` or
+`./disclosure`. An auditor's tool can carry only the verify surface,
+giving them the smallest possible attack surface to review. This is
+enforced at the module level, not by convention.

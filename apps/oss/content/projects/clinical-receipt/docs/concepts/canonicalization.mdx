@@ -1,0 +1,36 @@
+---
+title: "Canonicalization"
+description: "Why the same value produces the same bytes everywhere."
+order: 3
+---
+
+Every commitment names a canonicalization profile. That profile is what
+converts an abstract value (JSON, bytes, a string) into the exact bytes
+the hash consumes.
+
+## v1 profiles
+
+- **`jcs@1`** — RFC 8785 JSON Canonicalization Scheme. Recursive
+  member sort. Native `JSON.stringify` handles strings and numbers
+  correctly; the library adds sort and rejects invalid inputs
+  (`undefined`, non-finite numbers, `BigInt`, class instances, lone
+  surrogates).
+- **`bytes@1`** — the bytes as given.
+- **`utf8@1`** — UTF-8 encoding of a string.
+- **`utf8-nfc@1`** — UTF-8 encoding after Unicode NFC normalization.
+- **`clinical-receipt-event@1`** — the committed event form (used
+  internally).
+
+## Why versioned
+
+`jcs@1` is not "some JCS." It is exactly the rules listed above. If v2
+of the spec adds NFC normalization to JSON strings, that is a new
+profile (`jcs@2`) — a v1 receipt keeps verifying with `jcs@1` forever.
+Canonicalization identifiers are as load-bearing as algorithm names.
+
+## Timestamps
+
+All timestamps in receipts are ISO 8601 UTC (`YYYY-MM-DDThh:mm:ss.sssZ`)
+and are recorder-asserted claims — never externally trusted. The
+verifier reports timeline inconsistency as a warning, never as an
+integrity failure.

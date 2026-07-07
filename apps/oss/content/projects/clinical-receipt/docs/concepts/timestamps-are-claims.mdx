@@ -1,0 +1,43 @@
+---
+title: "Timestamps are claims"
+description: "Why every timestamp in a receipt is recorder-asserted, not authoritative."
+order: 4
+---
+
+A receipt records when events happened according to the recorder. A
+receipt does not — cannot — prove those timestamps were honest.
+
+The verification report reflects this precisely:
+
+```
+timeline: {
+  internallyConsistent: true,
+  externallyTimestamped: false,
+  notes: ["All timestamps are recorder-asserted claims."]
+}
+```
+
+And a permanent warning:
+
+```
+NO_EXTERNAL_TIMESTAMP: receipt has no externally trusted timestamp
+```
+
+## Internal consistency
+
+The verifier does check that:
+
+- `receipt.createdAt` ≤ `receipt.finalizedAt`.
+- Each event's `recordedAt` is non-decreasing in sequence order.
+- Parents were recorded before children.
+- `occurredAt` (if present) is not after `recordedAt`.
+
+An inconsistency here is a warning (`TIMELINE_INCONSISTENT`), never an
+integrity failure. Applications and auditors decide what internal
+consistency is worth.
+
+## External timestamps
+
+The spec reserves a `timestamps: []` slot on every signature record
+for future RFC 3161 or transparency-log countersignatures. Until 0.3
+that slot stays empty and the warning stays present. It is honest.
