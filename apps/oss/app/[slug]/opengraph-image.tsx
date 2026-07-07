@@ -12,13 +12,19 @@ export function generateStaticParams(): Params[] {
   return getProjects().map((p) => ({ slug: p.slug }));
 }
 
-type ProjectSlug = "ghost" | "handoff" | "durable-local" | "agnostic-web-ble";
+type ProjectSlug =
+  | "ghost"
+  | "handoff"
+  | "durable-local"
+  | "agnostic-web-ble"
+  | "clinical-receipt";
 
 const TAGLINES: Record<ProjectSlug, string> = {
   ghost: "persistent browser identity",
   handoff: "cross-device state transfer",
   "durable-local": "one durable JSON value",
   "agnostic-web-ble": "browser-agnostic Web Bluetooth",
+  "clinical-receipt": "verifiable clinical AI receipts",
 };
 
 function GhostGraphic() {
@@ -605,6 +611,82 @@ function AgnosticWebBleGraphic() {
   );
 }
 
+function ClinicalReceiptGraphic() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        width: "520px",
+        height: "520px",
+        position: "relative",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <svg
+        width="520"
+        height="520"
+        viewBox="0 0 520 520"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ display: "block" }}
+      >
+        <title>Clinical receipt — signed ledger and Merkle root</title>
+        {/* Faint background grid — the audit lines */}
+        <g opacity="0.14">
+          <line x1="60" y1="120" x2="460" y2="120" stroke="#9b8c73" strokeWidth="1" />
+          <line x1="60" y1="160" x2="460" y2="160" stroke="#9b8c73" strokeWidth="1" />
+          <line x1="60" y1="200" x2="460" y2="200" stroke="#9b8c73" strokeWidth="1" />
+          <line x1="60" y1="240" x2="460" y2="240" stroke="#9b8c73" strokeWidth="1" />
+          <line x1="60" y1="280" x2="460" y2="280" stroke="#9b8c73" strokeWidth="1" />
+          <line x1="60" y1="320" x2="460" y2="320" stroke="#9b8c73" strokeWidth="1" />
+          <line x1="60" y1="360" x2="460" y2="360" stroke="#9b8c73" strokeWidth="1" />
+          <line x1="60" y1="400" x2="460" y2="400" stroke="#9b8c73" strokeWidth="1" />
+        </g>
+        {/* Merkle tree — leaves at the bottom, single root at the top */}
+        <g opacity="0.68">
+          {/* level 0 leaves (8) */}
+          <circle cx="80" cy="400" r="7" fill="#c9705a" opacity="0.5" />
+          <circle cx="140" cy="400" r="7" fill="#c9705a" opacity="0.5" />
+          <circle cx="200" cy="400" r="7" fill="#c9705a" opacity="0.5" />
+          <circle cx="260" cy="400" r="7" fill="#c9705a" opacity="0.5" />
+          <circle cx="320" cy="400" r="7" fill="#c9705a" opacity="0.5" />
+          <circle cx="380" cy="400" r="7" fill="#c9705a" opacity="0.5" />
+          <circle cx="440" cy="400" r="7" fill="#c9705a" opacity="0.5" />
+          <circle cx="500" cy="400" r="7" fill="#c9705a" opacity="0.5" />
+          {/* level 1 */}
+          <circle cx="110" cy="330" r="8" fill="#8a6f5c" />
+          <circle cx="230" cy="330" r="8" fill="#8a6f5c" />
+          <circle cx="350" cy="330" r="8" fill="#8a6f5c" />
+          <circle cx="470" cy="330" r="8" fill="#8a6f5c" />
+          {/* level 2 */}
+          <circle cx="170" cy="260" r="10" fill="#8a6f5c" />
+          <circle cx="410" cy="260" r="10" fill="#8a6f5c" />
+          {/* root */}
+          <circle cx="290" cy="180" r="14" fill="#a34a3a" />
+          {/* edges */}
+          <line x1="80" y1="393" x2="110" y2="337" stroke="#9b8c73" strokeWidth="1.2" />
+          <line x1="140" y1="393" x2="110" y2="337" stroke="#9b8c73" strokeWidth="1.2" />
+          <line x1="200" y1="393" x2="230" y2="337" stroke="#9b8c73" strokeWidth="1.2" />
+          <line x1="260" y1="393" x2="230" y2="337" stroke="#9b8c73" strokeWidth="1.2" />
+          <line x1="320" y1="393" x2="350" y2="337" stroke="#9b8c73" strokeWidth="1.2" />
+          <line x1="380" y1="393" x2="350" y2="337" stroke="#9b8c73" strokeWidth="1.2" />
+          <line x1="440" y1="393" x2="470" y2="337" stroke="#9b8c73" strokeWidth="1.2" />
+          <line x1="500" y1="393" x2="470" y2="337" stroke="#9b8c73" strokeWidth="1.2" />
+          <line x1="110" y1="323" x2="170" y2="267" stroke="#9b8c73" strokeWidth="1.2" />
+          <line x1="230" y1="323" x2="170" y2="267" stroke="#9b8c73" strokeWidth="1.2" />
+          <line x1="350" y1="323" x2="410" y2="267" stroke="#9b8c73" strokeWidth="1.2" />
+          <line x1="470" y1="323" x2="410" y2="267" stroke="#9b8c73" strokeWidth="1.2" />
+          <line x1="170" y1="252" x2="290" y2="186" stroke="#a34a3a" strokeWidth="1.4" />
+          <line x1="410" y1="252" x2="290" y2="186" stroke="#a34a3a" strokeWidth="1.4" />
+        </g>
+        {/* Wax seal at the root — signed */}
+        <circle cx="290" cy="180" r="24" fill="none" stroke="#a34a3a" strokeWidth="1.4" opacity="0.55" />
+        <circle cx="290" cy="180" r="30" fill="none" stroke="#a34a3a" strokeWidth="1" opacity="0.35" />
+      </svg>
+    </div>
+  );
+}
+
 function graphicFor(slug: string) {
   switch (slug) {
     case "ghost":
@@ -615,6 +697,8 @@ function graphicFor(slug: string) {
       return <DurableLocalGraphic />;
     case "agnostic-web-ble":
       return <AgnosticWebBleGraphic />;
+    case "clinical-receipt":
+      return <ClinicalReceiptGraphic />;
     default:
       return null;
   }
