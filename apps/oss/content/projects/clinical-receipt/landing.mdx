@@ -88,4 +88,36 @@ in the reports, not just the docs.
 Everything else is honest silence. That is the correct posture for
 clinical software.
 
+## Know exactly which clinical state your AI saw
+
+Since v0.2, wrap your FHIR access and reads, searches, and writes
+become part of the receipt. A resource reference tells you where the
+data is. A receipt tells you which version actually participated.
+
+```ts
+import { instrumentFHIR } from "@0xsarwagya/clinical-receipt/fhir";
+
+const fhir = instrumentFHIR({
+  run,
+  client,
+});
+
+const context = await fhir.search("Observation", { patient: patientId });
+const answer = await model.generate(context);
+await fhir.create("ClinicalImpression", answer);
+```
+
+```
+Observation/a/_history/4
+Observation/b/_history/2
+
+        ↓
+
+AI run
+
+        ↓
+
+ClinicalImpression/789/_history/1
+```
+
 <ProjectLinks />

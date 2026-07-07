@@ -1,0 +1,71 @@
+---
+title: "FHIR"
+description: "Instrument FHIR access. Reads, searches, and writes become part of the receipt."
+order: 4
+---
+
+A `Patient/123` reference tells you where clinical data is. It does not
+tell you which clinical state participated in a decision.
+
+`clinical-receipt` v0.2 adds first-party FHIR instrumentation. A workflow
+that wraps its FHIR access with this package captures — in the same
+Merkle-committed receipt as its model calls, guardrails, and human
+review — the exact resources and versions the AI saw, the queries that
+produced them, and the resources it wrote back.
+
+```
+FHIR read
+    ↓
+AI execution
+    ↓
+FHIR write
+    ↓
+receipt
+    ↓
+verification
+```
+
+## What this ships in v0.2
+
+- **Instrumented fetch and instrumented client** — one or the other
+  goes at the boundary of your FHIR access; both funnel to the same
+  event model.
+- **Explicit operation API** — a runtime-neutral fallback when no
+  adapter fits your transport.
+- **Selective disclosure over FHIR events** — reveal the searches
+  without revealing the resources, and prove they belong to the same
+  receipt.
+- **Offline FHIR verification** — check the commitments in `verifyFHIR`
+  without contacting any FHIR server.
+- **Byte-pinned FHIR test vectors** — a receipt produced by any
+  implementation of `fhir-json-r4@1` recomputes bit-for-bit here.
+
+## What this deliberately does not ship in v0.2
+
+- Multi-page search consumption. The first page is committed with
+  `pagination: "complete"` or `"complete-first-page-only"`; multi-page
+  state and lazy iteration are next-release work.
+- Live FHIR-server comparison. `verifyFHIR` is offline in v0.2. Layer-3
+  store comparison ships in a follow-up.
+- Terminology or semantic equivalence. Two resources with equivalent
+  codings do NOT get the same commitment unless their canonical JSON
+  bytes are identical.
+- Universal client auto-detection. The default adapter fits any client
+  with a `.baseUrl` and a fetch-like method. Anything else needs an
+  explicit adapter.
+
+The package targets FHIR **R4**. R5 is not a v0.2 goal.
+
+## The one durable statement
+
+FHIR communicates clinical state. The receipt proves *which committed
+state participated in the run*. Neither claim rescues the other:
+
+- A verified commitment does NOT prove the underlying FHIR resource was
+  clinically correct.
+- A signed receipt does NOT prove the FHIR server was truthful.
+- A `versionPinned: true` event does NOT prove the server has never
+  rewritten its history.
+
+Read [Verifying](/clinical-receipt/docs/fhir/verifying) to understand
+the three layers of what a FHIR receipt actually claims.

@@ -1,0 +1,97 @@
+---
+title: "Instrumenting FHIR access"
+description: "Three levels: client, fetch, or explicit — pick the boundary that fits."
+order: 1
+---
+
+`clinical-receipt/fhir` gives you three places to draw the
+instrumentation boundary. All three funnel through the same event model,
+so a receipt does not care which level produced it.
+
+## Level 1 — Instrumented client
+
+The friendliest option. Give it a client with `.baseUrl` and a
+`fetch`-like method; the wrapper replaces the client's fetch in place
+and returns the same object.
+
+```ts
+import { createReceipt } from "@0xsarwagya/clinical-receipt";
+import { instrumentFHIR } from "@0xsarwagya/clinical-receipt/fhir";
+
+const run = await createReceipt({ workflow: { id: "discharge", version: "2.4" } });
+
+const fhir = instrumentFHIR({
+  run,
+  client: {
+    baseUrl: "https://hapi.fhir.org/baseR4",
+    fetch: globalThis.fetch,
+  },
+});
+
+// From here on, every request through fhir.fetch is recorded.
+const patient = await fhir.fetch(`${fhir.baseUrl}/Patient/123`).then((r) => r.json());
+```
+
+If the client cannot be confidently instrumented for every operation
+(missing fetch method, exotic transport not covered by the adapter),
+`instrumentFHIR` throws `PARTIAL_INSTRUMENTATION_UNSAFE` at setup —
+never silently.
+
+## Level 2 — Instrumented fetch
+
+The universal HTTP-level integration. Works with any code path that
+ends up calling `fetch(url)` — no adapter needed.
+
+```ts
+import { instrumentFHIRFetch } from "@0xsarwagya/clinical-receipt/fhir";
+
+const fhirFetch = instrumentFHIRFetch(globalThis.fetch, {
+  run,
+  baseUrl: "https://hapi.fhir.org/baseR4",
+});
+
+// Requests to any other origin pass through untouched — this is NOT a
+// generic HTTP recorder.
+const response = await fhirFetch("https://hapi.fhir.org/baseR4/Observation?patient=123");
+```
+
+## Level 3 — Explicit operation API
+
+The universal fallback. Use this when you cannot substitute a fetch
+implementation — a legacy library with an opaque transport, a custom
+protocol, or a mock in a test.
+
+```ts
+import { fhirExtension } from "@0xsarwagya/clinical-receipt/fhir";
+
+const fhir = fhirExtension(run, { server: { id: "hospital-primary" } });
+
+const op = fhir.operation({
+  method: "GET",
+  baseUrl: "https://hapi.fhir.org/baseR4",
+  path: "/Observation",
+  query: { patient: "123" },
+});
+try {
+  const response = await customTransport();
+  await op.commitResponse({ status: 200, body: response.body, headers: response.headers });
+} catch (error) {
+  await op.commitError({ httpStatus: 500 });
+  throw error;
+}
+```
+
+Because Level 3 is the fallback everyone else reduces to, it is where
+you go when a bug or ambiguity in Level 1 or 2 needs a workaround.
+
+## Which one should I use?
+
+- Your FHIR client already exposes `.baseUrl` and a fetch-like method:
+  **Level 1**.
+- You call `fetch` directly, or use a client that lets you swap its
+  underlying fetch: **Level 2**.
+- Neither of those works: **Level 3**.
+
+Two levels can coexist in one workflow — a Level-1 wrapper covers the
+mainline calls, and a Level-3 explicit commit fills in one legacy
+integration. Everything ends up in the same receipt.

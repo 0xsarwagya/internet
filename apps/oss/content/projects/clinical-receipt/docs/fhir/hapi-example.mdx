@@ -1,0 +1,80 @@
+---
+title: "Worked example: HAPI"
+description: "End to end against the HAPI public test server."
+order: 5
+---
+
+The public HAPI FHIR reference server at
+`https://hapi.fhir.org/baseR4` is the reference target for this
+integration. The example below reads a patient, searches observations,
+runs an AI step, writes a ClinicalImpression, and finalizes a receipt
+that verifies offline.
+
+```ts
+import { createReceipt } from "@0xsarwagya/clinical-receipt";
+import { instrumentFHIRFetch, verifyFHIR } from "@0xsarwagya/clinical-receipt/fhir";
+
+const BASE = "https://hapi.fhir.org/baseR4";
+const run = await createReceipt({
+  workflow: { id: "discharge-review", version: "2.4.1" },
+});
+
+const fhirFetch = instrumentFHIRFetch(globalThis.fetch, {
+  run,
+  baseUrl: BASE,
+  server: { id: "hapi-r4-public", baseUrl: BASE },
+});
+
+// Read the patient at whichever version the server currently holds.
+const patient = await fhirFetch(`${BASE}/Patient/123`).then((r) => r.json());
+
+// Search observations. The observed Bundle is committed to the receipt.
+const bundle = await fhirFetch(
+  `${BASE}/Observation?patient=123&category=laboratory`,
+).then((r) => r.json());
+
+// Your AI step. The workflow scope is up to you; this example passes
+// the observed context directly.
+const answer = await model.generate({ patient, observations: bundle });
+
+// Human review and guardrails are recorded through the base recorder
+// API (run.humanReview, run.guardrail, run.output.committed…).
+
+// Write the result. Both the submitted body and the persisted response
+// are committed — the server may assign an id/versionId.
+await fhirFetch(`${BASE}/ClinicalImpression`, {
+  method: "POST",
+  headers: { "content-type": "application/fhir+json" },
+  body: JSON.stringify({
+    resourceType: "ClinicalImpression",
+    status: "completed",
+    subject: { reference: "Patient/123" },
+    summary: answer.text,
+  }),
+});
+
+const receipt = await run.finalize();
+
+// Offline verification with the patient bytes we already fetched.
+const report = await verifyFHIR(receipt, {
+  resources: { "Patient/123": patient },
+});
+console.log(report.fhir.commitments); // "valid" | "not-applicable"
+```
+
+## Notes on HAPI
+
+- HAPI's public server is shared and periodically reset. **Do not put
+  PHI on it.** Use synthetic patients and synthetic observations.
+- HAPI returns pagination links for large searchsets. v0.2 records the
+  first page and marks `pagination: "complete-first-page-only"` when a
+  `next` link is present. Multi-page consumption is a follow-up.
+- HAPI's `meta.versionId` values are integers. Some servers return
+  opaque strings — the receipt captures whatever the server returned.
+
+## Beyond HAPI
+
+Any FHIR R4 server the workflow can reach works the same way. The
+`server.id` in the receipt is what identifies which FHIR store a
+record is against — pick a stable identifier your organization owns,
+not the URL.
