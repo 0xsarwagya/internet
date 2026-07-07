@@ -1,0 +1,94 @@
+---
+title: "Verifying"
+description: "Three layers of verification. v0.2 ships two of them; the third is next-release work."
+order: 4
+---
+
+`verifyFHIR` produces a report with three claim axes.
+
+## Layer 1 — Receipt integrity
+
+Runs the base receipt verifier — Merkle root, per-event commitment
+recomputation, signature verification. Answers **did the committed
+record change?** Zero network. Handled by the same code that ships in
+`@0xsarwagya/clinical-receipt/verify`.
+
+Failure surfaces in `report.integrity`.
+
+## Layer 2 — FHIR commitment integrity
+
+Walks the FHIR events and, for any resource the caller supplies,
+checks that the FHIR JSON they hold matches the receipt's commitment.
+Zero network. Answers **do the resources I already hold match the
+digests the receipt pinned?**
+
+```ts
+import { verifyFHIR } from "@0xsarwagya/clinical-receipt/verify";
+
+const patient = await hospitalArchive.load("Patient/123");
+const report = await verifyFHIR(receipt, {
+  resources: {
+    "Patient/123": patient,
+  },
+});
+console.log(report.fhir.commitments); // "valid" | "invalid" | "not-applicable"
+```
+
+References the caller does not supply are reported as
+`no-content-supplied` — not as failures. A partial answer is still an
+answer.
+
+## Layer 3 — Live FHIR store comparison
+
+**Not shipped in v0.2.** A follow-up release adds a live-comparison
+mode that fetches the receipt's referenced resources from the FHIR
+server today, canonicalizes them under `fhir-json-r4@1`, and compares
+against the pinned digests. Answers **does the FHIR store still return
+what the receipt says it returned?**
+
+The design keeps live comparison on a separate call surface so it never
+happens implicitly and never breaks the offline guarantee.
+
+## Report shape
+
+```ts
+type FhirVerificationReport = {
+  ...VerificationReport,
+  fhir: {
+    commitments: "valid" | "invalid" | "not-applicable",
+    understood: boolean,
+    resources: Array<{
+      reference: string,
+      eventId: string,
+      commitment: "match" | "mismatch" | "no-content-supplied"
+                | "unsupported-algorithm",
+    }>,
+    trace: FhirTrace, // reads, searches, writes, transactions, errors,
+                     // lineage — the projection inspectFHIR returns
+  },
+};
+```
+
+The base report already reports which extensions this verifier
+understood — a receipt containing FHIR events verified by a
+FHIR-unaware verifier still verifies for integrity; the
+`extensions.unknown` list shows the semantic gap.
+
+## What a FHIR receipt still does not claim
+
+Integrity is not truth. `verifyFHIR` proves:
+
+- The receipt's Merkle root and per-event commitments are stable.
+- The FHIR resources the caller supplied match what the receipt says
+  the workflow observed at record time.
+
+`verifyFHIR` does not prove:
+
+- The workflow's AI output was correct.
+- The FHIR server was truthful about `meta.versionId`.
+- The workflow saw every relevant FHIR resource — only what came
+  through the instrumentation boundary.
+- A resource with matching digest is medically appropriate.
+
+Every clinical claim is layered on top of that boundary. The receipt
+is the substrate.

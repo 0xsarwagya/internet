@@ -1,0 +1,67 @@
+---
+title: "Searches and writes"
+description: "The four evidence boundaries the FHIR extension commits to."
+order: 2
+---
+
+Every FHIR interaction has four moments the receipt commits to
+separately. Missing any one of them turns provenance into a story
+without proof.
+
+## 1. Request evidence
+
+What operation was requested. For a read, this is the resource type
+and id. For a search, this is the normalized query — after privacy
+transforms — including any `_sort` value that would make the ordering
+of results semantically meaningful.
+
+## 2. Response evidence
+
+What exact resources were observed. For a read, this is the resource's
+JSON content committed under `fhir-json-r4@1`. For a search, this is
+the full Bundle body plus a per-entry list of `{type, id, versionId,
+lastUpdated}` refs so a verifier does not have to re-parse the Bundle
+to know what was returned.
+
+## 3. Version evidence
+
+Which resource versions participated. When the FHIR server returns
+`meta.versionId`, the receipt records it verbatim. A versioned read
+(`GET /Patient/123/_history/7`) records `versionPinned: true` — a
+stronger claim about *requested* identity, not about the server's
+honesty.
+
+## 4. Mutation evidence
+
+What the workflow submitted versus what the server acknowledged. The
+`create`, `update`, `patch`, and `delete` event kinds distinguish
+`submitted.commitment` from `persisted.commitment`. When the server
+assigns a new id or version on write, both digests appear in the
+receipt and they differ.
+
+## What the receipt does not prove
+
+- That the server was truthful about `meta.versionId`.
+- That the resource is medically correct.
+- That the retrieval was complete when pagination is `partial` or
+  `complete-first-page-only`.
+- That the workflow saw *every* FHIR resource the server holds — only
+  what came through the instrumentation boundary.
+
+These limits are not footnotes. They are what `verifyFHIR` reports on
+by default; the [Verifying](/clinical-receipt/docs/fhir/verifying) page
+walks through the shape.
+
+## Pagination in v0.2
+
+The FHIR extension commits pagination state honestly:
+
+- `pagination: "complete"` — the server did not include a `next` link.
+- `pagination: "complete-first-page-only"` — the server offered more
+  pages; only the first was captured. **v0.2 does not follow next
+  links.**
+- `pagination: "partial"` — the caller consumed strictly less than the
+  first page (reserved for lazy-iteration adapters in a follow-up).
+
+If your workflow relies on a search returning ALL matching resources,
+verify the receipt says `complete` before trusting the result set.

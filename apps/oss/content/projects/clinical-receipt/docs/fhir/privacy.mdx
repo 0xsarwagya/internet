@@ -1,0 +1,86 @@
+---
+title: "Privacy"
+description: "Query transforms, header allowlist, resource-id hashing."
+order: 3
+---
+
+FHIR requests carry PHI in three obvious places: the query string, the
+response body, and the response headers. The FHIR extension gives you
+explicit controls at each boundary — and refuses wildcard configuration
+so an ergonomic mistake cannot silently commit PHI.
+
+## Query transforms
+
+```ts
+const fhir = instrumentFHIRFetch(fetch, {
+  run,
+  baseUrl,
+  privacy: {
+    query: {
+      patient: "hash",
+      subject: "hash",
+      identifier: "redact",
+    },
+  },
+});
+```
+
+Three transforms are supported:
+
+- `preserve` — commit the value verbatim (the default when a parameter
+  is not mentioned).
+- `hash` — commit `sha256:<32-hex>` — deterministic, dictionary-
+  resistant, disclosure-safe.
+- `redact` — commit `[redacted]` — for values that are not worth
+  distinguishing even under hash.
+
+The applied policy is recorded in the receipt event's `privacy.query`
+map — a verifier learns *how* a value was transformed, not just what
+the transformed value looks like.
+
+**Hashing is not anonymization.** Low-entropy identifiers (short
+integers, short strings) may still be brute-forceable. If a parameter's
+value space is small, prefer `redact`.
+
+## Header allowlist
+
+Only a small, opt-in list of response headers is ever committed. The
+default allowlist is:
+
+- `etag`
+- `last-modified`
+- `location`
+- `content-location`
+
+You can name your own allowlist, but wildcard entries are refused:
+
+```ts
+// Refused with UNSAFE_HEADER.
+privacy: { headers: ["*"] }
+```
+
+Authorization headers, cookies, and known-sensitive names are
+unconditionally blocked even if you try to add them explicitly.
+
+## Resource-id hashing
+
+Logical FHIR ids sometimes contain identifiers (patient MRNs, order
+numbers). Enable `resourceIds: "hash"` to swap the committed id with
+a short digest:
+
+```ts
+privacy: { resourceIds: "hash" }
+```
+
+The event then carries `resource.idCommitment: "sha256:<hex>"` in place
+of `resource.id`. The `resourceType` is always preserved — a verifier
+still knows this was a Patient without knowing which one.
+
+## What none of this changes
+
+- The FHIR resource body itself, when committed under `embedded` mode,
+  contains whatever the server returned. If you want the body kept
+  out of the receipt, use `commitment` or `reference` mode instead —
+  the base recorder API controls that.
+- The URL you actually sent to the server. Privacy transforms apply
+  to what enters the receipt, not to what leaves your process.
