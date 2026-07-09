@@ -1,0 +1,446 @@
+---
+title: "What I Learnt About SaaS Cost and Architecture Relationships"
+description: "I wanted to build a $9.99 email testing SaaS. Then I discovered I was actually building a distributed hardware lab."
+date: "2026-07-09"
+---
+# What I Learnt About SaaS Cost and Architecture Relationships
+Yesterday, I learnt why some SaaS products cost so much.
+Not from a pricing thread.
+Not from a founder podcast.
+I tried to build a cheaper one.
+## It started with a $9.99 SaaS
+I am building Render My Email.
+The idea seemed simple enough:
+You give it an email.
+It renders that email in Gmail, Outlook, Apple Mail, and other clients.
+You get screenshots.
+I wanted to charge $9.99 a month.
+The existing tools in this category can be expensive, so I thought there had to be room for something smaller, simpler, and cheaper.
+Then I started building the actual rendering infrastructure.
+## Web was easy
+Gmail Web and Outlook Web were straightforward enough.
+Send the email to a test inbox.
+Open the real web client with Playwright.
+Find the exact message.
+Open it.
+Capture the rendered email.
+That gave me the first worker family:
+```text
+Render Task
+    ↓
+worker-web
+    ↓
+Playwright
+    ↓
+Gmail / Outlook
+
+Cheap enough.
+
+Normal cloud infrastructure.
+
+This still looked like a $9.99 SaaS.
+
+Then I added Android.
+
+Android was not another browser
+
+I wanted Gmail, Outlook, and Yahoo on Android.
+
+That meant:
+
+* an Android runtime
+* ADB
+* installed email apps
+* authenticated accounts
+* app-specific automation
+* screenshots from the actual application
+
+So now I had another worker family:
+
+Render Task
+    ↓
+worker-android
+    ↓
+ADB
+    ↓
+Gmail / Outlook / Yahoo
+
+Still manageable.
+
+But it could no longer run like a normal web worker.
+
+The host needed to support the Android runtime properly.
+
+The infrastructure had started to split.
+
+Then came Outlook.
+
+Outlook Classic changed the entire problem
+
+Outlook Classic is not just another website.
+
+It is not even just another rendering engine.
+
+If I wanted a real screenshot from Outlook Classic, I needed:
+
+* Windows
+* Outlook
+* a signed-in test account
+* UI automation
+* a way to control the environment
+* a way to get the screenshot back to the control plane
+
+So I ended up with this:
+
+Host Worker
+    ↓
+Windows VM
+    ↓
+RME Agent
+    ↓
+Windows UI Automation
+    ↓
+Outlook
+
+The host does not pretend to be Windows.
+
+It sends the task to an agent running inside Windows.
+
+The agent finds the exact email and captures it.
+
+At this point, I was no longer building a screenshot API.
+
+I was building infrastructure for operating Windows.
+
+Then Apple made the joke complete
+
+macOS Mail requires macOS.
+
+Real macOS.
+
+Apple hardware.
+
+I could automate the native Mail app, find the email by its correlation marker, and capture the result.
+
+So now there was another worker family:
+
+Render Task
+    ↓
+worker-apple
+    ↓
+Native Automation
+    ↓
+Apple Mail
+
+And then I looked at iPhone Mail.
+
+The iOS Simulator does not give me a usable real Mail app target.
+
+So real iPhone Mail means a physical device.
+
+Of course it does.
+
+This is what I had built
+
+I started with:
+
+HTML
+  ↓
+Screenshot
+
+I ended up with:
+
+                         Render Task
+                              ↓
+                    Worker Orchestrator
+                              ↓
+     ┌────────────┬────────────┬────────────┬────────────┐
+     │    WEB     │  ANDROID   │  WINDOWS   │   APPLE    │
+     │            │            │            │            │
+     │ Playwright │    ADB     │ RME Agent  │ Native     │
+     │            │            │  + UIA     │ Automation │
+     │            │            │            │            │
+     │ Gmail      │ Gmail      │ Outlook    │ Apple Mail │
+     │ Outlook    │ Outlook    │ Classic    │ macOS      │
+     │            │ Yahoo      │ New        │ iPhone*    │
+     └────────────┴────────────┴────────────┴────────────┘
+                  One render contract.
+             Four completely different runtimes.
+               *iPhone requires a physical device
+
+And suddenly the pricing of the existing products made a lot more sense.
+
+SaaS pricing is often architecture wearing a suit
+
+That was the actual lesson.
+
+I had been thinking about pricing like this:
+
+What will customers pay?
+
+But the architecture was asking a different question:
+
+What can this product afford to sell?
+
+Those are connected.
+
+A SaaS running a few API calls on a Linux server can sell usage very differently from a SaaS that needs:
+
+* persistent browser sessions
+* Android runtimes
+* Windows environments
+* licensed software
+* Apple hardware
+* physical devices
+
+The pricing page is downstream of all of that.
+
+Your architecture determines your cost structure.
+
+Your cost structure determines your unit economics.
+
+Your unit economics determine what you can promise customers.
+
+I had understood the architecture before I understood the business.
+
+It turned out they were the same problem.
+
+My original pricing was wrong
+
+The original plan was simple:
+
+$9.99/month
+350 renders
+
+One email rendered in one client would use one credit.
+
+It sounded great.
+
+It also assumed that all renders cost roughly the same.
+
+They do not.
+
+A browser screenshot and a screenshot from a physical iPhone are not the same economic unit.
+
+A Gmail Web render and a Windows VM running real Outlook are not the same economic unit.
+
+Putting both behind the same cheap allowance means one of two things:
+
+1. users barely use the expensive clients, or
+2. the product loses money.
+
+Neither is a pricing strategy.
+
+So the architecture forced the product to change.
+
+The split: iteration and ground truth
+
+Most email development does not need a real Windows machine on every single edit.
+
+The workflow is usually:
+
+Change email
+    ↓
+Check it
+    ↓
+Change email
+    ↓
+Check it again
+    ↓
+Change email
+    ↓
+Final verification
+
+The expensive infrastructure should not run through that entire loop.
+
+So Render My Email is splitting rendering into two products.
+
+Instant Previews
+
+Fast compatibility previews for iteration.
+
+They model things like:
+
+* client HTML sanitization
+* CSS support
+* viewport constraints
+* dark mode behaviour
+* known compatibility problems
+
+They run on cheap, scalable infrastructure.
+
+They are not presented as real-client screenshots.
+
+They exist so you can iterate.
+
+Real-Client Renders
+
+The email is actually:
+
+1. delivered to a real inbox
+2. found using an exact correlation marker
+3. opened inside the actual email client
+4. captured from the real environment
+
+These are the ground truth.
+
+They are slower.
+
+They are more expensive.
+
+And that is fine.
+
+The workflow becomes:
+
+                    YOUR EMAIL
+                         ↓
+                 Canonical Artifact
+                         ↓
+             ┌───────────┴───────────┐
+             ↓                       ↓
+       INSTANT PREVIEW          REAL CLIENT
+       Cheap                    Expensive
+       Fast                     Slower
+       Scalable                 Scarce
+       Iteration                Verification
+       Compatibility model      Ground truth
+
+Iterate cheaply.
+
+Verify expensively.
+
+The new pricing makes more sense
+
+The current direction is:
+
+Pro — $9.99/month
+500 Instant Previews
+50 Real-Client Renders
+
+The exact numbers may change as I measure real usage and infrastructure cost.
+
+But the model is the important part.
+
+The cheap system absorbs iteration.
+
+The expensive system provides truth.
+
+This also makes the API and MCP side of the product possible.
+
+A coding agent can:
+
+edit
+  ↓
+instant preview
+  ↓
+edit
+  ↓
+instant preview
+  ↓
+edit
+  ↓
+instant preview
+  ↓
+real-client verification
+
+Without waking up a Windows VM, an Android environment, and an Apple machine after every change.
+
+Expensive infrastructure can become the moat
+
+There was another lesson hidden inside all of this.
+
+The infrastructure that made me think:
+
+Oh, this is why the incumbents charge so much.
+
+is also the infrastructure that makes the product difficult to copy.
+
+A normal screenshot API is easy to reproduce.
+
+A system that reliably coordinates:
+
+* web clients
+* Android apps
+* Windows Outlook
+* macOS Mail
+* eventually physical devices
+
+is not.
+
+The annoying part is the moat.
+
+The cost is also the barrier to entry.
+
+That does not mean expensive architecture is automatically good architecture.
+
+It means that if the complexity is genuinely required to produce something customers cannot get from a cheap browser simulation, then the complexity may be part of the value.
+
+The thing I would do differently now
+
+Before building a SaaS, I would ask:
+
+What is the most expensive thing that happens when the customer clicks the main button?
+
+Not the average API request.
+
+Not the database query.
+
+The main thing the product promises.
+
+Then I would ask:
+
+* Does it require scarce hardware?
+* Does it require persistent state?
+* Can it run concurrently?
+* Can it be horizontally scaled?
+* Does one user action fan out into ten expensive operations?
+* Can automation abuse it faster than a human can?
+* Does every advertised feature have the same marginal cost?
+
+I did not ask those questions first.
+
+I started with:
+
+$9.99 sounds good.
+
+Then the architecture answered them for me.
+
+The final lesson
+
+I used to think about SaaS architecture and SaaS pricing as two separate decisions.
+
+Build the product.
+
+Then price it.
+
+That is not always how it works.
+
+Sometimes:
+
+Architecture
+    ↓
+Cost structure
+    ↓
+Unit economics
+    ↓
+Product limits
+    ↓
+Pricing
+
+And sometimes the process runs backwards too:
+
+Target price
+    ↓
+Allowed cost
+    ↓
+Product design
+    ↓
+Architecture
+
+The best version probably happens when both loops meet in the middle.
+
+I wanted to build a $9.99 email testing SaaS.
+
+For a day, I accidentally built a distributed hardware lab.
+
+Now I am building the product that can actually afford to exist.
