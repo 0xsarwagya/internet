@@ -1,0 +1,230 @@
+---
+title: "Why I Killed an Email Rendering SaaS That Actually Worked"
+description: "It worked. It was cheap to run. I killed it anyway. This is the engineering story behind that decision."
+date: "2026-07-12"
+---
+
+# Why I Killed an Email Rendering SaaS That Actually Worked
+
+> Building software is easy.
+> Building software people continuously pay for is much harder.
+
+A few weeks ago I built **Render My Email**, a SaaS that solved a problem I had personally experienced while building transactional emails.
+
+The idea was straightforward.
+
+Upload or write your email template.
+
+Render it exactly how major email clients would display it.
+
+Catch layout bugs before your customers do.
+
+Technically, it worked.
+
+Commercially, it wasn't worth pursuing.
+
+This is the engineering story behind that decision.
+
+---
+
+## The Problem
+
+Every developer who has built HTML emails knows the pain.
+
+Email clients are effectively twenty different browsers from twenty different decades.
+
+Gmail strips CSS.
+
+Outlook uses Microsoft Word as a rendering engine.
+
+Apple Mail behaves differently.
+
+Dark mode introduces another layer of chaos.
+
+A perfectly valid HTML email can completely break depending on where it's opened.
+
+The obvious solution seems to be previewing emails across clients.
+
+So I built one.
+
+---
+
+## Building It
+
+The architecture itself wasn't particularly complicated.
+
+An API accepted raw HTML or MJML templates.
+
+Templates were normalized.
+
+Rendering jobs were queued.
+
+Multiple rendering environments generated previews.
+
+The frontend compared outputs side-by-side.
+
+Infrastructure costs stayed surprisingly low—around **$16/month**.
+
+From an engineering perspective, it was satisfying.
+
+Fast.
+
+Reliable.
+
+Minimal.
+
+Exactly the kind of product I enjoy building.
+
+---
+
+## Then Reality Happened
+
+I started talking to potential customers.
+
+Not friends.
+
+Not other builders.
+
+Actual people who might pay.
+
+A pattern emerged almost immediately.
+
+Most developers don't regularly test emails.
+
+They send one.
+
+Open Gmail.
+
+Maybe Outlook.
+
+If it looks acceptable, they ship.
+
+Companies that truly care about rendering quality already use established platforms with years of accumulated compatibility work.
+
+The customers in the middle—the ones who desperately needed this product and were also willing to pay—were surprisingly rare.
+
+The problem existed.
+
+The market didn't.
+
+Those are two very different things.
+
+---
+
+## Engineering Wasn't the Bottleneck
+
+This is probably the biggest lesson.
+
+Whenever traction is low, engineers instinctively blame the product.
+
+Maybe the UI needs work.
+
+Maybe performance could improve.
+
+Maybe another feature would help.
+
+But none of those mattered here.
+
+The product already solved its intended problem.
+
+Improving the solution doesn't help when too few people actually need the solution.
+
+That's a distribution problem masquerading as an engineering problem.
+
+---
+
+## The Unit Economics Were Fine
+
+Infrastructure wasn't killing the business.
+
+Monthly operating costs were tiny.
+
+The software scaled well.
+
+Margins would have been healthy.
+
+In theory, fifty paying customers would already have made it profitable.
+
+But profitability isn't the same as opportunity.
+
+Even if I eventually reached one hundred customers, what then?
+
+Would I spend the next three years competing against companies that already own this market?
+
+Probably.
+
+That's not where I wanted to spend my engineering time.
+
+---
+
+## Opportunity Cost Is Real
+
+Every side project competes with every future idea.
+
+The question stopped being:
+
+> "Can this make money?"
+
+Instead it became:
+
+> "Is this the best thing I could be building?"
+
+The answer was no.
+
+There are larger problems.
+
+Problems companies experience every single day.
+
+Problems painful enough that people actively search for solutions instead of being convinced they need one.
+
+That's where I want to build.
+
+---
+
+## Killing Projects Is a Skill
+
+Startup culture glorifies persistence.
+
+There's value in persistence.
+
+But there's also value in knowing when evidence says to stop.
+
+Shipping is a skill.
+
+Marketing is a skill.
+
+Knowing when **not** to continue might be the rarest skill of all.
+
+Render My Email wasn't abandoned because it failed technically.
+
+It was abandoned because continuing would have been an inefficient allocation of engineering time.
+
+That's a much better reason.
+
+---
+
+## What I'm Taking Forward
+
+This project reinforced a few principles I'll use before writing another line of production code.
+
+* Validate the market before polishing the implementation.
+* Build around recurring pain, not occasional annoyance.
+* Look for products with natural distribution instead of expensive education.
+* Infrastructure costs matter less than customer acquisition costs.
+* The fastest way to build a successful product is often to stop building the wrong one.
+
+---
+
+## Final Thoughts
+
+I'm glad I built Render My Email.
+
+Not because it became a business.
+
+Because it saved me from spending six more months building features for a market that wasn't there.
+
+Good engineering isn't just about writing code.
+
+Sometimes it's about deleting a roadmap.
+
+And moving on before momentum turns into sunk cost.
