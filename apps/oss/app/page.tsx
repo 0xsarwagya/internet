@@ -5,6 +5,7 @@ import { canonicalAlternates } from "@repo/seo/canonical";
 
 import {
   ACTIVE_PACKAGES,
+  familyDownloads,
   formatDownloads,
   getWeeklyDownloads,
 } from "../lib/npm-downloads";
@@ -18,7 +19,11 @@ export const metadata: Metadata = {
 export default async function Home() {
   const projects = getProjects();
   const downloads = await getWeeklyDownloads(ACTIVE_PACKAGES);
-  const activeCount = ACTIVE_PACKAGES.length;
+  // The hero's "N packages" reflects the number of workshop projects
+  // (one card per project). Projects like Ontoly that ship a family of
+  // npm packages count as one project here; every individual package
+  // in the family still contributes to the download total above.
+  const projectCount = projects.length;
 
   return (
     <main className="mx-auto w-full max-w-[1100px] px-5 sm:px-6 md:px-10">
@@ -46,7 +51,7 @@ export default async function Home() {
             title={`Window: ${downloads.window.start} → ${downloads.window.end}. npm counts each install of each package, including transitive dependencies.`}
           >
             {formatDownloads(downloads.total)} package downloads this week ·{" "}
-            {activeCount} packages
+            {projectCount} packages
           </p>
         ) : null}
       </section>
@@ -55,10 +60,13 @@ export default async function Home() {
         <h2 className="label">Projects</h2>
         <div className="mt-6 flex flex-col">
           {projects.map((project) => {
-            const perPackage =
+            // Per-project download count sums the project's whole npm
+            // package family — one number per card even when a project
+            // ships several packages (Ontoly ships 8).
+            const familySum =
               project.packageName && downloads
-                ? downloads.byPackage[project.packageName]
-                : undefined;
+                ? familyDownloads(project.packageName, downloads.byPackage)
+                : null;
             return (
               <Link
                 key={project.slug}
@@ -79,9 +87,9 @@ export default async function Home() {
                   {project.packageName ? (
                     <span className="mt-1 flex flex-wrap items-baseline gap-x-3 font-mono text-[11px] text-stone">
                       <span>{project.packageName}</span>
-                      {perPackage && perPackage > 0 ? (
+                      {familySum !== null && familySum > 0 ? (
                         <span>
-                          {formatDownloads(perPackage)} downloads / week
+                          {formatDownloads(familySum)} downloads / week
                         </span>
                       ) : null}
                     </span>

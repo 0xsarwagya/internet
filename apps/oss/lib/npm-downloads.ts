@@ -7,12 +7,60 @@
  * downloads" — never "users", "developers", or "installations".
  */
 
-export const ACTIVE_PACKAGES = [
-  "@0xsarwagya/ghost",
-  "@0xsarwagya/handoff",
-  "@0xsarwagya/durable-local",
-  "@0xsarwagya/agnostic-web-ble",
-] as const;
+/**
+ * Every project's npm-package family, keyed by the project's manifest
+ * `packageName`. A project can ship one npm package (most workshop
+ * projects) or many (Ontoly ships a cli + core + parsers + plugins).
+ *
+ * When a project ships multiple packages, its OSS main-page card sums
+ * the downloads across the whole family — one card per project — and
+ * the hero's total sums every package on this table.
+ */
+export const PROJECT_PACKAGE_FAMILIES: Record<string, readonly string[]> = {
+  "@0xsarwagya/ghost": ["@0xsarwagya/ghost"],
+  "@0xsarwagya/handoff": ["@0xsarwagya/handoff"],
+  "@0xsarwagya/durable-local": ["@0xsarwagya/durable-local"],
+  "@0xsarwagya/agnostic-web-ble": ["@0xsarwagya/agnostic-web-ble"],
+  "@0xsarwagya/clinical-receipt": ["@0xsarwagya/clinical-receipt"],
+  // Ontoly's manifest lists ontoly-cli as its primary package name;
+  // everything under @0xsarwagya/ontoly-* belongs to the same project.
+  "@0xsarwagya/ontoly-cli": [
+    "@0xsarwagya/ontoly-cli",
+    "@0xsarwagya/ontoly-core",
+    "@0xsarwagya/ontoly-cache",
+    "@0xsarwagya/ontoly-typescript",
+    "@0xsarwagya/ontoly-mcp",
+    "@0xsarwagya/ontoly-query",
+    "@0xsarwagya/ontoly-parser-typescript",
+    "@0xsarwagya/ontoly-plugin-html",
+  ],
+};
+
+export const ACTIVE_PACKAGES = Object.values(PROJECT_PACKAGE_FAMILIES).flat();
+
+/**
+ * Sum the weekly downloads across a project's whole npm-package family.
+ * Returns null when we have no data for any of them (used to decide
+ * whether to render the number on the card at all).
+ */
+export function familyDownloads(
+  projectPackageName: string,
+  byPackage: Record<string, number>,
+): number | null {
+  const family = PROJECT_PACKAGE_FAMILIES[projectPackageName] ?? [
+    projectPackageName,
+  ];
+  let sum = 0;
+  let any = false;
+  for (const pkg of family) {
+    const value = byPackage[pkg];
+    if (typeof value === "number") {
+      sum += value;
+      any = true;
+    }
+  }
+  return any ? sum : null;
+}
 
 export type WeeklyDownloads = {
   total: number;
