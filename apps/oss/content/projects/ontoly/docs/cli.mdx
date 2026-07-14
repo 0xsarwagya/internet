@@ -1,6 +1,9 @@
 ---
 title: "CLI"
 description: "The CLI builds, inspects, validates, and benchmarks the Software Graph."
+canonical: "https://oss.sarwagya.wtf/ontoly/docs/cli"
+source: "docs/cli.md"
+keywords: ["Ontoly", "Software Graph", "TypeScript", "static analysis", "MCP", "AI coding agents", "developer tools", "CLI"]
 ---
 
 The CLI builds, inspects, validates, and benchmarks the Software Graph.
@@ -23,10 +26,15 @@ ontoly build .
 ontoly inspect src/service.ts
 ontoly trace fn:src/index.ts:main
 ontoly coverage
+ontoly explain AuthService
+ontoly impact UserRepository --json
+ontoly implementation-plan "remove PlanDefinition support"
 ontoly doctor
 ontoly evaluate
 ontoly leaderboard
 ontoly skills validate
+ontoly enhancer list
+ontoly enhancer run semantic-index .
 ```
 
 ## Commands
@@ -40,13 +48,25 @@ ontoly skills validate
 - `ontoly trace <node-id-or-name>`
 - `ontoly stats [root]`
 - `ontoly architecture [root]`
+- `ontoly explain [query]`
+- `ontoly impact <node-id-or-query>`
+- `ontoly implementation-plan <task>`
+- `ontoly ownership <query>`
+- `ontoly health [root]`
+- `ontoly repository-summary [root]`
+- `ontoly risk [query]`
+- `ontoly request-trace <route>`
 - `ontoly coverage [root]`
 - `ontoly report [summary|api|dependencies|configuration|framework|frameworks|controllers|routes|modules|providers|workspace]`
+- `ontoly search <concept>`
+- `ontoly find <concept>`
+- `ontoly locate <feature>`
 - `ontoly graph [root]`
 - `ontoly query <operation> [target]`
 - `ontoly doctor [root]`
 - `ontoly mcp`
 - `ontoly skills <list|validate|doctor>`
+- `ontoly enhancer <list|inspect|run|graph|doctor|validate>`
 - `ontoly validate [all|repository|framework]`
 - `ontoly evaluate [repository]`
 - `ontoly leaderboard`
@@ -55,6 +75,31 @@ ontoly skills validate
 - `ontoly benchmark performance`
 
 Most commands support `--json`.
+
+## Interactive Folder Selection
+
+When `ontoly build` or `ontoly output` runs in an interactive terminal without a
+root path, Ontoly asks which folder to index:
+
+```sh
+ontoly build
+# Folder to index [.]:
+```
+
+Press Enter to index the current directory. Pass the folder explicitly to skip
+the prompt:
+
+```sh
+ontoly build .
+ontoly build apps/api
+ontoly output packages/core
+```
+
+Prompt input supports relative paths, absolute paths, and `~/` paths.
+
+Automation never needs to answer prompts. Non-interactive shells, `--json`,
+`--log-json`, `--remote`, `--root`, `--no-prompt`, and `--yes` all keep the
+command deterministic and use the explicit root or current directory.
 
 ## Output Bundle
 
@@ -177,6 +222,53 @@ graph coverage.
 HTML output opens the Software Graph Explorer: an offline graph debugger with
 Architecture, Dependency, Call Graph, and Full Graph modes.
 
+## Enhancers
+
+Enhancers are deterministic transformations over graph artifacts. They do not
+parse repositories or mutate the Software Graph.
+
+```sh
+ontoly enhancer list
+ontoly enhancer inspect semantic-index
+ontoly enhancer run semantic-index .
+ontoly enhancer run MarkdownDocs .
+ontoly enhancer graph --format mermaid
+ontoly enhancer validate --ci
+```
+
+`ontoly enhancer run` writes versioned artifacts and cache metadata under
+`.ontoly/enhancers/`.
+
+See [Enhancers](./enhancers) for the API, lifecycle, artifact model, caching,
+manifests, and pipeline visualization.
+
+## Semantic Index Search
+
+Use Semantic Index commands when you know the concept but not the exact graph
+symbol:
+
+```sh
+ontoly search "sleep thresholds"
+ontoly search authentication
+ontoly find JWT
+ontoly locate notifications
+ontoly search "JWT secret" --category configuration --json
+```
+
+Supported categories:
+
+- `concept`
+- `symbol`
+- `feature`
+- `configuration`
+- `environment`
+- `route`
+- `entrypoint`
+- `repository`
+
+`search`, `find`, and `locate` return matched concepts, ranked candidate
+symbols, confidence, evidence, and a recommended capability.
+
 `ontoly query` supports:
 
 - `find`
@@ -191,6 +283,19 @@ Architecture, Dependency, Call Graph, and Full Graph modes.
 - `configuration`
 - `cycles`
 
+For exact graph traversal, use `ontoly query`. For natural concepts, prefer
+`ontoly search` first:
+
+```sh
+ontoly search "Plan Definition Resource" --json
+ontoly query find "Plan Definition Resource" --json
+ontoly query impact "Plan Definition Resource" --json
+```
+
+`impact` returns dependent traversal plus grouped affected routes, controllers,
+services, modules, configuration, resources, permissions, and external boundary
+nodes when present in the graph.
+
 `ontoly architecture` supports:
 
 - `--json`
@@ -201,6 +306,31 @@ Architecture, Dependency, Call Graph, and Full Graph modes.
 
 HTML architecture output opens the same Software Graph Explorer with
 Architecture mode selected first.
+
+## Semantic Capability Commands
+
+High-level software-engineering commands are backed by the
+`@0xsarwagya/ontoly-capabilities` package. They return the shared capability
+schema with summary, evidence, affected nodes, diagnostics, confidence, and
+graph provenance.
+
+```sh
+ontoly explain AuthService
+ontoly impact UserRepository --json
+ontoly implementation-plan "remove PlanDefinition support"
+ontoly ownership auth
+ontoly health
+ontoly repository-summary
+ontoly risk AuthModule
+ontoly request-trace "POST /login"
+```
+
+Use `--root path` when the first positional argument is a target instead of a
+repository path:
+
+```sh
+ontoly impact AuthService --root apps/api --json
+```
 
 `ontoly coverage` supports:
 
