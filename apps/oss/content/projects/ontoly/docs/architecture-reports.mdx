@@ -12,6 +12,7 @@ They do not parse source code or read repository files directly.
 ```sh
 ontoly architecture
 ontoly architecture --format mermaid
+ontoly architecture --format html > architecture.html
 ontoly report
 ontoly report api
 ontoly report dependencies
@@ -25,6 +26,11 @@ ontoly report workspace
 - Markdown
 - JSON
 - Mermaid
+- Interactive HTML
+
+Interactive HTML opens the Software Graph Explorer. The explorer starts in
+Architecture mode, then lets you switch to dependency, call graph, or full graph
+views without rebuilding the graph.
 
 ## Report Types
 
