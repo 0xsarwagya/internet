@@ -1,10 +1,78 @@
 ---
 title: "Alpha Release Notes"
-description: "This CLI release makes LLM Enhancement the mandatory workflow contract whenever an LLM uses Ontoly."
+description: "This stabilization release fixes the real-world agent workflow bugs discovered against Ovok Core and the validation corpus."
 canonical: "https://oss.sarwagya.wtf/ontoly/docs/release-notes-alpha"
 source: "docs/release-notes-alpha.md"
 keywords: ["Ontoly", "Software Graph", "TypeScript", "static analysis", "MCP", "AI coding agents", "developer tools", "Alpha", "Release", "Notes"]
 ---
+
+## v0.1.0-alpha.13
+
+This stabilization release fixes the real-world agent workflow bugs discovered
+against Ovok Core and the validation corpus.
+
+- `ImplementationPlan`, `ImpactAnalysis`, and `EvidencePack` now enforce
+  deterministic execution budgets and return `PARTIAL` with diagnostics instead
+  of hanging.
+- Evidence Packs are compact and ranked: top nodes, top edges, relevant files,
+  and bounded metadata only.
+- Semantic Index hashing no longer builds huge monolithic strings for large
+  repositories.
+- Fuzzy impact queries resolve through the Semantic Index before traversal, so
+  phrases such as `sleep duration thresholds` resolve to stable graph nodes.
+- `ontoly profile implementation-plan` reports capability timing, visited
+  nodes/edges, budget status, and memory.
+- Validation Lab now distinguishes true compiler nondeterminism from active
+  repository input changes during rebuild checks.
+- Agent Skills now require Ontoly `0.1.0-alpha.13`.
+
+## v0.1.0-alpha.12
+
+This release fixes external npm installation by removing the hidden standalone
+Semantic Index package dependency from the public CLI graph.
+
+- Semantic Index APIs are now exported by `@0xsarwagya/ontoly-core`.
+- Cache, enhancer, capabilities, MCP, and CLI now consume Semantic Index APIs
+  from core, so latest installs only depend on packages npm is publicly serving.
+- The standalone `@0xsarwagya/ontoly-semantic-index` package was removed from
+  the release graph after npm publish logs marked it public but unauthenticated
+  installs still received 404 responses.
+- Agent Skills now require Ontoly `0.1.0-alpha.12`.
+
+## v0.1.0-alpha.11
+
+This release attempted to fix external npm installation by renaming the
+standalone Semantic Index package.
+
+- The Semantic Index package was renamed to
+  `@0xsarwagya/ontoly-semantic-index`.
+- Packages that consume the Semantic Index were republished against that
+  dependency name: cache, enhancer, capabilities, MCP, and CLI.
+- Agent Skills now require Ontoly `0.1.0-alpha.11` so installed workflows target
+  the fixed published artifact set.
+- This package name also returned public npm 404s after successful publish logs,
+  so alpha.12 removes the standalone package from latest installs.
+
+## v0.1.0-alpha.10
+
+This release adds compact Evidence Packs for graph-first agent workflows.
+
+- `ontoly evidence <query>` returns a compact graph-backed Evidence Pack with
+  top nodes, top edges, relevant files, stable ids, confidence, diagnostics, and
+  suggested next commands.
+- `EvidencePack` is available through the Semantic Capability Engine and MCP.
+- `evidence-pack` is a first-class Enhancer artifact; no separate router package
+  is introduced.
+- `ontoly search` now includes deterministic `runNext` commands that start with
+  `ontoly evidence`.
+- `ImpactAnalysis` supports scoped modes: `direct`, `local`, `feature`,
+  `semantic`, and `blast-radius`.
+- `ImplementationPlan` now returns bounded partial results when a deterministic
+  node budget is exceeded.
+- The npm publish script includes the Semantic Index package in the package
+  publication order.
+- Official Agent Skills now require LLM Enhancement plus `EvidencePack` and
+  document the evidence-first workflow in every installable skill folder.
 
 ## v0.1.0-alpha.9
 
