@@ -28,6 +28,13 @@
       "runtimeArgs": ["--dir", "/Users/shrey/Desktop/personal/local", "dev"],
       "port": 5173,
       "autoPort": true
+    },
+    {
+      "name": "same-state",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "/Users/shrey/Desktop/personal/same-state", "dev"],
+      "port": 3005,
+      "autoPort": true
     }
   ]
 }
