@@ -25,9 +25,17 @@ export function GET(): Response {
   lines.push("");
   lines.push("## Takes");
   lines.push("");
+  lines.push(
+    "Every take has a raw-markdown twin at the same URL with a `.md`",
+  );
+  lines.push(
+    "suffix (e.g. `/takes/foo.md`) — LLM-agent-friendly, no HTML",
+  );
+  lines.push("scraping needed.");
+  lines.push("");
   for (const take of takes) {
     lines.push(
-      `- [${take.title}](${absoluteUrl(`/takes/${take.slug}`)}): ${take.summary}`,
+      `- [${take.title}](${absoluteUrl(`/takes/${take.slug}.md`)}): ${take.summary}`,
     );
   }
   return new Response(lines.join("\n") + "\n", {

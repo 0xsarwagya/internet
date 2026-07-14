@@ -9,6 +9,9 @@ const nextConfig = {
   pageExtensions: ["ts", "tsx", "js", "jsx", "md", "mdx"],
   outputFileTracingRoot: path.join(__dirname, "../../"),
   transpilePackages: ["@0xsarwagya/ui", "@repo/seo"],
+  async rewrites() {
+    return [{ source: "/:path*.md", destination: "/api/raw/:path*" }];
+  },
 };
 
 const withMDX = createMDX({

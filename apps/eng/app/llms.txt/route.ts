@@ -27,9 +27,17 @@ export function GET(): Response {
   lines.push("");
   lines.push("## Essays");
   lines.push("");
+  lines.push(
+    "Every essay has a raw-markdown twin at the same URL with a `.md`",
+  );
+  lines.push(
+    "suffix (e.g. `/learnings/foo.md`) — LLM-agent-friendly, no HTML",
+  );
+  lines.push("scraping needed.");
+  lines.push("");
   for (const learning of learnings) {
     lines.push(
-      `- [${learning.title}](${absoluteUrl(`/learnings/${learning.slug}`)}): ${learning.summary}`,
+      `- [${learning.title}](${absoluteUrl(`/learnings/${learning.slug}.md`)}): ${learning.summary}`,
     );
   }
   lines.push("");

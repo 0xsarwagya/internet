@@ -24,6 +24,14 @@ export function GET(): Response {
   lines.push("");
   lines.push("## Projects");
   lines.push("");
+  lines.push(
+    "Every project's landing page and every doc page has a raw-markdown",
+  );
+  lines.push(
+    "twin at the same URL with a `.md` suffix — LLM-agent-friendly, no",
+  );
+  lines.push("HTML scraping needed.");
+  lines.push("");
   for (const project of projects) {
     const parts = [
       project.status,
@@ -32,17 +40,17 @@ export function GET(): Response {
     ].filter(Boolean);
     const meta = parts.length > 0 ? ` (${parts.join(" · ")})` : "";
     lines.push(
-      `- [${project.name}](${absoluteUrl(`/${project.slug}`)}): ${project.description}${meta}`,
+      `- [${project.name}](${absoluteUrl(`/${project.slug}.md`)}): ${project.description}${meta}`,
     );
   }
   lines.push("");
   lines.push("## Documentation");
   lines.push("");
   lines.push(
-    "Each project ships its own docs tree; typical entry points are:",
+    "Each project ships its own docs tree; the docs index for each is:",
   );
   for (const project of projects) {
-    lines.push(`- ${absoluteUrl(`/${project.slug}/docs`)}`);
+    lines.push(`- ${absoluteUrl(`/${project.slug}/docs.md`)}`);
   }
   return new Response(lines.join("\n") + "\n", {
     headers: {

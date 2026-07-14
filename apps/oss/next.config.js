@@ -11,6 +11,13 @@ const nextConfig = {
   transpilePackages: ["@0xsarwagya/ui", "@repo/seo"],
   outputFileTracingIncludes: {
     "/oss-assets/[slug]/[...path]": ["./content/projects/**/assets/**"],
+    "/api/raw/[[...path]]": [
+      "./content/projects/**/*.mdx",
+      "./content/projects/**/manifest.json",
+    ],
+  },
+  async rewrites() {
+    return [{ source: "/:path*.md", destination: "/api/raw/:path*" }];
   },
 };
 
