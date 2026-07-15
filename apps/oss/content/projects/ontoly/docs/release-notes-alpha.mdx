@@ -1,10 +1,97 @@
 ---
 title: "Alpha Release Notes"
-description: "This stabilization release fixes the real-world agent workflow bugs discovered against Ovok Core and the validation corpus."
-canonical: "https://oss.sarwagya.wtf/ontoly/docs/release-notes-alpha"
+description: "This Semantic Intelligence release turns the trusted Software Graph into richer deterministic derived intelligence without changing the compiler or graph schema."
+canonical: "https://ontoly.sarwagya.wtf/docs/release-notes-alpha"
 source: "docs/release-notes-alpha.md"
 keywords: ["Ontoly", "Software Graph", "TypeScript", "static analysis", "MCP", "AI coding agents", "developer tools", "Alpha", "Release", "Notes"]
 ---
+
+## v0.1.0-alpha.19
+
+This Semantic Intelligence release turns the trusted Software Graph into richer
+deterministic derived intelligence without changing the compiler or graph
+schema.
+
+- Added the official `semantics` enhancer, published as
+  `@0xsarwagya/ontoly-enhancer-semantics`.
+- Added `@0xsarwagya/ontoly-intelligence` for deterministic query expansion,
+  evidence, feature ownership, and semantic neighborhoods over graph artifacts.
+- Added `ontoly semantics build`, `ontoly semantics inspect`, and
+  `ontoly semantics validate`.
+- Added MCP capabilities `SemanticNeighborhood`, `FeatureOwnership`,
+  `IntentExpansion`, and `SemanticContext`.
+- The generated `semantics.json` includes a Graphify-style `semanticGraph`
+  with concept nodes and links for feature, vocabulary, intent, and software
+  node relationships.
+- Software Graph hash, graph schema, compiler behavior, CALLS generation, and
+  framework analyzers remain unchanged.
+- Agent Skills now require Ontoly `0.1.0-alpha.19`.
+
+## v0.1.0-alpha.18
+
+This NestJS semantic-resolution release completes deterministic method-level
+impact analysis for common NestJS runtime paths while preserving the Software
+Graph schema.
+
+- TypeScript symbol resolution now backs method-level `CALLS` edges for
+  `this.*`, `super.*`, local method, and injected-service method calls.
+- NestJS runtime topology now models BullMQ processors, cron handlers, event
+  handlers, websocket gateways, repository injection, queue injection, and model
+  injection with existing graph node and relationship types.
+- A synthetic NestJS runtime-topology corpus records deterministic expected
+  questions for processor, service, repository, queue, model, and handler flows.
+- Fresh Ovok graph validation produced 21,686 nodes, 52,548 edges, and 5,823
+  `CALLS` edges.
+- The Ovok 40-question benchmark passed at 40 PASS, 0 PARTIAL, 0 FAIL, and
+  39 Top-1 results.
+- Agent Skills now require Ontoly `0.1.0-alpha.18`.
+
+## v0.1.0-alpha.17
+
+This engineering-excellence release keeps alpha.16 behavior intact while
+cleaning private CLI source and publishing the measured alpha.17 audit report.
+
+- Removed unused private CLI plumbing with no public API changes.
+- Added `reports/alpha17-engineering-excellence.md` with runtime/docs LOC,
+  public export counts, package dependency graph, complexity observations, and
+  validation evidence.
+- Preserved the Ovok 40-question benchmark at 40 PASS, 0 PARTIAL, 0 FAIL, and
+  38 Top-1 results.
+- Agent Skills now require Ontoly `0.1.0-alpha.17`.
+
+## v0.1.0-alpha.16
+
+This retrieval stabilization release restores the alpha.14 Ovok benchmark
+quality line while keeping the alpha.15 enhancer fixes.
+
+- Action-oriented code queries now include a bounded executable-action ranking
+  signal, so methods/functions can outrank owner classes when the user asks what
+  code calculates, builds, resolves, writes, or performs a similar action.
+- The regression query `What code calculates sleep duration averages for
+  thresholds?` now ranks `calculateSleepDurationAverages` first.
+- The Ovok 40-question Ontoly benchmark is now at 40 PASS, 0 PARTIAL, 0 FAIL,
+  and 38 Top-1 results.
+- Agent Skills now require Ontoly `0.1.0-alpha.16`.
+
+## v0.1.0-alpha.14
+
+This stabilization release fixes retrieval quality, bounded evidence, and
+capability latency issues discovered during real-world Ovok Core evaluation.
+
+- Natural-language seed resolution now favors repository-local feature owners
+  and penalizes expanded-term false positives, so `sleep duration thresholds`
+  resolves to threshold services/methods instead of observation helpers or
+  external FHIR package symbols.
+- Evidence Packs remain compact and ranked through serialization, include
+  scoped diagnostics, and avoid unrelated repository-wide warnings lowering
+  confidence.
+- Semantic Index artifacts are versioned at `1.0.1`; stale or incompatible
+  indexes are rebuilt and persisted automatically.
+- CLI capability commands now reuse the loaded Semantic Index instead of
+  rebuilding it for each `impact`, `evidence`, or `implementation-plan` call.
+- The agent workflow regression corpus now covers sleep thresholds, batch-data
+  observations, authentication, JWT, signals, FHIR, and PlanDefinition queries.
+- Agent Skills now require Ontoly `0.1.0-alpha.14`.
 
 ## v0.1.0-alpha.13
 
@@ -133,7 +220,7 @@ This CLI release adds interactive Software Graph HTML export.
 
 ## v0.1.0-alpha.1
 
-This release candidate prepares Ontoly for its first public alpha.
+This public preview prepares Ontoly for its first public alpha.
 
 ## What Works
 
@@ -144,7 +231,7 @@ This release candidate prepares Ontoly for its first public alpha.
 - Install Ontoly Agent Skills as self-contained folders.
 - Run validation, semantic evaluation, package checks, docs checks, and release gates.
 
-## What Changed in the RC Pass
+## What Changed in the Public Preview Pass
 
 - Skill installation no longer depends on a sibling `skills/shared` folder after install.
 - Installed skill artifacts are validated in CI.
